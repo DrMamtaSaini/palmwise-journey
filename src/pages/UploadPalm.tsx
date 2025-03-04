@@ -5,24 +5,50 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import UploadSection from "../components/UploadSection";
+import { analyzePalmImage } from "../services/geminiService";
 
 const UploadPalm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleAnalyze = (imageUrl: string) => {
+  const handleAnalyze = async (imageUrl: string) => {
     setIsProcessing(true);
     
-    // Simulate processing delay
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      // Call the Gemini API through our service
+      const analysisResult = await analyzePalmImage(imageUrl);
+      
+      if (!analysisResult) {
+        toast({
+          title: "Analysis failed",
+          description: "We couldn't analyze your palm. Please try again with a clearer image.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Store the result in sessionStorage for the results page to use
+      sessionStorage.setItem('palmReadingResult', JSON.stringify(analysisResult.result));
+      
       toast({
         title: "Analysis complete",
         description: "Your palm reading is ready to view.",
       });
+      
+      // Navigate to results page
       navigate("/reading-results");
-    }, 3000);
+    } catch (error) {
+      console.error("Error during palm analysis:", error);
+      toast({
+        title: "Analysis error",
+        description: "An error occurred during analysis. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

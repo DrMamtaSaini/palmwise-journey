@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Volume2 } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -7,17 +7,42 @@ import Footer from "../components/Footer";
 import AudioPlayer from "../components/AudioPlayer";
 import PaymentButton from "../components/PaymentButton";
 
+interface PalmReading {
+  palmReading: {
+    past: string[];
+    present: string[];
+    future: string[];
+    guidance: string[];
+  };
+  summary: string;
+}
+
 const ReadingResults = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("past");
   const [isPremium, setIsPremium] = useState(false);
+  const [readingData, setReadingData] = useState<PalmReading | null>(null);
+
+  useEffect(() => {
+    // Load reading data from session storage
+    const storedReading = sessionStorage.getItem('palmReadingResult');
+    if (storedReading) {
+      try {
+        const parsedReading = JSON.parse(storedReading);
+        setReadingData(parsedReading);
+      } catch (error) {
+        console.error("Error parsing reading data:", error);
+      }
+    }
+  }, []);
 
   const handlePayment = () => {
     // In a real app, this would integrate with PayPal
     setIsPremium(true);
   };
 
-  const readingContent = {
+  // Default content to show if no reading data is available
+  const defaultReadingContent = {
     past: {
       title: "Your Past",
       content: [
@@ -52,6 +77,16 @@ const ReadingResults = () => {
     }
   };
 
+  // Use either the API data or default content
+  const readingContent = readingData?.palmReading 
+    ? {
+        past: { title: "Your Past", content: readingData.palmReading.past },
+        present: { title: "Your Present", content: readingData.palmReading.present },
+        future: { title: "Your Future", content: readingData.palmReading.future },
+        guidance: { title: "Personal Guidance", content: readingData.palmReading.guidance }
+      }
+    : defaultReadingContent;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -81,6 +116,13 @@ const ReadingResults = () => {
                     </button>
                   </div>
                 </div>
+
+                {readingData?.summary && (
+                  <div className="mb-8 p-4 bg-palm-light rounded-lg">
+                    <h3 className="font-semibold mb-2">Summary</h3>
+                    <p className="text-gray-700">{readingData.summary}</p>
+                  </div>
+                )}
 
                 {isPremium && (
                   <div className="mb-8">
