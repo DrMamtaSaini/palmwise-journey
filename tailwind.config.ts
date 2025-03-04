@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				palm: {
+					purple: '#7953F5',
+					light: '#F5F0FF',
+					dark: '#27153A'
 				}
 			},
 			borderRadius: {
@@ -84,11 +90,63 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					from: {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					to: {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'fade-in-slow': {
+					from: {
+						opacity: '0',
+					},
+					to: {
+						opacity: '1',
+					}
+				},
+				'slide-up': {
+					from: {
+						opacity: '0',
+						transform: 'translateY(20px)'
+					},
+					to: {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'pulse-slow': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.8'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.6s ease-out',
+				'fade-in-slow': 'fade-in-slow 1.2s ease-out',
+				'slide-up': 'slide-up 0.8s ease-out',
+				'pulse-slow': 'pulse-slow 3s infinite'
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'palm-pattern': "url('/palm-pattern.png')"
+			},
+			fontFamily: {
+				sans: ['Inter var', 'sans-serif'],
+				serif: ['Playfair Display', 'serif']
+			},
+			boxShadow: {
+				'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+				'soft': '0 0 20px rgba(0, 0, 0, 0.05)'
 			}
 		}
 	},
