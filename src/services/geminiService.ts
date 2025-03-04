@@ -18,18 +18,18 @@ interface GeminiResponse {
 export async function analyzePalmImage(imageBase64: string): Promise<GeminiResponse | null> {
   try {
     // Get the Gemini API key from Supabase
-    const { data, error } = await supabase
+    const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('api_keys')
       .select('key_value')
       .eq('key_name', 'gemini_api_key')
       .single();
 
-    if (error || !data) {
-      console.error('Failed to retrieve Gemini API key:', error);
+    if (apiKeyError || !apiKeyData) {
+      console.error('Failed to retrieve Gemini API key:', apiKeyError);
       return null;
     }
 
-    const geminiApiKey = data.key_value;
+    const geminiApiKey = apiKeyData.key_value;
     
     // Remove the data URL prefix if present
     const base64Image = imageBase64.includes('base64,') 
@@ -69,11 +69,11 @@ export async function analyzePalmImage(imageBase64: string): Promise<GeminiRespo
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const apiResponseData = await response.json();
     
     // Process the Gemini response
     // This is a simplified example - actual parsing depends on Gemini's response format
-    const responseText = data.candidates[0].content.parts[0].text;
+    const responseText = apiResponseData.candidates[0].content.parts[0].text;
     
     // Try to extract JSON from the response text
     // Gemini might wrap JSON in markdown code blocks or add other text
@@ -81,8 +81,8 @@ export async function analyzePalmImage(imageBase64: string): Promise<GeminiRespo
     try {
       // Look for JSON structure in the response
       const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        responseText.match(/{[\s\S]*}/);
-                        
+                      responseText.match(/{[\s\S]*}/);
+                      
       const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseText;
       jsonData = JSON.parse(jsonString);
     } catch (err) {
