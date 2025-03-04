@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -10,23 +10,11 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate login API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to PalmInsight!",
-      });
-      navigate("/dashboard");
-    }, 1500);
+    await signIn(email, password);
   };
 
   return (
@@ -90,10 +78,10 @@ const Login = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center hover:bg-palm-purple/90 transition-colors"
               >
-                {isLoading ? (
+                {loading ? (
                   <span className="animate-pulse">Logging in...</span>
                 ) : (
                   <>
@@ -111,6 +99,7 @@ const Login = () => {
 
               <button
                 type="button"
+                onClick={() => alert("Google sign-in will be implemented soon!")}
                 className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
                 <img

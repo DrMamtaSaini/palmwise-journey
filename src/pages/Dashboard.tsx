@@ -1,14 +1,13 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, History, Settings, User, LogOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signOut, user } = useAuth();
   const [activeTab, setActiveTab] = useState("readings");
 
   // Mock data for readings history
@@ -31,14 +30,12 @@ const Dashboard = () => {
     navigate("/upload-palm");
   };
 
-  const handleLogout = () => {
-    // Simulate logout
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-    navigate("/");
+  const handleLogout = async () => {
+    await signOut();
   };
+
+  const userName = user?.user_metadata?.full_name || 'User';
+  const userEmail = user?.email || 'user@example.com';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -55,7 +52,7 @@ const Dashboard = () => {
                     <User size={24} />
                   </div>
                   <div>
-                    <h3 className="font-medium">Jane Smith</h3>
+                    <h3 className="font-medium">{userName}</h3>
                     <p className="text-sm text-gray-500">Premium Member</p>
                   </div>
                 </div>
@@ -187,7 +184,7 @@ const Dashboard = () => {
                         </label>
                         <input
                           type="text"
-                          value="Jane Smith"
+                          value={userName}
                           readOnly
                           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
                         />
@@ -198,7 +195,7 @@ const Dashboard = () => {
                         </label>
                         <input
                           type="email"
-                          value="jane.smith@example.com"
+                          value={userEmail}
                           readOnly
                           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
                         />

@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -11,23 +11,11 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate signup API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Account created",
-        description: "Welcome to PalmInsight! Your account has been created successfully.",
-      });
-      navigate("/dashboard");
-    }, 1500);
+    await signUp(email, password, name);
   };
 
   return (
@@ -86,6 +74,7 @@ const Signup = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-palm-purple focus:border-transparent"
                     placeholder="Create a password"
                   />
@@ -98,7 +87,7 @@ const Signup = () => {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Password must be at least 8 characters long
+                  Password must be at least 6 characters long
                 </p>
               </div>
 
@@ -123,10 +112,10 @@ const Signup = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center hover:bg-palm-purple/90 transition-colors"
               >
-                {isLoading ? (
+                {loading ? (
                   <span className="animate-pulse">Creating account...</span>
                 ) : (
                   <>
@@ -144,6 +133,7 @@ const Signup = () => {
 
               <button
                 type="button"
+                onClick={() => alert("Google sign-in will be implemented soon!")}
                 className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
                 <img
