@@ -12,6 +12,8 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Use separate ref for interval to avoid TypeScript errors
+  const intervalRef = useRef<number | null>(null);
 
   // In a real app, we would use a real audio URL
   // For now, we'll simulate with a dummy audio element
@@ -33,6 +35,10 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
           setProgress(0);
         });
       }
+      // Clear interval on unmount
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, []);
 
@@ -47,29 +53,45 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        // Clear simulation interval
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
       } else {
         // Simulate audio playback for demo
         // In a real app, we would set audioRef.current.src = audioUrl
-        const duration = 30; // 30 seconds
+        const duration = 30; // 30 seconds simulation
         let currentTime = 0;
-        audioRef.current.duration = duration;
+        // Can't set duration directly, so we'll simulate it
         
-        if (audioRef.current._interval) {
-          clearInterval(audioRef.current._interval);
+        // Clear any existing interval
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
         }
         
-        audioRef.current._interval = setInterval(() => {
+        // Create a new interval for simulation
+        intervalRef.current = window.setInterval(() => {
           currentTime += 0.1;
-          audioRef.current!.currentTime = currentTime;
-          
-          if (currentTime >= duration) {
-            clearInterval(audioRef.current!._interval);
-            setIsPlaying(false);
-            setProgress(0);
+          if (audioRef.current) {
+            audioRef.current.currentTime = currentTime;
+            
+            if (currentTime >= duration) {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              setIsPlaying(false);
+              setProgress(0);
+            }
           }
         }, 100);
         
-        audioRef.current.play();
+        // Simulate play
+        audioRef.current.play().catch(() => {
+          // Handle autoplay restrictions
+          console.log("Playback simulation active");
+        });
       }
       setIsPlaying(!isPlaying);
     }
