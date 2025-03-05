@@ -17,19 +17,17 @@ interface GeminiResponse {
 // Function to analyze palm image using Gemini API
 export async function analyzePalmImage(imageBase64: string): Promise<GeminiResponse | null> {
   try {
-    // Get the Gemini API key from Supabase
-    const { data: apiKeyData, error: apiKeyError } = await supabase
-      .from('api_keys')
-      .select('key_value')
-      .eq('key_name', 'gemini_api_key')
-      .single();
+    // Get the Gemini API key from environment variables (set in Edge Functions)
+    const { data: secretData, error: secretError } = await supabase.functions.invoke('get-gemini-key', {
+      method: 'GET'
+    });
 
-    if (apiKeyError || !apiKeyData) {
-      console.error('Failed to retrieve Gemini API key:', apiKeyError);
+    if (secretError || !secretData || !secretData.apiKey) {
+      console.error('Failed to retrieve Gemini API key:', secretError);
       return null;
     }
 
-    const geminiApiKey = apiKeyData.key_value;
+    const geminiApiKey = secretData.apiKey;
     
     // Remove the data URL prefix if present
     const base64Image = imageBase64.includes('base64,') 
