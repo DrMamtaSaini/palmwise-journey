@@ -14,13 +14,21 @@ import UploadPalm from "./pages/UploadPalm";
 import ReadingResults from "./pages/ReadingResults";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Create a new QueryClient with retry disabled for development ease
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+console.log("App component rendering");
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -51,6 +59,8 @@ const App = () => (
           </Routes>
         </AuthProvider>
       </BrowserRouter>
+      <Toaster />
+      <Sonner />
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Sparkles, Heart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import FeatureCard from "../components/FeatureCard";
@@ -11,21 +12,31 @@ import PaymentButton from "../components/PaymentButton";
 import Footer from "../components/Footer";
 
 const Index = () => {
-  console.log("Index component rendering");
+  console.log("Index component rendering START");
+  const { toast } = useToast();
   
   const navigate = useNavigate();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
     console.log("Index component mounted");
+    document.title = "PalmInsight - Unlock the Secrets of Your Palm";
+    
     // Force a re-render after a delay to ensure everything loads properly
     const timer = setTimeout(() => {
-      console.log("Forcing re-render");
-      setUploadedImage(null); // This will trigger a re-render
-    }, 100);
+      console.log("Index forcing re-render");
+      setIsRendered(true);
+      
+      // Show toast to verify the component is actually rendering
+      toast({
+        title: "Welcome to PalmInsight",
+        description: "Discover your past, present, and future through palm analysis.",
+      });
+    }, 300);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [toast]);
 
   const handleAnalyze = (imageUrl: string) => {
     setUploadedImage(imageUrl);
@@ -38,14 +49,17 @@ const Index = () => {
   const handlePayment = () => {
     // In a real app, this would integrate with PayPal
     console.log("Payment button clicked");
-    alert("PayPal integration would open here");
+    toast({
+      title: "Payment Initiated",
+      description: "This would connect to PayPal in production.",
+    });
   };
 
-  // Extra debugging info
-  console.log("Index rendering completed");
+  console.log("Index rendering completed, isRendered:", isRendered);
   
   return (
     <div className="min-h-screen flex flex-col">
+      {console.log("Index return rendering")}
       <Navbar />
       
       <main className="flex-grow">

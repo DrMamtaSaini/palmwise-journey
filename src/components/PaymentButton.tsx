@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 interface PaymentButtonProps {
   price: string;
@@ -14,6 +15,10 @@ const PaymentButton = ({
   isPrimary = false,
   onClick
 }: PaymentButtonProps) => {
+  useEffect(() => {
+    console.log(`PaymentButton mounted: ${description} - ${price}`);
+  }, [description, price]);
+
   console.log(`Rendering PaymentButton: ${description} - ${price}`);
   
   return (

@@ -1,11 +1,23 @@
 
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Hero = () => {
+  const [isRendered, setIsRendered] = useState(false);
+
   useEffect(() => {
     console.log("Hero component mounted");
+    setIsRendered(true);
+    
+    // Force a re-render to ensure component appears
+    const timer = setTimeout(() => {
+      console.log("Hero forcing update");
+      setIsRendered(prev => !prev);
+      setIsRendered(prev => !prev);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const scrollToFeatures = () => {
@@ -15,11 +27,14 @@ const Hero = () => {
     }
   };
 
-  console.log("Hero component rendering");
+  console.log("Hero component rendering, isRendered:", isRendered);
 
   return (
-    <section className="relative min-h-[80vh] flex items-center pt-16 overflow-hidden bg-gradient-to-b from-palm-light to-white">
-      <div className="absolute inset-0 bg-palm-pattern opacity-10"></div>
+    <section className="relative min-h-screen flex items-center pt-16 overflow-hidden bg-gradient-to-b from-palm-light to-white">
+      <div 
+        className="absolute inset-0 bg-palm-pattern opacity-30"
+        style={{ backgroundSize: "300px 300px" }}
+      ></div>
       
       <div className="container mx-auto px-6 py-16 relative z-10">
         <div className="flex flex-col items-center text-center">
