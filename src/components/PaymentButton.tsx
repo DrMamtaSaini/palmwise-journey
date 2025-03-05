@@ -14,12 +14,14 @@ const PaymentButton = ({
   isPrimary = false,
   onClick
 }: PaymentButtonProps) => {
+  console.log(`Rendering PaymentButton: ${description} - ${price}`);
+  
   return (
     <Button
       onClick={onClick}
       className={`w-full ${
         isPrimary 
-          ? "bg-palm-purple hover:bg-palm-purple/90" 
+          ? "bg-palm-purple hover:bg-palm-purple/90 text-white" 
           : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"
       }`}
     >

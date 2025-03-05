@@ -11,11 +11,20 @@ import PaymentButton from "../components/PaymentButton";
 import Footer from "../components/Footer";
 
 const Index = () => {
+  console.log("Index component rendering");
+  
   const navigate = useNavigate();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("Index component mounted");
+    // Force a re-render after a delay to ensure everything loads properly
+    const timer = setTimeout(() => {
+      console.log("Forcing re-render");
+      setUploadedImage(null); // This will trigger a re-render
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const handleAnalyze = (imageUrl: string) => {
@@ -32,6 +41,9 @@ const Index = () => {
     alert("PayPal integration would open here");
   };
 
+  // Extra debugging info
+  console.log("Index rendering completed");
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
