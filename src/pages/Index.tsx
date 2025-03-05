@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Sparkles, Heart } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -14,15 +14,21 @@ const Index = () => {
   const navigate = useNavigate();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
+  useEffect(() => {
+    console.log("Index component mounted");
+  }, []);
+
   const handleAnalyze = (imageUrl: string) => {
     setUploadedImage(imageUrl);
     // In a real app, we would send the image to the backend
     // and navigate to the results page with the reading ID
+    console.log("Navigating to reading results with image:", imageUrl.substring(0, 50) + "...");
     navigate("/reading-results");
   };
 
   const handlePayment = () => {
     // In a real app, this would integrate with PayPal
+    console.log("Payment button clicked");
     alert("PayPal integration would open here");
   };
 

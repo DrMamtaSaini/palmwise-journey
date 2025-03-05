@@ -1,6 +1,5 @@
-
 import { useState, useRef } from "react";
-import { Upload, Camera, SparklesIcon } from "lucide-react";
+import { Upload, Camera, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UploadSectionProps {
@@ -21,7 +20,6 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       const reader = new FileReader();
       reader.onload = () => {
         setPreviewUrl(reader.result as string);
-        // Close camera if it was active
         if (isCameraActive) {
           stopCamera();
         }
@@ -40,7 +38,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       
       videoRef.current.srcObject = stream;
       setIsCameraActive(true);
-      setPreviewUrl(null); // Clear any existing preview
+      setPreviewUrl(null);
       
       toast({
         title: "Camera activated",
@@ -70,20 +68,16 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       
-      // Draw current video frame to canvas
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas to data URL
         const imageUrl = canvas.toDataURL('image/jpeg');
         setPreviewUrl(imageUrl);
         
-        // Stop the camera
         stopCamera();
         
         toast({
@@ -97,7 +91,6 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
   const handleAnalyze = () => {
     if (previewUrl) {
       setIsLoading(true);
-      // In a real app, you would upload the image to your backend here
       setTimeout(() => {
         onAnalyze(previewUrl);
         setIsLoading(false);
@@ -148,7 +141,6 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
           </>
         )}
         
-        {/* Hidden canvas for capturing photos */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
@@ -186,7 +178,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
           <span className="animate-pulse">Analyzing...</span>
         ) : (
           <>
-            <SparklesIcon size={20} className="mr-2" />
+            <Sparkles size={20} className="mr-2" />
             <span>Read My Palm</span>
           </>
         )}

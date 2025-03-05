@@ -1,5 +1,5 @@
 
-import { CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface PaymentButtonProps {
   price: string;
@@ -9,25 +9,23 @@ interface PaymentButtonProps {
 }
 
 const PaymentButton = ({ 
-  price, 
-  description, 
-  isPrimary = false, 
-  onClick 
+  price,
+  description,
+  isPrimary = false,
+  onClick
 }: PaymentButtonProps) => {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className={`w-full p-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+      className={`w-full ${
         isPrimary 
-          ? "bg-palm-purple text-white hover:shadow-lg" 
-          : "bg-white border border-gray-200 hover:border-palm-purple text-gray-800"
+          ? "bg-palm-purple hover:bg-palm-purple/90" 
+          : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"
       }`}
     >
-      <CreditCard size={20} />
-      <span>
-        Pay {price} - {description}
-      </span>
-    </button>
+      <span className="mr-1">Pay</span>
+      <span className="font-bold">{price}</span>
+    </Button>
   );
 };
 
