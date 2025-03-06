@@ -52,13 +52,13 @@ const Index = () => {
     });
   };
 
-  // Fix: Ensure scrollToFeatures returns null, not void
-  const scrollToFeatures = (): null => {
+  // Fixed: Return null, not void
+  const scrollToFeatures = () => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });
     }
-    return null;
+    return null; // Explicitly return null instead of implicit void
   };
 
   console.log("Index rendering completed, isRendered:", isRendered);

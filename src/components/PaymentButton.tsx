@@ -24,7 +24,8 @@ const PaymentButton = ({
   return (
     <Button
       onClick={onClick}
-      className={`w-full font-medium ${
+      type="button"
+      className={`w-full font-medium transition-all duration-300 ${
         isPrimary 
           ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md" 
           : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"

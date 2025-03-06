@@ -28,9 +28,9 @@ const Hero = () => {
   console.log("Hero component rendering, isRendered:", isRendered);
 
   return (
-    <section className="relative min-h-[100vh] flex items-center justify-center pt-16 pb-16 overflow-hidden bg-gradient-to-b from-purple-100 to-white">
+    <section className="w-full h-screen flex items-center justify-center pt-16 pb-16 overflow-hidden bg-gradient-to-b from-purple-100 to-white relative">
       <div 
-        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-70 z-0"
+        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-70 z-0 bg-repeat"
         style={{ backgroundSize: "300px 300px" }}
       ></div>
       
