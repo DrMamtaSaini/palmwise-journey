@@ -29,6 +29,8 @@ console.log("App component rendering");
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -59,8 +61,6 @@ const App = () => (
           </Routes>
         </AuthProvider>
       </BrowserRouter>
-      <Toaster />
-      <Sonner />
     </TooltipProvider>
   </QueryClientProvider>
 );

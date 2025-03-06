@@ -55,6 +55,15 @@ const Index = () => {
     });
   };
 
+  // Fix for Type 'void' is not assignable to type 'ReactNode'
+  const scrollToFeatures = (): JSX.Element | null => {
+    const featuresSection = document.getElementById("features");
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: "smooth" });
+    }
+    return null; // Return null as a valid ReactNode
+  };
+
   console.log("Index rendering completed, isRendered:", isRendered);
   
   return (

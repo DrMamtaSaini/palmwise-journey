@@ -26,7 +26,7 @@ const PaymentButton = ({
       onClick={onClick}
       className={`w-full ${
         isPrimary 
-          ? "bg-palm-purple hover:bg-palm-purple/90 text-white" 
+          ? "bg-purple-600 hover:bg-purple-700 text-white" 
           : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"
       }`}
     >
