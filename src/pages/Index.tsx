@@ -52,13 +52,13 @@ const Index = () => {
     });
   };
 
-  // Fixed: Return null, not void
-  const scrollToFeatures = () => {
+  // Fix the scrollToFeatures function to explicitly return React.ReactNode
+  const scrollToFeatures = (): React.ReactNode => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });
     }
-    return null; // Explicitly return null instead of implicit void
+    return null;
   };
 
   console.log("Index rendering completed, isRendered:", isRendered);
