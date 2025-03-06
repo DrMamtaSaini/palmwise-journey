@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Sparkles, Heart } from "lucide-react";
@@ -51,8 +52,8 @@ const Index = () => {
     });
   };
 
-  // Fixed: Function now properly returns JSX.Element or null
-  const scrollToFeatures = () => {
+  // Fix: Ensure scrollToFeatures returns null, not void
+  const scrollToFeatures = (): null => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });

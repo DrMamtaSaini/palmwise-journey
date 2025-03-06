@@ -10,14 +10,12 @@ const Hero = () => {
     console.log("Hero component mounted");
     setIsRendered(true);
     
-    // Force a re-render to ensure component appears
-    const timer = setTimeout(() => {
-      console.log("Hero forcing update");
-      setIsRendered(prev => !prev);
-      setIsRendered(prev => !prev);
-    }, 100);
+    // Log when component renders
+    console.log("Hero component rendered");
     
-    return () => clearTimeout(timer);
+    return () => {
+      console.log("Hero component unmounting");
+    };
   }, []);
 
   const scrollToFeatures = () => {
@@ -30,9 +28,9 @@ const Hero = () => {
   console.log("Hero component rendering, isRendered:", isRendered);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16 pb-16 overflow-hidden bg-gradient-to-b from-purple-100 to-white">
+    <section className="relative min-h-[100vh] flex items-center justify-center pt-16 pb-16 overflow-hidden bg-gradient-to-b from-purple-100 to-white">
       <div 
-        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-50 z-0"
+        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-70 z-0"
         style={{ backgroundSize: "300px 300px" }}
       ></div>
       

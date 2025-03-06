@@ -26,43 +26,47 @@ const queryClient = new QueryClient({
 
 console.log("App component rendering");
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/upload-palm" element={
-              <ProtectedRoute>
-                <UploadPalm />
-              </ProtectedRoute>
-            } />
-            <Route path="/reading-results" element={
-              <ProtectedRoute>
-                <ReadingResults />
-              </ProtectedRoute>
-            } />
-            <Route path="/reading-results/:id" element={
-              <ProtectedRoute>
-                <ReadingResults />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      <Toaster />
-      <Sonner />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("App rendering with QueryClient");
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Sonner position="bottom-right" />
+        <Toaster />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/upload-palm" element={
+                <ProtectedRoute>
+                  <UploadPalm />
+                </ProtectedRoute>
+              } />
+              <Route path="/reading-results" element={
+                <ProtectedRoute>
+                  <ReadingResults />
+                </ProtectedRoute>
+              } />
+              <Route path="/reading-results/:id" element={
+                <ProtectedRoute>
+                  <ReadingResults />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
