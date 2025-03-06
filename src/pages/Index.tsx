@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star, Sparkles, Heart } from "lucide-react";
@@ -40,14 +39,11 @@ const Index = () => {
 
   const handleAnalyze = (imageUrl: string) => {
     setUploadedImage(imageUrl);
-    // In a real app, we would send the image to the backend
-    // and navigate to the results page with the reading ID
     console.log("Navigating to reading results with image:", imageUrl.substring(0, 50) + "...");
     navigate("/reading-results");
   };
 
   const handlePayment = () => {
-    // In a real app, this would integrate with PayPal
     console.log("Payment button clicked");
     toast({
       title: "Payment Initiated",
@@ -55,13 +51,13 @@ const Index = () => {
     });
   };
 
-  // Fix for Type 'void' is not assignable to type 'ReactNode'
-  const scrollToFeatures = (): JSX.Element | null => {
+  // Fixed: Function now properly returns JSX.Element or null
+  const scrollToFeatures = () => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });
     }
-    return null; // Return null as a valid ReactNode
+    return null;
   };
 
   console.log("Index rendering completed, isRendered:", isRendered);

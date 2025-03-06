@@ -30,15 +30,15 @@ const Hero = () => {
   console.log("Hero component rendering, isRendered:", isRendered);
 
   return (
-    <section className="relative h-screen flex items-center pt-16 overflow-hidden bg-gradient-to-b from-purple-50 to-white">
+    <section className="relative min-h-screen flex items-center justify-center pt-16 pb-16 overflow-hidden bg-gradient-to-b from-purple-100 to-white">
       <div 
-        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-30"
+        className="absolute inset-0 bg-[url('/palm-pattern.svg')] opacity-50 z-0"
         style={{ backgroundSize: "300px 300px" }}
       ></div>
       
       <div className="container mx-auto px-6 py-16 relative z-10">
         <div className="flex flex-col items-center text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight max-w-4xl mx-auto text-gray-900">
             Unlock The Secrets Of Your <span className="text-purple-600">Palm</span>
           </h1>
           
@@ -50,7 +50,7 @@ const Hero = () => {
           <div>
             <Link
               to="/upload-palm"
-              className="bg-purple-600 text-white px-8 py-4 rounded-md text-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center group"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-md text-lg font-medium hover:shadow-lg transition-all duration-300 flex items-center group"
             >
               Try Palm Reading
               <ChevronDown className="ml-2 group-hover:translate-y-1 transition-transform" />
