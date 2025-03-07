@@ -52,13 +52,13 @@ const Index = () => {
     });
   };
 
-  // Fix the scrollToFeatures function to explicitly return React.ReactNode
-  const scrollToFeatures = (): React.ReactNode => {
+  // Fixed return type issue
+  const scrollToFeatures = () => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });
     }
-    return null;
+    return null as React.ReactNode;
   };
 
   console.log("Index rendering completed, isRendered:", isRendered);
