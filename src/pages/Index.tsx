@@ -52,13 +52,13 @@ const Index = () => {
     });
   };
 
-  // Fixed return type issue
-  const scrollToFeatures = () => {
+  // Fixed return type issue - explicitly returning null for React.ReactNode
+  const scrollToFeatures = (): React.ReactNode => {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
       featuresSection.scrollIntoView({ behavior: "smooth" });
     }
-    return null as React.ReactNode;
+    return null;
   };
 
   console.log("Index rendering completed, isRendered:", isRendered);
