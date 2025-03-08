@@ -1,6 +1,5 @@
 
-import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { CreditCard } from "lucide-react";
 
 interface PaymentButtonProps {
   price: string;
@@ -10,30 +9,25 @@ interface PaymentButtonProps {
 }
 
 const PaymentButton = ({ 
-  price,
-  description,
-  isPrimary = false,
-  onClick
+  price, 
+  description, 
+  isPrimary = false, 
+  onClick 
 }: PaymentButtonProps) => {
-  useEffect(() => {
-    console.log(`PaymentButton mounted: ${description} - ${price}`);
-  }, [description, price]);
-
-  console.log(`Rendering PaymentButton: ${description} - ${price}`);
-  
   return (
-    <Button
+    <button
       onClick={onClick}
-      type="button"
-      className={`w-full font-medium transition-all duration-300 ${
+      className={`w-full p-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${
         isPrimary 
-          ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md" 
-          : "bg-white border border-gray-200 text-gray-800 hover:bg-gray-50"
+          ? "bg-palm-purple text-white hover:shadow-lg" 
+          : "bg-white border border-gray-200 hover:border-palm-purple text-gray-800"
       }`}
     >
-      <span className="mr-1">Pay</span>
-      <span className="font-bold">{price}</span>
-    </Button>
+      <CreditCard size={20} />
+      <span>
+        Pay {price} - {description}
+      </span>
+    </button>
   );
 };
 
