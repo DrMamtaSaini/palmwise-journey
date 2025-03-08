@@ -26,8 +26,10 @@ export const useAuth = (): UseAuthResult => {
   });
 
   useEffect(() => {
+    console.log("Setting up auth subscription");
     // Subscribe to auth state changes
     const unsubscribe = AuthService.subscribe((state) => {
+      console.log("Auth state changed:", state);
       setAuthState({
         user: state.user,
         isLoading: state.isLoading,
@@ -40,15 +42,29 @@ export const useAuth = (): UseAuthResult => {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    return AuthService.signIn(email, password);
+    try {
+      return await AuthService.signIn(email, password);
+    } catch (error) {
+      console.error("Sign in error:", error);
+      return false;
+    }
   }, []);
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
-    return AuthService.signUp(name, email, password);
+    try {
+      return await AuthService.signUp(name, email, password);
+    } catch (error) {
+      console.error("Sign up error:", error);
+      return false;
+    }
   }, []);
 
   const signOut = useCallback(async () => {
-    return AuthService.signOut();
+    try {
+      return await AuthService.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
   }, []);
 
   return {
