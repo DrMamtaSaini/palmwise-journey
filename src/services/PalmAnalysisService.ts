@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { supabase } from "../lib/supabase";
 
 export interface PalmReading {
   id: string;
@@ -39,6 +40,35 @@ class PalmAnalysisService {
       PalmAnalysisService.instance = new PalmAnalysisService();
     }
     return PalmAnalysisService.instance;
+  }
+
+  public async uploadPalmImage(file: File, userId: string): Promise<string | null> {
+    try {
+      // Generate unique file path for palm image
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${userId}/palm-images/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('palm-images')
+        .upload(filePath, file);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get public URL for the uploaded image
+      const { data } = supabase.storage
+        .from('palm-images')
+        .getPublicUrl(filePath);
+        
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error('Upload failed', {
+        description: 'There was a problem uploading your image. Please try again.',
+      });
+      return null;
+    }
   }
 
   public async analyzePalm(imageUrl: string, userId: string): Promise<PalmReading> {
@@ -88,8 +118,22 @@ class PalmAnalysisService {
         };
       }
       
-      // Save to local storage for persistence
-      this.savePalmReading(reading);
+      // Save to Supabase database
+      const { error } = await supabase
+        .from('palm_readings')
+        .insert([
+          {
+            id: reading.id,
+            user_id: reading.userId,
+            image_url: reading.imageUrl,
+            created_at: reading.createdAt,
+            results: reading.results
+          }
+        ]);
+        
+      if (error) {
+        console.error('Error saving reading to database:', error);
+      }
       
       toast.success('Palm analysis complete', {
         description: 'Your palm reading is ready to view.',
@@ -109,13 +153,24 @@ class PalmAnalysisService {
 
   public async getPalmReadings(userId: string): Promise<PalmReading[]> {
     try {
-      // In a real implementation, this would fetch from your backend
-      // For now, we'll get from localStorage
-      const readingsStr = localStorage.getItem('palm_readings');
-      if (!readingsStr) return [];
+      const { data, error } = await supabase
+        .from('palm_readings')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
       
-      const readings: PalmReading[] = JSON.parse(readingsStr);
-      return readings.filter(r => r.userId === userId);
+      // Transform from database schema to application schema
+      return data.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        imageUrl: item.image_url,
+        createdAt: item.created_at,
+        results: item.results
+      }));
     } catch (error) {
       console.error('Get palm readings error:', error);
       return [];
@@ -124,31 +179,26 @@ class PalmAnalysisService {
 
   public async getPalmReading(id: string): Promise<PalmReading | null> {
     try {
-      const readingsStr = localStorage.getItem('palm_readings');
-      if (!readingsStr) return null;
+      const { data, error } = await supabase
+        .from('palm_readings')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (error) {
+        throw error;
+      }
       
-      const readings: PalmReading[] = JSON.parse(readingsStr);
-      const reading = readings.find(r => r.id === id);
-      return reading || null;
+      return {
+        id: data.id,
+        userId: data.user_id,
+        imageUrl: data.image_url,
+        createdAt: data.created_at,
+        results: data.results
+      };
     } catch (error) {
       console.error('Get palm reading error:', error);
       return null;
-    }
-  }
-
-  private savePalmReading(reading: PalmReading): void {
-    try {
-      const readingsStr = localStorage.getItem('palm_readings');
-      let readings: PalmReading[] = [];
-      
-      if (readingsStr) {
-        readings = JSON.parse(readingsStr);
-      }
-      
-      readings.push(reading);
-      localStorage.setItem('palm_readings', JSON.stringify(readings));
-    } catch (error) {
-      console.error('Save palm reading error:', error);
     }
   }
 }

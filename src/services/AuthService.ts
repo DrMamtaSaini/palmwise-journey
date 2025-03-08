@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { supabase } from "../lib/supabase";
 
 interface User {
   id: string;
@@ -14,7 +15,6 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-// This would be replaced with actual Supabase or other auth provider code
 class AuthService {
   private static instance: AuthService;
   private authState: AuthState = {
@@ -27,6 +27,32 @@ class AuthService {
   private constructor() {
     // Check for existing session on init
     this.checkSession();
+    
+    // Set up auth state change listener
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session && session.user) {
+        this.fetchUserProfile(session.user.id).then(profile => {
+          this.authState = {
+            user: {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: profile?.name || session.user.email?.split('@')[0] || 'User',
+              createdAt: session.user.created_at || new Date().toISOString(),
+            },
+            isLoading: false,
+            isAuthenticated: true,
+          };
+          this.notifyListeners();
+        });
+      } else {
+        this.authState = {
+          user: null,
+          isLoading: false,
+          isAuthenticated: false,
+        };
+        this.notifyListeners();
+      }
+    });
   }
 
   public static getInstance(): AuthService {
@@ -37,14 +63,24 @@ class AuthService {
   }
 
   private async checkSession(): Promise<void> {
-    // In a real implementation, this would check with your backend
-    // For now, we'll check localStorage for a demo user
     try {
-      const userStr = localStorage.getItem('palm_user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.session) {
+        const { user } = data.session;
+        const profile = await this.fetchUserProfile(user.id);
+        
         this.authState = {
-          user,
+          user: {
+            id: user.id,
+            email: user.email || '',
+            name: profile?.name || user.email?.split('@')[0] || 'User',
+            createdAt: user.created_at || new Date().toISOString(),
+          },
           isLoading: false,
           isAuthenticated: true,
         };
@@ -64,6 +100,26 @@ class AuthService {
       };
     }
     this.notifyListeners();
+  }
+
+  private async fetchUserProfile(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      return null;
+    }
   }
 
   public subscribe(listener: (state: AuthState) => void): () => void {
@@ -86,55 +142,33 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // In a real implementation, this would call your backend
-      // For now, we'll simulate a successful login for demo@example.com
-      if (email === 'demo@example.com' && password === 'password') {
-        const user = {
-          id: '1',
-          email: 'demo@example.com',
-          name: 'Demo User',
-          createdAt: new Date().toISOString(),
-        };
-        
-        localStorage.setItem('palm_user', JSON.stringify(user));
-        
-        this.authState = {
-          user,
-          isLoading: false,
-          isAuthenticated: true,
-        };
-        this.notifyListeners();
-        
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.user) {
         toast.success('Welcome back!', {
           description: 'You have successfully signed in.',
         });
-        
         return true;
       }
       
-      toast.error('Invalid credentials', {
-        description: 'Please check your email and password.',
-      });
-      
-      this.authState = {
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-      };
-      this.notifyListeners();
-      
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign in error:', error);
       
       toast.error('Authentication failed', {
-        description: 'Please try again later.',
+        description: error.message || 'Please check your credentials and try again.',
       });
       
       this.authState = {
-        user: null,
+        ...this.authState,
         isLoading: false,
-        isAuthenticated: false,
       };
       this.notifyListeners();
       
@@ -147,40 +181,50 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // In a real implementation, this would call your backend
-      // For now, we'll simulate successful signup
-      const user = {
-        id: Math.random().toString(36).substring(2, 15),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-        createdAt: new Date().toISOString(),
-      };
-      
-      localStorage.setItem('palm_user', JSON.stringify(user));
-      
-      this.authState = {
-        user,
-        isLoading: false,
-        isAuthenticated: true,
-      };
-      this.notifyListeners();
-      
-      toast.success('Account created', {
-        description: 'Your account has been successfully created.',
+        password,
+        options: {
+          data: {
+            name,
+          }
+        }
       });
       
-      return true;
-    } catch (error) {
+      if (error) {
+        throw error;
+      }
+      
+      if (data.user) {
+        // Create a profile entry for the user
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: data.user.id, name }
+          ]);
+        
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        }
+        
+        toast.success('Account created', {
+          description: 'Your account has been successfully created.',
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error: any) {
       console.error('Sign up error:', error);
       
       toast.error('Account creation failed', {
-        description: 'Please try again later.',
+        description: error.message || 'Please try again later.',
       });
       
       this.authState = {
-        user: null,
+        ...this.authState,
         isLoading: false,
-        isAuthenticated: false,
       };
       this.notifyListeners();
       
@@ -193,24 +237,20 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // In a real implementation, this would call your backend
-      localStorage.removeItem('palm_user');
+      const { error } = await supabase.auth.signOut();
       
-      this.authState = {
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-      };
-      this.notifyListeners();
+      if (error) {
+        throw error;
+      }
       
       toast.success('Signed out', {
         description: 'You have been successfully signed out.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign out error:', error);
       
       toast.error('Sign out failed', {
-        description: 'Please try again later.',
+        description: error.message || 'Please try again later.',
       });
       
       this.authState = {
