@@ -5,24 +5,41 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import UploadSection from "../components/UploadSection";
+import PalmAnalysisService from "../services/PalmAnalysisService";
+import { useAuth } from "../hooks/useAuth";
 
 const UploadPalm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleAnalyze = (imageUrl: string) => {
+  const handleAnalyze = async (imageUrl: string) => {
     setIsProcessing(true);
     
-    // Simulate processing delay
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      if (!isAuthenticated || !user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to analyze your palm.",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+      
+      const reading = await PalmAnalysisService.analyzePalm(imageUrl, user.id);
+      navigate(`/reading-results/${reading.id}`);
+    } catch (error) {
+      console.error("Analysis error:", error);
       toast({
-        title: "Analysis complete",
-        description: "Your palm reading is ready to view.",
+        title: "Analysis failed",
+        description: "There was a problem analyzing your palm. Please try again.",
+        variant: "destructive",
       });
-      navigate("/reading-results");
-    }, 3000);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
