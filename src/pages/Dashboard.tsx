@@ -28,7 +28,7 @@ const Dashboard = () => {
       if (user && isAuthenticated) {
         try {
           setLoadingReadings(true);
-          const userReadings = await PalmAnalysisService.getUserReadings(user.id);
+          const userReadings = await PalmAnalysisService.getPalmReadings(user.id);
           setReadings(userReadings);
         } catch (error) {
           console.error('Error fetching readings:', error);
