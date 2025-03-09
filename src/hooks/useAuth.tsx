@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from "sonner";
 import AuthService from '../services/AuthService';
 
 export interface User {
@@ -21,12 +22,30 @@ interface UseAuthResult {
 export const useAuth = (): UseAuthResult => {
   const [authState, setAuthState] = useState({
     user: AuthService.getAuthState().user,
-    isLoading: AuthService.getAuthState().isLoading,
+    isLoading: true, // Start with loading true
     isAuthenticated: AuthService.getAuthState().isAuthenticated,
   });
 
   useEffect(() => {
     console.log("Setting up auth subscription");
+    
+    // Initial auth check
+    const initialCheck = async () => {
+      try {
+        await AuthService.checkSession();
+        setAuthState({
+          user: AuthService.getAuthState().user,
+          isLoading: false,
+          isAuthenticated: AuthService.getAuthState().isAuthenticated,
+        });
+      } catch (error) {
+        console.error("Error during initial auth check:", error);
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+    
+    initialCheck();
+    
     // Subscribe to auth state changes
     const unsubscribe = AuthService.subscribe((state) => {
       console.log("Auth state changed:", state);
@@ -43,27 +62,47 @@ export const useAuth = (): UseAuthResult => {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      return await AuthService.signIn(email, password);
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const success = await AuthService.signIn(email, password);
+      return success;
     } catch (error) {
       console.error("Sign in error:", error);
+      toast.error("Login failed", {
+        description: error instanceof Error ? error.message : "Please check your credentials and try again.",
+      });
       return false;
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 
   const signUp = useCallback(async (name: string, email: string, password: string) => {
     try {
-      return await AuthService.signUp(name, email, password);
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const success = await AuthService.signUp(name, email, password);
+      return success;
     } catch (error) {
       console.error("Sign up error:", error);
+      toast.error("Signup failed", {
+        description: error instanceof Error ? error.message : "Please try again with different credentials.",
+      });
       return false;
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 
   const signOut = useCallback(async () => {
     try {
-      return await AuthService.signOut();
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      await AuthService.signOut();
     } catch (error) {
       console.error("Sign out error:", error);
+      toast.error("Sign out failed", {
+        description: error instanceof Error ? error.message : "Please try again later.",
+      });
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 

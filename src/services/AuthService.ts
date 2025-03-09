@@ -26,10 +26,13 @@ class AuthService {
 
   private constructor() {
     // Check for existing session on init
+    console.log("AuthService constructor - checking session");
     this.checkSession();
     
     // Set up auth state change listener
     supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change event:", event, "Session:", session ? "exists" : "null");
+      
       if (session && session.user) {
         this.fetchUserProfile(session.user.id).then(profile => {
           this.authState = {
@@ -42,6 +45,7 @@ class AuthService {
             isLoading: false,
             isAuthenticated: true,
           };
+          console.log("Updated auth state with session:", this.authState);
           this.notifyListeners();
         });
       } else {
@@ -50,6 +54,7 @@ class AuthService {
           isLoading: false,
           isAuthenticated: false,
         };
+        console.log("Updated auth state - no session:", this.authState);
         this.notifyListeners();
       }
     });
@@ -62,13 +67,20 @@ class AuthService {
     return AuthService.instance;
   }
 
-  private async checkSession(): Promise<void> {
+  public async checkSession(): Promise<void> {
     try {
+      console.log("Checking session...");
+      this.authState = { ...this.authState, isLoading: true };
+      this.notifyListeners();
+      
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
+        console.error("Session check error:", error);
         throw error;
       }
+      
+      console.log("Session check result:", data);
       
       if (data.session) {
         const { user } = data.session;
@@ -84,12 +96,14 @@ class AuthService {
           isLoading: false,
           isAuthenticated: true,
         };
+        console.log("Session exists, updated auth state:", this.authState);
       } else {
         this.authState = {
           user: null,
           isLoading: false,
           isAuthenticated: false,
         };
+        console.log("No session found, updated auth state:", this.authState);
       }
     } catch (error) {
       console.error('Session check error:', error);
@@ -104,17 +118,19 @@ class AuthService {
 
   private async fetchUserProfile(userId: string) {
     try {
+      console.log("Fetching user profile for ID:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('name')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
         
       if (error) {
         console.error('Error fetching user profile:', error);
         return null;
       }
       
+      console.log("User profile data:", data);
       return data;
     } catch (error) {
       console.error('Profile fetch error:', error);
@@ -139,6 +155,7 @@ class AuthService {
 
   public async signIn(email: string, password: string): Promise<boolean> {
     try {
+      console.log("Signing in with email:", email);
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
@@ -148,10 +165,22 @@ class AuthService {
       });
       
       if (error) {
-        throw error;
+        console.error("Sign in error:", error);
+        toast.error('Authentication failed', {
+          description: error.message || 'Please check your credentials and try again.',
+        });
+        
+        this.authState = {
+          ...this.authState,
+          isLoading: false,
+        };
+        this.notifyListeners();
+        
+        return false;
       }
       
       if (data.user) {
+        console.log("Sign in successful:", data.user);
         toast.success('Welcome back!', {
           description: 'You have successfully signed in.',
         });
@@ -178,6 +207,7 @@ class AuthService {
 
   public async signUp(name: string, email: string, password: string): Promise<boolean> {
     try {
+      console.log("Signing up with email:", email, "and name:", name);
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
@@ -192,8 +222,21 @@ class AuthService {
       });
       
       if (error) {
-        throw error;
+        console.error("Sign up error:", error);
+        toast.error('Account creation failed', {
+          description: error.message || 'Please try again later.',
+        });
+        
+        this.authState = {
+          ...this.authState,
+          isLoading: false,
+        };
+        this.notifyListeners();
+        
+        return false;
       }
+      
+      console.log("Sign up response:", data);
       
       if (data.user) {
         // Create a profile entry for the user
@@ -234,12 +277,14 @@ class AuthService {
 
   public async signOut(): Promise<void> {
     try {
+      console.log("Signing out");
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error("Sign out error:", error);
         throw error;
       }
       
