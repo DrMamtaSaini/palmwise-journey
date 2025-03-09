@@ -1,295 +1,186 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Upload, History, Settings, User, LogOut } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
-import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Camera, Calendar, Clock, BarChart2, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PalmAnalysisService from '../services/PalmAnalysisService';
 
+// Dashboard component
 const Dashboard = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [readings, setReadings] = useState([]);
+  const [loadingReadings, setLoadingReadings] = useState(true);
   const navigate = useNavigate();
-  const { user, signOut, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState("readings");
-  const [readings, setReadings] = useState<PalmReading[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated && !isLoading) {
-      navigate("/login");
+    // If user is not authenticated and not loading, redirect to login
+    if (!isLoading && !isAuthenticated) {
+      navigate('/login');
     }
-  }, [isAuthenticated, navigate, isLoading]);
-
+  }, [isAuthenticated, isLoading, navigate]);
+  
   useEffect(() => {
+    // Fetch user readings when authenticated
     const fetchReadings = async () => {
-      if (user?.id) {
+      if (user && isAuthenticated) {
         try {
-          setIsLoading(true);
-          const userReadings = await PalmAnalysisService.getPalmReadings(user.id);
+          setLoadingReadings(true);
+          const userReadings = await PalmAnalysisService.getUserReadings(user.id);
           setReadings(userReadings);
         } catch (error) {
-          console.error("Error fetching readings:", error);
-          toast.error("Could not load your readings");
+          console.error('Error fetching readings:', error);
+          toast.error('Failed to load your palm readings', {
+            description: 'Please try again later.'
+          });
         } finally {
-          setIsLoading(false);
+          setLoadingReadings(false);
         }
       }
     };
-
+    
     fetchReadings();
-  }, [user?.id]);
+  }, [user, isAuthenticated]);
 
-  const handleNewReading = () => {
-    navigate("/upload-palm");
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-    navigate("/");
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-8 w-32 bg-gray-200 rounded mb-4"></div>
+            <div className="h-64 w-full max-w-md bg-gray-200 rounded"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-
-      <main className="flex-grow pt-24 pb-16 px-4 bg-palm-light">
-        <div className="container mx-auto">
-          <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-            <div className="md:flex">
-              {/* Sidebar */}
-              <div className="bg-gray-50 md:w-64 p-6 border-r border-gray-100">
-                <div className="flex items-center space-x-3 mb-8">
-                  <div className="w-12 h-12 rounded-full bg-palm-purple text-white flex items-center justify-center">
-                    <User size={24} />
+      
+      <main className="flex-grow bg-palm-light py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome, {user?.name || 'Friend'}
+            </h1>
+            <p className="text-gray-600">
+              Explore your palm readings and discover your destiny
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-soft col-span-1 md:col-span-2">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Your Palm Readings</h2>
+                <Link 
+                  to="/upload-palm" 
+                  className="text-palm-purple hover:underline flex items-center text-sm font-medium"
+                >
+                  New Reading <ChevronRight size={16} />
+                </Link>
+              </div>
+              
+              {loadingReadings ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="animate-pulse bg-gray-100 p-4 rounded-lg">
+                      <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : readings.length > 0 ? (
+                <div className="space-y-4">
+                  {readings.map((reading) => (
+                    <div key={reading.id} className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
+                      <Link to={`/reading-results/${reading.id}`} className="block">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{reading.readingName || 'Palm Reading'}</h3>
+                            <p className="text-sm text-gray-600 flex items-center mt-1">
+                              <Calendar size={14} className="mr-1" /> 
+                              {new Date(reading.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <ChevronRight className="text-gray-400" />
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-palm-purple mb-2">
+                    <Camera size={40} className="mx-auto" />
                   </div>
-                  <div>
-                    <h3 className="font-medium">{user?.name || 'User'}</h3>
-                    <p className="text-sm text-gray-500">Premium Member</p>
+                  <h3 className="font-medium text-gray-900 mb-1">No palm readings yet</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Upload a photo of your palm to get your first reading
+                  </p>
+                  <Link 
+                    to="/upload-palm" 
+                    className="inline-block bg-palm-purple text-white px-4 py-2 rounded-lg hover:bg-palm-purple/90 transition-colors"
+                  >
+                    Upload Palm Photo
+                  </Link>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-soft space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+                <div className="space-y-3">
+                  <Link 
+                    to="/upload-palm" 
+                    className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="bg-palm-purple/10 p-2 rounded-full mr-3">
+                        <Camera size={18} className="text-palm-purple" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-900">New Reading</span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Stats</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center mb-1">
+                      <BarChart2 size={16} className="text-palm-purple mr-1" />
+                      <span className="text-sm font-medium text-gray-900">Readings</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{readings.length}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex items-center mb-1">
+                      <Clock size={16} className="text-palm-purple mr-1" />
+                      <span className="text-sm font-medium text-gray-900">Latest</span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {readings.length > 0 
+                        ? new Date(readings[0].createdAt).toLocaleDateString() 
+                        : 'None'}
+                    </p>
                   </div>
                 </div>
-
-                <nav>
-                  <ul className="space-y-2">
-                    <li>
-                      <button
-                        onClick={() => setActiveTab("readings")}
-                        className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                          activeTab === "readings"
-                            ? "bg-palm-purple text-white"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        <History size={18} />
-                        <span>My Readings</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => setActiveTab("profile")}
-                        className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                          activeTab === "profile"
-                            ? "bg-palm-purple text-white"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        <User size={18} />
-                        <span>Profile</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => setActiveTab("settings")}
-                        className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                          activeTab === "settings"
-                            ? "bg-palm-purple text-white"
-                            : "hover:bg-gray-100"
-                        }`}
-                      >
-                        <Settings size={18} />
-                        <span>Settings</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-3 p-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        <LogOut size={18} />
-                        <span>Logout</span>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-
-              {/* Main content */}
-              <div className="flex-1 p-6">
-                {activeTab === "readings" && (
-                  <div>
-                    <div className="flex justify-between items-center mb-8">
-                      <h2 className="text-2xl font-bold">My Palm Readings</h2>
-                      <button
-                        onClick={handleNewReading}
-                        className="bg-palm-purple text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-palm-purple/90 transition-colors"
-                      >
-                        <Upload size={18} />
-                        <span>New Reading</span>
-                      </button>
-                    </div>
-
-                    {isLoading ? (
-                      <div className="text-center py-12">
-                        <p className="text-gray-500 mb-4">Loading your readings...</p>
-                      </div>
-                    ) : readings.length > 0 ? (
-                      <div className="bg-white rounded-lg border border-gray-100">
-                        <div className="hidden md:grid grid-cols-4 p-4 font-medium border-b border-gray-100">
-                          <div>ID</div>
-                          <div>Date</div>
-                          <div>Type</div>
-                          <div>Status</div>
-                        </div>
-
-                        {readings.map((reading) => (
-                          <div
-                            key={reading.id}
-                            className="grid grid-cols-1 md:grid-cols-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
-                            onClick={() => navigate(`/reading-results/${reading.id}`)}
-                          >
-                            <div className="md:hidden font-medium mb-1">ID:</div>
-                            <div>#{reading.id.substring(0, 8)}</div>
-                            
-                            <div className="md:hidden font-medium mb-1 mt-2">Date:</div>
-                            <div>{formatDate(reading.createdAt)}</div>
-                            
-                            <div className="md:hidden font-medium mb-1 mt-2">Type:</div>
-                            <div>{reading.results.fateLinePresent ? "Premium Reading" : "Basic Reading"}</div>
-                            
-                            <div className="md:hidden font-medium mb-1 mt-2">Status:</div>
-                            <div>
-                              <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                Completed
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500 mb-4">You have no readings yet</p>
-                        <button
-                          onClick={handleNewReading}
-                          className="bg-palm-purple text-white px-4 py-2 rounded-lg inline-flex items-center space-x-2"
-                        >
-                          <Upload size={18} />
-                          <span>Get Your First Reading</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "profile" && (
-                  <div>
-                    <h2 className="text-2xl font-bold mb-8">Your Profile</h2>
-                    <div className="space-y-6 max-w-lg">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          value={user?.name || ''}
-                          readOnly
-                          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={user?.email || ''}
-                          readOnly
-                          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Membership
-                        </label>
-                        <div className="flex items-center space-x-3 bg-palm-light px-4 py-3 rounded-lg">
-                          <span className="font-medium">Premium</span>
-                          <span className="text-xs bg-palm-purple text-white px-2 py-1 rounded-full">
-                            Active
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "settings" && (
-                  <div>
-                    <h2 className="text-2xl font-bold mb-8">Settings</h2>
-                    <div className="space-y-8 max-w-lg">
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Notification Preferences</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span>Email notifications</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" value="" className="sr-only peer" defaultChecked />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-palm-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-palm-purple"></div>
-                            </label>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Reading reminders</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" value="" className="sr-only peer" />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-palm-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-palm-purple"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Privacy Settings</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span>Auto-delete readings after 30 days</span>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" value="" className="sr-only peer" defaultChecked />
-                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-palm-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-palm-purple"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -303,6 +302,56 @@ class AuthService {
         isLoading: false,
       };
       this.notifyListeners();
+    }
+  }
+
+  public async signInWithGoogle(): Promise<boolean> {
+    try {
+      console.log("Signing in with Google");
+      this.authState = { ...this.authState, isLoading: true };
+      this.notifyListeners();
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) {
+        console.error("Google sign in error:", error);
+        toast.error('Google authentication failed', {
+          description: error.message || 'Please try again later.',
+        });
+        
+        this.authState = {
+          ...this.authState,
+          isLoading: false,
+        };
+        this.notifyListeners();
+        
+        return false;
+      }
+      
+      console.log("Google sign in initiated:", data);
+      
+      // This won't actually return true in most cases as the user will be redirected
+      // to Google's authentication page
+      return true;
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      
+      toast.error('Google authentication failed', {
+        description: error.message || 'Please try again later.',
+      });
+      
+      this.authState = {
+        ...this.authState,
+        isLoading: false,
+      };
+      this.notifyListeners();
+      
+      return false;
     }
   }
 
