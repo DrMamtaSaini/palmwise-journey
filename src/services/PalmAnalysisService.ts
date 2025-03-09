@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface PalmReading {
   id: string;
@@ -79,9 +80,12 @@ class PalmAnalysisService {
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 3000));
       
+      // Generate a proper UUID
+      const readingId = uuidv4();
+      
       // Mock palm reading result
       const reading: PalmReading = {
-        id: Math.random().toString(36).substring(2, 15),
+        id: readingId,
         userId,
         imageUrl,
         createdAt: new Date().toISOString(),
@@ -133,6 +137,7 @@ class PalmAnalysisService {
         
       if (error) {
         console.error('Error saving reading to database:', error);
+        // Continue even if there's a DB error, so user can still see the reading
       }
       
       toast.success('Palm analysis complete', {
@@ -164,7 +169,7 @@ class PalmAnalysisService {
       }
       
       // Transform from database schema to application schema
-      return data.map(item => ({
+      return (data || []).map(item => ({
         id: item.id,
         userId: item.user_id,
         imageUrl: item.image_url,
@@ -173,6 +178,7 @@ class PalmAnalysisService {
       }));
     } catch (error) {
       console.error('Get palm readings error:', error);
+      // Return empty array if there was an error
       return [];
     }
   }
@@ -183,10 +189,14 @@ class PalmAnalysisService {
         .from('palm_readings')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
         
       if (error) {
         throw error;
+      }
+      
+      if (!data) {
+        return null;
       }
       
       return {

@@ -17,6 +17,8 @@ interface UseAuthResult {
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
+  handleEmailVerificationError: (errorCode: string, errorDescription: string) => void;
 }
 
 export const useAuth = (): UseAuthResult => {
@@ -26,8 +28,43 @@ export const useAuth = (): UseAuthResult => {
     isAuthenticated: AuthService.getAuthState().isAuthenticated,
   });
 
+  // Handle email verification errors from URL
+  const handleEmailVerificationError = useCallback((errorCode: string, errorDescription: string) => {
+    if (errorCode === 'access_denied' || errorCode === 'otp_expired') {
+      toast.error("Email verification failed", {
+        description: "The verification link has expired or is invalid. Please request a new one.",
+        duration: 8000,
+      });
+    } else {
+      toast.error("Authentication error", {
+        description: errorDescription || "An error occurred during authentication.",
+        duration: 5000,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     console.log("Setting up auth subscription");
+    
+    // Parse URL for auth errors on component mount
+    const handleAuthErrors = () => {
+      const url = new URL(window.location.href);
+      const errorCode = url.searchParams.get('error_code');
+      const errorDescription = url.searchParams.get('error_description');
+      
+      if (errorCode && errorDescription) {
+        console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
+        handleEmailVerificationError(errorCode, errorDescription);
+        
+        // Remove error params from URL to prevent showing the error again on refresh
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('error_code');
+        cleanUrl.searchParams.delete('error_description');
+        window.history.replaceState({}, document.title, cleanUrl.toString());
+      }
+    };
+    
+    handleAuthErrors();
     
     // Initial auth check
     const initialCheck = async () => {
@@ -58,7 +95,7 @@ export const useAuth = (): UseAuthResult => {
 
     // Cleanup subscription on unmount
     return unsubscribe;
-  }, []);
+  }, [handleEmailVerificationError]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
@@ -80,6 +117,11 @@ export const useAuth = (): UseAuthResult => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       const success = await AuthService.signUp(name, email, password);
+      if (success) {
+        toast.success("Sign up successful", {
+          description: "Please check your email to verify your account.",
+        });
+      }
       return success;
     } catch (error) {
       console.error("Sign up error:", error);
@@ -106,6 +148,22 @@ export const useAuth = (): UseAuthResult => {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const success = await AuthService.signInWithGoogle();
+      return success;
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Google login failed", {
+        description: error instanceof Error ? error.message : "Please try again later.",
+      });
+      return false;
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, []);
+
   return {
     user: authState.user,
     isLoading: authState.isLoading,
@@ -113,5 +171,7 @@ export const useAuth = (): UseAuthResult => {
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
+    handleEmailVerificationError,
   };
 };

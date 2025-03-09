@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -12,20 +12,44 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { signIn, isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { signIn, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
+
+  useEffect(() => {
+    // Check for auth errors in URL
+    const searchParams = new URLSearchParams(location.search);
+    const errorCode = searchParams.get('error_code');
+    const errorDescription = searchParams.get('error_description');
+    
+    if (errorCode && errorDescription) {
+      handleEmailVerificationError(errorCode, errorDescription);
+      
+      // Clean the URL
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('error_code');
+      cleanUrl.searchParams.delete('error_description');
+      window.history.replaceState({}, document.title, cleanUrl.toString());
+    }
+  }, [location.search, handleEmailVerificationError]);
 
   useEffect(() => {
     // If user is already authenticated, redirect to dashboard
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading) {
       navigate("/dashboard");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const success = await signIn(email, password);
+    if (success) {
+      navigate("/dashboard");
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const success = await signInWithGoogle();
     if (success) {
       navigate("/dashboard");
     }
@@ -113,6 +137,8 @@ const Login = () => {
 
               <button
                 type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
                 className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
                 <img
@@ -120,7 +146,7 @@ const Login = () => {
                   alt="Google logo"
                   className="w-5 h-5 mr-2"
                 />
-                <span>Continue with Google</span>
+                <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
               </button>
 
               <p className="text-center text-gray-600 text-sm mt-8">

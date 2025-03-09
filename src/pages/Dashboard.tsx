@@ -1,43 +1,66 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, History, Settings, User, LogOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user, signOut, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState("readings");
+  const [readings, setReadings] = useState<PalmReading[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data for readings history
-  const readingsHistory = [
-    {
-      id: "1",
-      date: "June 15, 2023",
-      type: "Premium Reading",
-      status: "Completed",
-    },
-    {
-      id: "2",
-      date: "May 3, 2023",
-      type: "Basic Reading",
-      status: "Completed",
-    },
-  ];
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated && !isLoading) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate, isLoading]);
+
+  useEffect(() => {
+    const fetchReadings = async () => {
+      if (user?.id) {
+        try {
+          setIsLoading(true);
+          const userReadings = await PalmAnalysisService.getPalmReadings(user.id);
+          setReadings(userReadings);
+        } catch (error) {
+          console.error("Error fetching readings:", error);
+          toast.error("Could not load your readings");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchReadings();
+  }, [user?.id]);
 
   const handleNewReading = () => {
     navigate("/upload-palm");
   };
 
-  const handleLogout = () => {
-    // Simulate logout
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
     });
     navigate("/");
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -55,7 +78,7 @@ const Dashboard = () => {
                     <User size={24} />
                   </div>
                   <div>
-                    <h3 className="font-medium">Jane Smith</h3>
+                    <h3 className="font-medium">{user?.name || 'User'}</h3>
                     <p className="text-sm text-gray-500">Premium Member</p>
                   </div>
                 </div>
@@ -129,7 +152,11 @@ const Dashboard = () => {
                       </button>
                     </div>
 
-                    {readingsHistory.length > 0 ? (
+                    {isLoading ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500 mb-4">Loading your readings...</p>
+                      </div>
+                    ) : readings.length > 0 ? (
                       <div className="bg-white rounded-lg border border-gray-100">
                         <div className="hidden md:grid grid-cols-4 p-4 font-medium border-b border-gray-100">
                           <div>ID</div>
@@ -138,25 +165,25 @@ const Dashboard = () => {
                           <div>Status</div>
                         </div>
 
-                        {readingsHistory.map((reading) => (
+                        {readings.map((reading) => (
                           <div
                             key={reading.id}
                             className="grid grid-cols-1 md:grid-cols-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
                             onClick={() => navigate(`/reading-results/${reading.id}`)}
                           >
                             <div className="md:hidden font-medium mb-1">ID:</div>
-                            <div>#{reading.id}</div>
+                            <div>#{reading.id.substring(0, 8)}</div>
                             
                             <div className="md:hidden font-medium mb-1 mt-2">Date:</div>
-                            <div>{reading.date}</div>
+                            <div>{formatDate(reading.createdAt)}</div>
                             
                             <div className="md:hidden font-medium mb-1 mt-2">Type:</div>
-                            <div>{reading.type}</div>
+                            <div>{reading.results.fateLinePresent ? "Premium Reading" : "Basic Reading"}</div>
                             
                             <div className="md:hidden font-medium mb-1 mt-2">Status:</div>
                             <div>
                               <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                {reading.status}
+                                Completed
                               </span>
                             </div>
                           </div>
@@ -187,7 +214,7 @@ const Dashboard = () => {
                         </label>
                         <input
                           type="text"
-                          value="Jane Smith"
+                          value={user?.name || ''}
                           readOnly
                           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
                         />
@@ -198,7 +225,7 @@ const Dashboard = () => {
                         </label>
                         <input
                           type="email"
-                          value="jane.smith@example.com"
+                          value={user?.email || ''}
                           readOnly
                           className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50"
                         />
