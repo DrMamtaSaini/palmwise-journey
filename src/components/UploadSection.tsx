@@ -1,35 +1,73 @@
 
 import { useState } from "react";
 import { Upload, Camera, SparklesIcon } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import PalmAnalysisService from "../services/PalmAnalysisService";
 
 interface UploadSectionProps {
   onAnalyze: (imageUrl: string) => void;
 }
 
 const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
+  const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
       const reader = new FileReader();
       reader.onload = () => {
         setPreviewUrl(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selectedFile);
     }
   };
 
-  const handleAnalyze = () => {
-    if (previewUrl) {
+  const handleAnalyze = async () => {
+    if (!file || !user) return;
+    
+    try {
       setIsLoading(true);
-      // In a real app, you would upload the image to your backend here
-      setTimeout(() => {
-        onAnalyze(previewUrl);
-        setIsLoading(false);
-      }, 2000);
+      
+      // First upload the image to Supabase storage
+      const imageUrl = await PalmAnalysisService.uploadPalmImage(file, user.id);
+      
+      if (imageUrl) {
+        // Then pass the uploaded image URL to the parent component for analysis
+        onAnalyze(imageUrl);
+      } else {
+        throw new Error("Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Error processing image:", error);
+      setIsLoading(false);
     }
+  };
+
+  const takePicture = () => {
+    // Create an input element for capturing photos
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // Use the back camera if available
+    
+    input.onchange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const selectedFile = target.files?.[0];
+      if (selectedFile) {
+        setFile(selectedFile);
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPreviewUrl(reader.result as string);
+        };
+        reader.readAsDataURL(selectedFile);
+      }
+    };
+    
+    input.click();
   };
 
   return (
@@ -74,7 +112,10 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
           </div>
         </label>
 
-        <button className="flex-1 bg-white border border-gray-200 rounded-lg py-3 px-4 text-center hover:bg-gray-50 transition-colors flex items-center justify-center">
+        <button 
+          className="flex-1 bg-white border border-gray-200 rounded-lg py-3 px-4 text-center hover:bg-gray-50 transition-colors flex items-center justify-center"
+          onClick={takePicture}
+        >
           <Camera size={20} className="mr-2" />
           <span>Take Photo</span>
         </button>

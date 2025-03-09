@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import UploadSection from "../components/UploadSection";
@@ -10,7 +10,6 @@ import { useAuth } from "../hooks/useAuth";
 
 const UploadPalm = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -32,10 +31,8 @@ const UploadPalm = () => {
       navigate(`/reading-results/${reading.id}`);
     } catch (error) {
       console.error("Analysis error:", error);
-      toast({
-        title: "Analysis failed",
+      toast.error("Analysis failed", {
         description: "There was a problem analyzing your palm. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -77,7 +74,7 @@ const UploadPalm = () => {
                 </li>
                 <li className="flex items-start">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-palm-purple text-white flex items-center justify-center mr-3 mt-0.5">4</span>
-                  <p>For premium readings, upload images of both palms</p>
+                  <p>Make sure the image is sharply focused and not blurry</p>
                 </li>
               </ul>
             </div>

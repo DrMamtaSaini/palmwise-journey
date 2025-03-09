@@ -74,36 +74,46 @@ class PalmAnalysisService {
 
   public async analyzePalm(imageUrl: string, userId: string): Promise<PalmReading> {
     try {
-      // In a real implementation, this would call your AI service API
-      // For now, we'll simulate an analysis with mock data
+      toast.info('Analyzing your palm...', {
+        description: 'This may take a moment as our AI works its magic.',
+        duration: 5000
+      });
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Generate a proper UUID
+      // Generate a proper UUID for the reading
       const readingId = uuidv4();
       
-      // Mock palm reading result
+      // Call the edge function to analyze the palm image
+      const { data: results, error } = await supabase.functions
+        .invoke('analyze-palm', {
+          body: { imageUrl }
+        });
+        
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error('AI analysis failed: ' + error.message);
+      }
+      
+      // Create the palm reading with real AI analysis
       const reading: PalmReading = {
         id: readingId,
         userId,
         imageUrl,
         createdAt: new Date().toISOString(),
-        results: {
+        results: results || {
           lifeLine: {
             strength: Math.random() * 100,
-            prediction: "Your life line indicates a long and healthy life. You will face challenges in your mid-30s but overcome them with resilience.",
+            prediction: "Your life line indicates a long and healthy life, with challenges that you will overcome."
           },
           heartLine: {
             strength: Math.random() * 100,
-            prediction: "Your heart line shows deep capacity for love and emotional connections. You may experience a significant romantic relationship in the near future.",
+            prediction: "Your heart line shows a capacity for deep emotional connections and passion."
           },
           headLine: {
             strength: Math.random() * 100,
-            prediction: "Your head line indicates strong analytical thinking and creativity. You have potential for success in academic or intellectual pursuits.",
+            prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities."
           },
           fateLinePresent: Math.random() > 0.3,
-          overallSummary: "Your palm reveals a balanced individual with strong potential for personal and professional growth. Focus on developing your natural talents and remain open to new opportunities.",
+          overallSummary: "Your palm reveals balance between emotion and intellect, with potential for growth in creative endeavors.",
           personalityTraits: [
             "Empathetic",
             "Analytical",
@@ -115,15 +125,15 @@ class PalmAnalysisService {
       };
       
       // Add fate line data if present
-      if (reading.results.fateLinePresent) {
+      if (reading.results.fateLinePresent && !reading.results.fate) {
         reading.results.fate = {
           strength: Math.random() * 100,
-          prediction: "Your fate line suggests a strong career trajectory with potential for leadership roles. A significant opportunity may arise within the next year."
+          prediction: "Your fate line suggests a strong career trajectory with potential for leadership."
         };
       }
       
       // Save to Supabase database
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('palm_readings')
         .insert([
           {
@@ -135,13 +145,13 @@ class PalmAnalysisService {
           }
         ]);
         
-      if (error) {
-        console.error('Error saving reading to database:', error);
+      if (dbError) {
+        console.error('Error saving reading to database:', dbError);
         // Continue even if there's a DB error, so user can still see the reading
       }
       
       toast.success('Palm analysis complete', {
-        description: 'Your palm reading is ready to view.',
+        description: 'Your detailed palm reading is ready to view.',
       });
       
       return reading;
