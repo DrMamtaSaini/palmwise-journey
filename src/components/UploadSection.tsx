@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Upload, Camera, SparklesIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import PalmAnalysisService from "../services/PalmAnalysisService";
+import { toast } from "sonner";
 
 interface UploadSectionProps {
   onAnalyze: (imageUrl: string) => void;
@@ -27,7 +28,12 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
   };
 
   const handleAnalyze = async () => {
-    if (!file || !user) return;
+    if (!file || !user) {
+      toast.error("Unable to proceed", { 
+        description: !file ? "Please upload an image first" : "You need to be logged in"
+      });
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -43,38 +49,55 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       }
     } catch (error) {
       console.error("Error processing image:", error);
+      toast.error("Upload failed", {
+        description: "There was a problem uploading your image. Please try again."
+      });
       setIsLoading(false);
     }
   };
 
   const takePicture = () => {
-    // Create an input element for capturing photos
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; // Use the back camera if available
-    
-    input.onchange = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const selectedFile = target.files?.[0];
-      if (selectedFile) {
-        setFile(selectedFile);
-        const reader = new FileReader();
-        reader.onload = () => {
-          setPreviewUrl(reader.result as string);
-        };
-        reader.readAsDataURL(selectedFile);
-      }
-    };
-    
-    input.click();
+    try {
+      // Create an input element for capturing photos
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      
+      // On mobile browsers, the "capture" attribute enables camera access
+      // Note: We're setting it as property, not attribute
+      input.setAttribute('capture', 'environment'); // Use the back camera if available
+      
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const selectedFile = target.files?.[0];
+        if (selectedFile) {
+          setFile(selectedFile);
+          const reader = new FileReader();
+          reader.onload = () => {
+            setPreviewUrl(reader.result as string);
+          };
+          reader.readAsDataURL(selectedFile);
+        }
+      };
+      
+      // This triggers the file selection dialog
+      input.click();
+    } catch (error) {
+      console.error("Error activating camera:", error);
+      toast.error("Camera error", {
+        description: "Could not access your camera. Please check permissions."
+      });
+    }
   };
 
   return (
     <div className="bg-white p-8 rounded-2xl shadow-soft">
       <h2 className="text-3xl font-bold mb-6 text-center">Palm Reader</h2>
 
-      <div className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px]">
+      <div 
+        className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px] cursor-pointer"
+        onClick={() => document.getElementById('file-upload')?.click()}
+      >
         {previewUrl ? (
           <div className="mb-4 w-full max-w-sm">
             <img 
@@ -101,6 +124,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <label className="flex-1">
           <input
+            id="file-upload"
             type="file"
             accept="image/*"
             className="hidden"
@@ -113,6 +137,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
         </label>
 
         <button 
+          type="button"
           className="flex-1 bg-white border border-gray-200 rounded-lg py-3 px-4 text-center hover:bg-gray-50 transition-colors flex items-center justify-center"
           onClick={takePicture}
         >
@@ -122,8 +147,9 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       </div>
 
       <button
+        type="button"
         className={`w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center ${
-          !previewUrl ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
+          !previewUrl || isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
         }`}
         disabled={!previewUrl || isLoading}
         onClick={handleAnalyze}
