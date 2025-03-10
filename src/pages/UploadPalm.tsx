@@ -18,10 +18,8 @@ const UploadPalm = () => {
     
     try {
       if (!isAuthenticated || !user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to analyze your palm.",
-          variant: "destructive",
+        toast.error("Authentication required", {
+          description: "Please log in to analyze your palm."
         });
         navigate("/login");
         return;
@@ -32,7 +30,7 @@ const UploadPalm = () => {
     } catch (error) {
       console.error("Analysis error:", error);
       toast.error("Analysis failed", {
-        description: "There was a problem analyzing your palm. Please try again.",
+        description: "There was a problem analyzing your palm. Please try again."
       });
     } finally {
       setIsProcessing(false);

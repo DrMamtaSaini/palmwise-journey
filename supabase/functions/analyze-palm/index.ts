@@ -24,7 +24,7 @@ serve(async (req) => {
     }
 
     console.log("Analyzing palm image:", imageUrl);
-    const analysis = await analyzePalmWithAI(imageUrl);
+    const analysis = await analyzePalmWithGemini(imageUrl);
     
     return new Response(
       JSON.stringify(analysis),
@@ -39,13 +39,23 @@ serve(async (req) => {
   }
 });
 
-async function analyzePalmWithAI(imageUrl: string) {
-  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+async function analyzePalmWithGemini(imageUrl: string) {
+  const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
   
-  if (!OPENAI_API_KEY) {
-    throw new Error("OpenAI API key is not set");
+  if (!GEMINI_API_KEY) {
+    throw new Error("Gemini API key is not set");
   }
 
+  // Fetch the image as binary data
+  const imageResponse = await fetch(imageUrl);
+  if (!imageResponse.ok) {
+    throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+  }
+  
+  // Convert the image to base64
+  const imageBuffer = await imageResponse.arrayBuffer();
+  const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+  
   const prompt = `
 You are an expert palm reader. Analyze the palm image carefully and provide insights on:
 
@@ -59,47 +69,46 @@ You are an expert palm reader. Analyze the palm image carefully and provide insi
 Respond in a formal, mystic palm reader voice.
 `;
 
-  // Call OpenAI API with image
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  // Call Gemini API with image
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENAI_API_KEY}`
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
+      contents: [
         {
-          role: "system",
-          content: prompt
-        },
-        {
-          role: "user",
-          content: [
+          parts: [
             {
-              type: "text",
-              text: "Please analyze this palm image in detail."
+              text: prompt
             },
             {
-              type: "image_url",
-              image_url: {
-                url: imageUrl
+              inline_data: {
+                mime_type: "image/jpeg",
+                data: base64Image
               }
             }
           ]
         }
       ],
-      max_tokens: 1000
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024
+      }
     })
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
   }
 
   const result = await response.json();
-  const aiResponse = result.choices[0].message.content;
+  const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  
+  if (!aiResponse) {
+    throw new Error("Gemini API did not return any text content");
+  }
   
   // Parse AI response and structure it
   return parseAIResponse(aiResponse);
