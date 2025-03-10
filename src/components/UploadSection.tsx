@@ -123,7 +123,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
 
       <button
         className={`w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center ${
-          !previewUrl && "opacity-50 cursor-not-allowed"
+          !previewUrl ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
         }`}
         disabled={!previewUrl || isLoading}
         onClick={handleAnalyze}
