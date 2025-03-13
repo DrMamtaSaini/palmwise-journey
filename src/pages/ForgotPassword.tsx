@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle } from "lucide-react";
@@ -9,6 +8,28 @@ import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+const ConnectionHelper = () => {
+  const [port, setPort] = useState<string | null>(null);
+  
+  useEffect(() => {
+    setPort(window.location.port || (window.location.protocol === 'https:' ? '443' : '80'));
+  }, []);
+  
+  return (
+    <Alert className="mb-6 bg-amber-50 border-amber-200">
+      <AlertCircle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-amber-800">
+        <p className="font-medium">Connection troubleshooting:</p>
+        <ul className="list-disc pl-5 mt-1 text-sm space-y-1">
+          <li>Your app is currently configured to run on port 8080</li>
+          <li>Your current browser port is: {port || 'unknown'}</li>
+          <li>Try accessing the app directly at: <a href="http://localhost:8080" className="underline">http://localhost:8080</a></li>
+        </ul>
+      </AlertDescription>
+    </Alert>
+  );
+};
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -163,6 +184,8 @@ const ForgotPassword = () => {
           </div>
         </div>
       </main>
+
+      <ConnectionHelper />
 
       <Footer />
     </div>
