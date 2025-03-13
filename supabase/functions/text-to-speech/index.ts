@@ -27,16 +27,12 @@ serve(async (req) => {
     }
 
     console.log(`Generating speech with Gemini API. Text length: ${text.length}, voice: ${voice}`)
+    console.log(`Speech text ready. Length: ${text.length}`)
     
-    // We want to return exactly the text passed in so it reads the actual palm reading sections
-    // We're just skipping the actual Gemini API call that rewrites the text
-    const narratedText = text;
-    console.log(`Speech text ready. Length: ${narratedText.length}`)
-
+    // We use the exact text passed to the function to ensure all palm reading sections are included
     return new Response(
       JSON.stringify({ 
-        narratedText: narratedText,
-        // Indicate that we're using the browser's speech synthesis
+        narratedText: text,
         useBrowserSynthesis: true 
       }),
       {

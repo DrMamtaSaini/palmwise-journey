@@ -85,11 +85,17 @@ const ReadingResults = () => {
       // Add each section content
       Object.entries(readingContent).forEach(([key, section]) => {
         if (key !== 'summary') { // Skip overall summary as we've already added it
-          fullText += `${section.title}: ${section.content.join(' ')}\n\n`;
+          const typedSection = section as { 
+            title: string; 
+            content: string[];
+            insights?: string[];
+          };
           
-          if (section.insights && section.insights.length > 0) {
-            fullText += `Key insights for ${section.title}:\n`;
-            section.insights.forEach((insight, index) => {
+          fullText += `${typedSection.title}: ${typedSection.content.join(' ')}\n\n`;
+          
+          if (typedSection.insights && typedSection.insights.length > 0) {
+            fullText += `Key insights for ${typedSection.title}:\n`;
+            typedSection.insights.forEach((insight, index) => {
               fullText += `${index + 1}. ${insight}\n`;
             });
             fullText += '\n';
