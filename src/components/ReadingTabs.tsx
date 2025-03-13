@@ -70,6 +70,17 @@ const ReadingTabs = ({ readingContent, isPremium, isPremiumTest }: ReadingTabsPr
                 </ul>
               </div>
             )}
+
+            {readingContent[key].remedies && (
+              <div className="mt-6 bg-green-50 p-4 rounded-lg border border-green-100">
+                <h3 className="font-semibold text-lg mb-3 text-green-800">Remedial Actions:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  {readingContent[key].remedies.map((remedy: string, idx: number) => (
+                    <li key={idx} className="text-green-700">{remedy}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </TabsContent>
       ))}
