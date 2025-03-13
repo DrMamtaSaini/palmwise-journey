@@ -27,7 +27,7 @@ export async function handleHashRecoveryToken() {
     if (window.location.hash && window.location.hash.includes('access_token') && window.location.hash.includes('type=recovery')) {
       console.log("Found recovery token in URL hash, attempting to set session");
       
-      // We need to manually extract the tokens and set the session
+      // We need to manually extract the tokens from the hash
       const hash = window.location.hash.substring(1); // Remove the # character
       const params = new URLSearchParams(hash);
       
@@ -46,10 +46,11 @@ export async function handleHashRecoveryToken() {
           return { success: false, error };
         }
         
+        console.log("Successfully processed recovery token:", data.session ? "Session created" : "No session");
+        
         // Clean up the URL by removing the hash
         window.history.replaceState(null, '', window.location.pathname);
         
-        console.log("Successfully processed recovery token:", data.session ? "Session created" : "No session");
         return { success: !!data.session, session: data.session };
       }
     }

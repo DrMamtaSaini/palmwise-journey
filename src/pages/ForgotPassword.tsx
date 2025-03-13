@@ -27,8 +27,8 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // Use just the origin for simpler redirect
-      const redirectUrl = window.location.origin;
+      // Use the full reset-password page URL for the redirect
+      const redirectUrl = `${window.location.origin}/reset-password`;
       
       console.log("Using redirect URL for password reset:", redirectUrl);
       
