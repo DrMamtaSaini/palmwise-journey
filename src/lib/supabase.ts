@@ -22,8 +22,8 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 // Define response type for better type safety
 export type AuthTokenHandlerResult = 
-  | { success: boolean; session: any; error?: undefined } 
-  | { success: boolean; error: any; session?: undefined }
+  | { success: boolean; session: any; error?: undefined; message?: string } 
+  | { success: boolean; error: any; session?: undefined; message?: string }
   | { success: boolean; message: string; session?: undefined; error?: undefined };
 
 // Handle URL with tokens on page load

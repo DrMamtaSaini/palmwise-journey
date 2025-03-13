@@ -35,7 +35,7 @@ const ResetPassword = () => {
           setIsVerifying(false);
           return;
         } else {
-          // Get the error message or a default one
+          // Safely extract error message using optional chaining and fallbacks
           const errorMessage = tokenResult.error 
             ? `Error: ${tokenResult.error.message || "Unknown error"}` 
             : (tokenResult.message || "No valid token found");
