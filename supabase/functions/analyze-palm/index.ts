@@ -46,17 +46,18 @@ async function analyzePalmWithGemini(imageUrl: string) {
     throw new Error("Gemini API key is not set");
   }
 
-  // Fetch the image as binary data
-  const imageResponse = await fetch(imageUrl);
-  if (!imageResponse.ok) {
-    throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
-  }
-  
-  // Convert the image to base64
-  const imageBuffer = await imageResponse.arrayBuffer();
-  const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-  
-  const prompt = `
+  try {
+    // Fetch the image as binary data
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+    }
+    
+    // Convert the image to base64
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    
+    const prompt = `
 You are an expert palm reader. Analyze the palm image carefully and provide insights on:
 
 1. Life Line: Analyze the length, curve, and depth. Provide strength (percentage) and prediction.
@@ -69,49 +70,53 @@ You are an expert palm reader. Analyze the palm image carefully and provide insi
 Respond in a formal, mystic palm reader voice.
 `;
 
-  // Call Gemini API with image
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt
-            },
-            {
-              inline_data: {
-                mime_type: "image/jpeg",
-                data: base64Image
+    // Call Gemini API with image
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              },
+              {
+                inline_data: {
+                  mime_type: "image/jpeg",
+                  data: base64Image
+                }
               }
-            }
-          ]
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024
         }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024
-      }
-    })
-  });
+      })
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
-  }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
+    }
 
-  const result = await response.json();
-  const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  
-  if (!aiResponse) {
-    throw new Error("Gemini API did not return any text content");
+    const result = await response.json();
+    const aiResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    if (!aiResponse) {
+      throw new Error("Gemini API did not return any text content");
+    }
+    
+    // Parse AI response and structure it
+    return parseAIResponse(aiResponse);
+  } catch (error) {
+    console.error("Error in analyzePalmWithGemini:", error);
+    throw error; // Re-throw to be handled by the main handler
   }
-  
-  // Parse AI response and structure it
-  return parseAIResponse(aiResponse);
 }
 
 function parseAIResponse(aiResponse: string) {

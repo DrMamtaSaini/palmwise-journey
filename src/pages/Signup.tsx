@@ -72,10 +72,13 @@ const Signup = () => {
     try {
       const success = await signUp(name, email, password);
       if (success) {
-        toast.success("Email verification sent", {
+        toast.success("Account created successfully", {
           description: "Please check your email to verify your account before logging in."
         });
-        navigate("/login");
+        // Redirect to login page after successful signup
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
     } catch (error) {
       console.error("Sign up error:", error);
@@ -105,6 +108,15 @@ const Signup = () => {
     }
   };
 
+  // Function to handle enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isLoading) {
+      // Submit the form when enter key is pressed
+      const form = e.currentTarget.closest('form');
+      if (form) form.requestSubmit();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -126,7 +138,7 @@ const Signup = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyPress}>
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name

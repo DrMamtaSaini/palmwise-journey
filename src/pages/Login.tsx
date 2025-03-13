@@ -53,9 +53,19 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password) {
+      toast.error("Missing information", {
+        description: "Please enter both email and password.",
+      });
+      return;
+    }
+    
     try {
       const success = await signIn(email, password);
       if (success) {
+        toast.success("Login successful", {
+          description: "Redirecting to dashboard...",
+        });
         navigate("/dashboard");
       }
     } catch (error) {
@@ -86,6 +96,15 @@ const Login = () => {
     }
   };
 
+  // Function to handle enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isLoading) {
+      // Submit the form when enter key is pressed
+      const form = e.currentTarget.closest('form');
+      if (form) form.requestSubmit();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -107,7 +126,7 @@ const Login = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyPress}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
