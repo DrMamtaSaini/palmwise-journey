@@ -29,21 +29,11 @@ const ForgotPassword = () => {
       console.log("=========== PASSWORD RESET ATTEMPT ===========");
       console.log("Initiating password reset for:", email);
       
-      // Use origin and explicitly force http protocol as fallback
-      let protocol = window.location.protocol;
-      let host = window.location.host;
+      // Use the current domain for the redirect URL
+      const currentUrl = window.location.origin;
+      const redirectUrl = `${currentUrl}/reset-password`;
       
-      console.log("Current location:", {
-        fullUrl: window.location.href,
-        protocol,
-        host,
-        origin: window.location.origin,
-        pathname: window.location.pathname
-      });
-      
-      // Use explicit protocol and host for maximum compatibility
-      const redirectUrl = `${protocol}//${host}/reset-password`;
-      
+      console.log("Current domain:", currentUrl);
       console.log("Using redirect URL for password reset:", redirectUrl);
       
       const success = await forgotPassword(email, redirectUrl);
