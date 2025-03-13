@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Info } from "lucide-react";
@@ -25,16 +26,23 @@ const ReadingResults = () => {
   const [isPremiumTest, setIsPremiumTest] = useState(false);
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const testMode = urlParams.get('premiumTest');
+    const debug = urlParams.get('debug');
+    
     if (testMode === 'true') {
       setIsPremiumTest(true);
       setIsPremium(true);
       toast.info("Premium test mode activated", {
         description: "You can now access all premium features for testing"
       });
+    }
+    
+    if (debug === 'true') {
+      setDebugMode(true);
     }
   }, []);
 
@@ -53,6 +61,14 @@ const ReadingResults = () => {
         if (result) {
           console.log("Fetched reading data:", result);
           setReading(result as ExtendedPalmReading);
+          
+          // Choose first available tab as active
+          if (result.results) {
+            const firstTab = getFirstAvailableTab(result);
+            if (firstTab) {
+              setActiveTab(firstTab);
+            }
+          }
         } else {
           toast.error("Reading not found", {
             description: "We couldn't find this palm reading"
@@ -71,6 +87,17 @@ const ReadingResults = () => {
 
     fetchReading();
   }, [readingId, navigate]);
+
+  const getFirstAvailableTab = (reading: ExtendedPalmReading) => {
+    const content = getReadingContent();
+    if (!content) return "lifeLine";
+    
+    const availableTabs = Object.keys(content).filter(key => 
+      !content[key].premium || isPremium || isPremiumTest
+    );
+    
+    return availableTabs[0] || "lifeLine";
+  };
 
   const handlePayment = () => {
     setIsPremium(true);
@@ -99,28 +126,28 @@ const ReadingResults = () => {
       lifeLine: {
         title: "Life Line",
         content: [
-          reading.results.lifeLine.prediction,
-          `Strength: ${reading.results.lifeLine.strength}%`
-        ],
-        insights: reading.results.lifeLine.insights,
+          reading.results.lifeLine?.prediction,
+          reading.results.lifeLine ? `Strength: ${reading.results.lifeLine.strength}%` : ""
+        ].filter(Boolean),
+        insights: reading.results.lifeLine?.insights,
         premium: false
       },
       heartLine: {
         title: "Heart Line",
         content: [
-          reading.results.heartLine.prediction,
-          `Strength: ${reading.results.heartLine.strength}%`
-        ],
-        insights: reading.results.heartLine.insights,
+          reading.results.heartLine?.prediction,
+          reading.results.heartLine ? `Strength: ${reading.results.heartLine.strength}%` : ""
+        ].filter(Boolean),
+        insights: reading.results.heartLine?.insights,
         premium: false
       },
       headLine: {
         title: "Head Line",
         content: [
-          reading.results.headLine.prediction,
-          `Strength: ${reading.results.headLine.strength}%`
-        ],
-        insights: reading.results.headLine.insights,
+          reading.results.headLine?.prediction,
+          reading.results.headLine ? `Strength: ${reading.results.headLine.strength}%` : ""
+        ].filter(Boolean),
+        insights: reading.results.headLine?.insights,
         premium: false
       },
       past: {
@@ -218,8 +245,9 @@ const ReadingResults = () => {
       title: "Overall Summary",
       content: [
         reading.results.overallSummary,
-        `Personality traits: ${reading.results.personalityTraits.join(', ')}`
-      ],
+        reading.results.personalityTraits?.length > 0 ? 
+          `Personality traits: ${reading.results.personalityTraits.join(', ')}` : ""
+      ].filter(Boolean),
       premium: false
     };
 
@@ -252,6 +280,13 @@ const ReadingResults = () => {
               <ArrowLeft size={18} className="mr-2" />
               <span>Back</span>
             </button>
+
+            {debugMode && reading && (
+              <div className="mb-6 p-4 bg-gray-100 rounded-lg overflow-auto">
+                <h3 className="font-bold mb-2">Debug: Raw Reading Data</h3>
+                <pre className="text-xs">{JSON.stringify(reading, null, 2)}</pre>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="bg-white rounded-2xl shadow-soft p-8 flex justify-center items-center min-h-[300px]">
@@ -290,6 +325,30 @@ const ReadingResults = () => {
                     </div>
                     
                     <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                      <button 
+                        className="text-gray-500 hover:text-palm-purple transition-colors flex items-center"
+                        onClick={() => {
+                          // Toggle debug mode
+                          const newDebugMode = !debugMode;
+                          setDebugMode(newDebugMode);
+                          
+                          // Update URL without refreshing page
+                          const url = new URL(window.location.href);
+                          if (newDebugMode) {
+                            url.searchParams.set('debug', 'true');
+                          } else {
+                            url.searchParams.delete('debug');
+                          }
+                          window.history.pushState({}, "", url.toString());
+                          
+                          toast.info(newDebugMode ? "Debug mode activated" : "Debug mode deactivated");
+                        }}
+                      >
+                        <Info size={20} />
+                        <span className="ml-1 text-sm">
+                          {debugMode ? "Hide" : "Show"} Raw Data
+                        </span>
+                      </button>
                       <button 
                         className="text-gray-500 hover:text-palm-purple transition-colors flex items-center"
                         onClick={() => {
@@ -346,58 +405,67 @@ const ReadingResults = () => {
                     </div>
                   )}
 
-                  <Tabs defaultValue="lifeLine" className="w-full" onValueChange={setActiveTab}>
-                    <TabsList className="flex flex-wrap mb-8 border-b border-gray-100 bg-transparent p-0 w-full justify-start overflow-x-auto">
+                  {filteredTabs.length > 0 ? (
+                    <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
+                      <TabsList className="flex flex-wrap mb-8 border-b border-gray-100 bg-transparent p-0 w-full justify-start overflow-x-auto">
+                        {filteredTabs.map((key) => (
+                          <TabsTrigger
+                            key={key}
+                            value={key}
+                            className={`px-4 py-3 font-medium transition-colors rounded-none flex items-center whitespace-nowrap ${
+                              activeTab === key
+                                ? "text-palm-purple border-b-2 border-palm-purple"
+                                : "text-gray-500 hover:text-palm-purple"
+                            }`}
+                          >
+                            {readingContent[key].premium && (
+                              <span className="w-2 h-2 bg-palm-purple rounded-full mr-2"></span>
+                            )}
+                            {readingContent[key].title}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+
                       {filteredTabs.map((key) => (
-                        <TabsTrigger
-                          key={key}
-                          value={key}
-                          className={`px-4 py-3 font-medium transition-colors rounded-none flex items-center whitespace-nowrap ${
-                            activeTab === key
-                              ? "text-palm-purple border-b-2 border-palm-purple"
-                              : "text-gray-500 hover:text-palm-purple"
-                          }`}
-                        >
-                          {readingContent[key].premium && (
-                            <span className="w-2 h-2 bg-palm-purple rounded-full mr-2"></span>
-                          )}
-                          {readingContent[key].title}
-                        </TabsTrigger>
+                        <TabsContent key={key} value={key} className="animate-fade-in mt-4">
+                          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                            {readingContent[key].title}
+                            {readingContent[key].premium && (
+                              <span className="ml-2 text-xs bg-palm-purple text-white px-2 py-1 rounded-full">
+                                Premium
+                              </span>
+                            )}
+                          </h2>
+                          
+                          <div className="space-y-6">
+                            {readingContent[key].content.map((paragraph: string, index: number) => (
+                              <p key={index} className="text-gray-700 leading-relaxed">
+                                {paragraph}
+                              </p>
+                            ))}
+
+                            {readingContent[key].insights && (
+                              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <h3 className="font-semibold text-lg mb-3">Key Insights:</h3>
+                                <ul className="list-disc list-inside space-y-2">
+                                  {readingContent[key].insights.map((insight: string, idx: number) => (
+                                    <li key={idx} className="text-gray-700">{insight}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
                       ))}
-                    </TabsList>
-
-                    {filteredTabs.map((key) => (
-                      <TabsContent key={key} value={key} className="animate-fade-in mt-4">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center">
-                          {readingContent[key].title}
-                          {readingContent[key].premium && (
-                            <span className="ml-2 text-xs bg-palm-purple text-white px-2 py-1 rounded-full">
-                              Premium
-                            </span>
-                          )}
-                        </h2>
-                        
-                        <div className="space-y-6">
-                          {readingContent[key].content.map((paragraph: string, index: number) => (
-                            <p key={index} className="text-gray-700 leading-relaxed">
-                              {paragraph}
-                            </p>
-                          ))}
-
-                          {readingContent[key].insights && (
-                            <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                              <h3 className="font-semibold text-lg mb-3">Key Insights:</h3>
-                              <ul className="list-disc list-inside space-y-2">
-                                {readingContent[key].insights.map((insight: string, idx: number) => (
-                                  <li key={idx} className="text-gray-700">{insight}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </TabsContent>
-                    ))}
-                  </Tabs>
+                    </Tabs>
+                  ) : (
+                    <div className="p-8 text-center bg-gray-50 rounded-lg">
+                      <h3 className="text-xl font-semibold mb-4">No Reading Content Available</h3>
+                      <p className="text-gray-600">
+                        We couldn't find any content for this palm reading. This may be due to a data issue.
+                      </p>
+                    </div>
+                  )}
 
                   {!isPremium && !isPremiumTest && (
                     <div className="mt-8 p-6 border border-dashed border-gray-200 rounded-lg bg-gray-50">
