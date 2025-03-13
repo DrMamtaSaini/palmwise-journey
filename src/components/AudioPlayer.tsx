@@ -1,6 +1,7 @@
-
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Loader2 } from "lucide-react";
+import TextToSpeechService from "../services/TextToSpeechService";
+import { toast } from "sonner";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -11,13 +12,11 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  // Use separate ref for interval to avoid TypeScript errors
-  const intervalRef = useRef<number | null>(null);
 
-  // In a real app, we would use a real audio URL
-  // For now, we'll simulate with a dummy audio element
   useEffect(() => {
+    // Create audio element if it doesn't exist
     if (!audioRef.current) {
       audioRef.current = new Audio();
       audioRef.current.addEventListener("timeupdate", updateProgress);
@@ -34,10 +33,7 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
           setIsPlaying(false);
           setProgress(0);
         });
-      }
-      // Clear interval on unmount
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        audioRef.current.pause();
       }
     };
   }, []);
@@ -49,51 +45,43 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
     }
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-        // Clear simulation interval
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-      } else {
-        // Simulate audio playback for demo
-        // In a real app, we would set audioRef.current.src = audioUrl
-        const duration = 30; // 30 seconds simulation
-        let currentTime = 0;
-        // Can't set duration directly, so we'll simulate it
-        
-        // Clear any existing interval
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-        
-        // Create a new interval for simulation
-        intervalRef.current = window.setInterval(() => {
-          currentTime += 0.1;
-          if (audioRef.current) {
-            audioRef.current.currentTime = currentTime;
-            
-            if (currentTime >= duration) {
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-              setIsPlaying(false);
-              setProgress(0);
-            }
-          }
-        }, 100);
-        
-        // Simulate play
-        audioRef.current.play().catch(() => {
-          // Handle autoplay restrictions
-          console.log("Playback simulation active");
-        });
+        setIsPlaying(false);
+        return;
       }
-      setIsPlaying(!isPlaying);
+
+      // If we already have an audio URL, just play it
+      if (audioRef.current.src && audioRef.current.src !== window.location.href) {
+        audioRef.current.play();
+        setIsPlaying(true);
+        return;
+      }
+
+      // Otherwise, generate audio from text
+      try {
+        setIsLoading(true);
+        // Limit text length for the API call
+        const limitedText = text.length > 4000 ? text.substring(0, 4000) + "..." : text;
+        const audioBase64 = await TextToSpeechService.generateSpeech(limitedText);
+        
+        // Create audio from base64
+        const audioSrc = `data:audio/mp3;base64,${audioBase64}`;
+        audioRef.current.src = audioSrc;
+        
+        // Play audio
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error("Error playing audio:", error);
+        toast.error("Failed to play audio", {
+          description: "Please try again later"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -109,9 +97,16 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
       <div className="flex items-center space-x-3 mb-2">
         <button
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-palm-purple text-white flex items-center justify-center hover:bg-palm-purple/90 transition-colors"
+          disabled={isLoading}
+          className="w-10 h-10 rounded-full bg-palm-purple text-white flex items-center justify-center hover:bg-palm-purple/90 transition-colors disabled:bg-palm-purple/50"
         >
-          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+          {isLoading ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : isPlaying ? (
+            <Pause size={16} />
+          ) : (
+            <Play size={16} />
+          )}
         </button>
         
         <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -123,14 +118,17 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
         
         <button
           onClick={toggleMute}
-          className="text-gray-500 hover:text-palm-purple transition-colors"
+          disabled={!isPlaying && !audioRef.current?.src}
+          className="text-gray-500 hover:text-palm-purple transition-colors disabled:text-gray-300"
         >
           {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
       </div>
       
       <p className="text-sm text-gray-500">
-        {isPlaying ? "Playing audio reading..." : "Click play to listen to your palm reading"}
+        {isLoading ? "Generating audio..." : 
+          isPlaying ? "Playing audio reading..." : 
+          "Click play to listen to your palm reading"}
       </p>
     </div>
   );
