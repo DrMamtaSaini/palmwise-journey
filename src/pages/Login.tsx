@@ -100,7 +100,7 @@ const Login = () => {
             </div>
 
             {portMismatch && (
-              <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
+              <Alert className="mb-6 bg-amber-50 border-amber-200">
                 <AlertCircle className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-800">
                   <p className="font-medium">Your app is running on port {window.location.port}, but Supabase expects port 8080.</p>
