@@ -1,9 +1,10 @@
 
 import { useState } from "react";
-import { Upload, Camera, SparklesIcon } from "lucide-react";
+import { Upload, Camera, SparklesIcon, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import PalmAnalysisService from "../services/PalmAnalysisService";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 interface UploadSectionProps {
   onAnalyze: (imageUrl: string) => void;
@@ -106,8 +107,8 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
       <h2 className="text-3xl font-bold mb-6 text-center">Palm Reader</h2>
 
       <div 
-        className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px] cursor-pointer relative"
-        onClick={() => !isProcessing && !isUploading && document.getElementById('file-upload')?.click()}
+        className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px] relative"
+        onClick={() => !isProcessing && !isUploading && !previewUrl && document.getElementById('file-upload')?.click()}
       >
         {previewUrl ? (
           <div className="mb-4 w-full max-w-sm relative">
@@ -125,10 +126,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
                 className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
                 aria-label="Remove image"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <X size={20} />
               </button>
             )}
           </div>
@@ -174,23 +172,53 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         </button>
       </div>
 
-      <button
-        type="button"
-        className={`w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center ${
-          !previewUrl || isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
-        }`}
-        disabled={!previewUrl || isProcessing || isUploading}
-        onClick={handleAnalyze}
-      >
-        {isProcessing || isUploading ? (
-          <span className="animate-pulse">{isProcessing ? "Analyzing..." : "Uploading..."}</span>
-        ) : (
-          <>
-            <SparklesIcon size={20} className="mr-2" />
-            <span>Read My Palm</span>
-          </>
-        )}
-      </button>
+      {previewUrl && (
+        <div className="flex justify-between gap-4 mb-6">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={resetUpload}
+            disabled={isProcessing || isUploading}
+          >
+            <X size={16} className="mr-2" />
+            Remove
+          </Button>
+          
+          <Button
+            type="button"
+            className="flex-1 bg-palm-purple text-white hover:bg-purple-700"
+            disabled={!previewUrl || isProcessing || isUploading}
+            onClick={handleAnalyze}
+          >
+            {isProcessing || isUploading ? (
+              <span className="animate-pulse">{isProcessing ? "Analyzing..." : "Uploading..."}</span>
+            ) : (
+              <>
+                <SparklesIcon size={20} className="mr-2" />
+                <span>Read My Palm</span>
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+      
+      {!previewUrl && (
+        <Button
+          type="button"
+          className="w-full bg-palm-purple text-white hover:bg-purple-700"
+          disabled={!previewUrl || isProcessing || isUploading}
+          onClick={handleAnalyze}
+        >
+          {isProcessing || isUploading ? (
+            <span className="animate-pulse">{isProcessing ? "Analyzing..." : "Uploading..."}</span>
+          ) : (
+            <>
+              <SparklesIcon size={20} className="mr-2" />
+              <span>Read My Palm</span>
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };

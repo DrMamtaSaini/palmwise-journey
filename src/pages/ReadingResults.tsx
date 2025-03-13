@@ -9,6 +9,7 @@ import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisServic
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { getLanguageInfo, IndianLanguage } from "../components/LanguageSelector";
+import PersonalizedQuestionForm from "../components/PersonalizedQuestionForm";
 
 // Extend the PalmReading type to include the translationNote property
 interface ExtendedPalmReading extends PalmReading {
@@ -274,176 +275,120 @@ const ReadingResults = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
-                <div className="p-8">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-                    <div>
-                      <h1 className="text-3xl font-bold mb-2">Your Palm Reading</h1>
-                      {reading.language && (
-                        <div className="text-palm-purple font-medium flex items-center">
-                          <span className="mr-2">Language:</span>
-                          <span className="bg-palm-light px-2 py-1 rounded">
-                            {getLanguageDisplay()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                      <button 
-                        className="text-gray-500 hover:text-palm-purple transition-colors flex items-center"
-                        onClick={() => {
-                          if (!isPremiumTest) {
-                            const newUrl = `${window.location.pathname}?premiumTest=true`;
-                            window.history.pushState({}, "", newUrl);
-                            setIsPremiumTest(true);
-                            setIsPremium(true);
-                            toast.info("Premium test mode activated", {
-                              description: "You can now access all premium features for testing"
-                            });
-                          } else {
-                            const newUrl = window.location.pathname;
-                            window.history.pushState({}, "", newUrl);
-                            setIsPremiumTest(false);
-                            setIsPremium(false);
-                            toast.info("Premium test mode deactivated", {
-                              description: "Premium features are now hidden"
-                            });
-                          }
-                        }}
-                      >
-                        <Info size={20} />
-                        <span className="ml-1 text-sm">
-                          {isPremiumTest ? "Disable" : "Enable"} Test Mode
-                        </span>
-                      </button>
-                      <button className="text-gray-500 hover:text-palm-purple transition-colors">
-                        <Download size={20} />
-                      </button>
-                      <button className="text-gray-500 hover:text-palm-purple transition-colors">
-                        <Share2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {reading.language !== 'english' && reading.translationNote && (
-                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-yellow-800 text-sm">{reading.translationNote}</p>
-                      <p className="text-yellow-800 text-sm mt-2">
-                        We're using a dictionary-based translation method for common terms. This provides useful translations 
-                        while keeping the app lightweight without external API dependencies.
-                      </p>
-                    </div>
-                  )}
-
-                  {(isPremium || isPremiumTest) && (
-                    <div className="mb-8">
-                      <AudioPlayer text={reading.results.overallSummary} />
-                    </div>
-                  )}
-
-                  <Tabs defaultValue="lifeLine" className="w-full" onValueChange={setActiveTab}>
-                    <TabsList className="flex flex-wrap mb-8 border-b border-gray-100 bg-transparent p-0 w-full justify-start overflow-x-auto">
-                      {filteredTabs.map((key) => (
-                        <TabsTrigger
-                          key={key}
-                          value={key}
-                          className={`px-4 py-3 font-medium transition-colors rounded-none flex items-center whitespace-nowrap ${
-                            activeTab === key
-                              ? "text-palm-purple border-b-2 border-palm-purple"
-                              : "text-gray-500 hover:text-palm-purple"
-                          }`}
-                        >
-                          {readingContent[key].premium && (
-                            <span className="w-2 h-2 bg-palm-purple rounded-full mr-2"></span>
-                          )}
-                          {readingContent[key].title}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-
-                    {filteredTabs.map((key) => (
-                      <TabsContent key={key} value={key} className="animate-fade-in mt-4">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center">
-                          {readingContent[key].title}
-                          {readingContent[key].premium && (
-                            <span className="ml-2 text-xs bg-palm-purple text-white px-2 py-1 rounded-full">
-                              Premium
+              <>
+                <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
+                  <div className="p-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+                      <div>
+                        <h1 className="text-3xl font-bold mb-2">Your Palm Reading</h1>
+                        {reading.language && (
+                          <div className="text-palm-purple font-medium flex items-center">
+                            <span className="mr-2">Language:</span>
+                            <span className="bg-palm-light px-2 py-1 rounded">
+                              {getLanguageDisplay()}
                             </span>
-                          )}
-                        </h2>
-                        
-                        <div className="space-y-6">
-                          {readingContent[key].content.map((paragraph: string, index: number) => (
-                            <p key={index} className="text-gray-700 leading-relaxed">
-                              {paragraph}
-                            </p>
-                          ))}
-
-                          {readingContent[key].insights && (
-                            <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                              <h3 className="font-semibold text-lg mb-3">Key Insights:</h3>
-                              <ul className="list-disc list-inside space-y-2">
-                                {readingContent[key].insights.map((insight: string, idx: number) => (
-                                  <li key={idx} className="text-gray-700">{insight}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      </TabsContent>
-                    ))}
-                  </Tabs>
-
-                  {!isPremium && !isPremiumTest && reading.results.elementalInfluences && (
-                    <div className="mt-8 p-6 border border-dashed border-gray-200 rounded-lg bg-gray-50">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0 bg-gray-200 w-16 h-16 rounded-full flex items-center justify-center mr-4">
-                          <Info size={24} className="text-gray-400" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold mb-2">Premium Insights Available</h3>
-                          <p className="text-gray-600 mb-4">
-                            Unlock detailed analysis of your Elemental Influences, Relationships, Career Path, and Health indicators with our premium reading.
-                          </p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">Relationships</span>
-                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">Career</span>
-                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">Health</span>
-                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm">Elements</span>
                           </div>
-                        </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-4 mt-4 md:mt-0">
+                        <button 
+                          className="text-gray-500 hover:text-palm-purple transition-colors flex items-center"
+                          onClick={() => {
+                            if (!isPremiumTest) {
+                              const newUrl = `${window.location.pathname}?premiumTest=true`;
+                              window.history.pushState({}, "", newUrl);
+                              setIsPremiumTest(true);
+                              setIsPremium(true);
+                              toast.info("Premium test mode activated", {
+                                description: "You can now access all premium features for testing"
+                              });
+                            } else {
+                              const newUrl = window.location.pathname;
+                              window.history.pushState({}, "", newUrl);
+                              setIsPremiumTest(false);
+                              setIsPremium(false);
+                              toast.info("Premium test mode deactivated", {
+                                description: "Premium features are now hidden"
+                              });
+                            }
+                          }}
+                        >
+                          <Info size={20} />
+                          <span className="ml-1 text-sm">
+                            {isPremiumTest ? "Disable" : "Enable"} Test Mode
+                          </span>
+                        </button>
+                        <button className="text-gray-500 hover:text-palm-purple transition-colors">
+                          <Download size={20} />
+                        </button>
+                        <button className="text-gray-500 hover:text-palm-purple transition-colors">
+                          <Share2 size={20} />
+                        </button>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                {!isPremium && !isPremiumTest && (
-                  <div className="bg-palm-light p-8 border-t border-gray-100">
-                    <div className="max-w-2xl mx-auto text-center">
-                      <h3 className="text-xl font-semibold mb-3">Unlock Premium Features</h3>
-                      <p className="text-gray-600 mb-6">
-                        Get access to audio readings, detailed insights on relationships, career, health, and elemental influences, plus personalized guidance.
-                      </p>
-                      
-                      <PaymentButton
-                        price="$29.99"
-                        description="Premium Reading"
-                        isPrimary
-                        onClick={handlePayment}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
+                    {reading.language !== 'english' && reading.translationNote && (
+                      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-yellow-800 text-sm">{reading.translationNote}</p>
+                        <p className="text-yellow-800 text-sm mt-2">
+                          We're using a dictionary-based translation method for common terms. This provides useful translations 
+                          while keeping the app lightweight without external API dependencies.
+                        </p>
+                      </div>
+                    )}
 
-      <Footer />
-    </div>
-  );
-};
+                    {(isPremium || isPremiumTest) && (
+                      <div className="mb-8">
+                        <AudioPlayer text={reading.results.overallSummary} />
+                      </div>
+                    )}
 
-export default ReadingResults;
+                    <Tabs defaultValue="lifeLine" className="w-full" onValueChange={setActiveTab}>
+                      <TabsList className="flex flex-wrap mb-8 border-b border-gray-100 bg-transparent p-0 w-full justify-start overflow-x-auto">
+                        {filteredTabs.map((key) => (
+                          <TabsTrigger
+                            key={key}
+                            value={key}
+                            className={`px-4 py-3 font-medium transition-colors rounded-none flex items-center whitespace-nowrap ${
+                              activeTab === key
+                                ? "text-palm-purple border-b-2 border-palm-purple"
+                                : "text-gray-500 hover:text-palm-purple"
+                            }`}
+                          >
+                            {readingContent[key].premium && (
+                              <span className="w-2 h-2 bg-palm-purple rounded-full mr-2"></span>
+                            )}
+                            {readingContent[key].title}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+
+                      {filteredTabs.map((key) => (
+                        <TabsContent key={key} value={key} className="animate-fade-in mt-4">
+                          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                            {readingContent[key].title}
+                            {readingContent[key].premium && (
+                              <span className="ml-2 text-xs bg-palm-purple text-white px-2 py-1 rounded-full">
+                                Premium
+                              </span>
+                            )}
+                          </h2>
+                          
+                          <div className="space-y-6">
+                            {readingContent[key].content.map((paragraph: string, index: number) => (
+                              <p key={index} className="text-gray-700 leading-relaxed">
+                                {paragraph}
+                              </p>
+                            ))}
+
+                            {readingContent[key].insights && (
+                              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <h3 className="font-semibold text-lg mb-3">Key Insights:</h3>
+                                <ul className="list-disc list-inside space-y-2">
+                                  {readingContent[key].insights.map((insight: string, idx: number) => (
+                                    <li key={idx} className="text-gray-700">{insight}</li>
+                                  ))}
+                                </ul>
+                              </div
+
