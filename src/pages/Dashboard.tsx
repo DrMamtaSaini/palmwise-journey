@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, Calendar, Clock, BarChart2, ChevronRight } from 'lucide-react';
+import { Camera, Calendar, Clock, BarChart2, ChevronRight, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '../components/Navbar';
@@ -10,7 +10,7 @@ import PalmAnalysisService from '../services/PalmAnalysisService';
 
 // Dashboard component
 const Dashboard = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const [readings, setReadings] = useState([]);
   const [loadingReadings, setLoadingReadings] = useState(true);
   const navigate = useNavigate();
@@ -44,6 +44,17 @@ const Dashboard = () => {
     fetchReadings();
   }, [user, isAuthenticated]);
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out');
+    }
+  };
+
   if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -65,13 +76,22 @@ const Dashboard = () => {
       
       <main className="flex-grow bg-palm-light py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome, {user?.name || 'Friend'}
-            </h1>
-            <p className="text-gray-600">
-              Explore your palm readings and discover your destiny
-            </p>
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome, {user?.name || 'Friend'}
+              </h1>
+              <p className="text-gray-600">
+                Explore your palm readings and discover your destiny
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center bg-white text-palm-purple hover:bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 shadow-sm transition-colors"
+            >
+              <LogOut size={18} className="mr-2" />
+              Logout
+            </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -150,6 +170,19 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                  >
+                    <div className="flex items-center">
+                      <div className="bg-red-100 p-2 rounded-full mr-3">
+                        <LogOut size={18} className="text-red-500" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-900">Sign Out</span>
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </div>
               

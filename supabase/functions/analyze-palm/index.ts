@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -55,18 +54,16 @@ async function analyzePalmImage(imageUrl: string) {
     
     const imageBlob = await imageResponse.blob();
     
-    // Perform palm analysis based on the image characteristics
-    // This is a simplified implementation that extracts basic image properties
-    // for demonstration purposes
+    // Get a more unique hash based on the image URL
+    const imageHash = await getImageHash(imageUrl, imageBlob);
     
-    // Basic image analysis - detecting dominant colors, contrast, etc.
-    const dominantColors = await extractDominantColorFeatures(imageBlob);
+    // Extract features based on the image and its unique hash
+    const dominantColors = await extractDominantColorFeatures(imageBlob, imageHash);
     
     // Map image characteristics to palm reading interpretations
-    // This is where we would normally apply more sophisticated image processing
     const analysis = interpretPalmFeatures(dominantColors);
     
-    console.log("Palm analysis completed");
+    console.log("Palm analysis completed with unique hash:", imageHash);
     return analysis;
   } catch (error) {
     console.error("Error in palm image analysis:", error);
@@ -74,20 +71,28 @@ async function analyzePalmImage(imageUrl: string) {
   }
 }
 
+// Generate a more unique hash from the image URL and content
+async function getImageHash(imageUrl: string, imageBlob: Blob): Promise<number> {
+  const urlSeed = imageUrl.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const sizeSeed = imageBlob.size;
+  const timeSeed = Date.now() % 10000;
+  
+  // Combine different factors to create a more unique hash
+  return (urlSeed * 13 + sizeSeed * 7 + timeSeed) % 100000;
+}
+
 // Extract color features from image
-async function extractDominantColorFeatures(imageBlob: Blob) {
-  // In a real implementation, this would use computer vision libraries
-  // to extract palm line features, skin tone, hand shape, etc.
-  // For this demo, we'll use characteristics of the image itself
+async function extractDominantColorFeatures(imageBlob: Blob, imageHash: number) {
+  // Use the hash to create more varied features
+  const hashDecimal = imageHash / 100000; // Normalize to 0-1 range
   
-  // Create a seed value based on the image size
-  const seed = imageBlob.size % 1000;
-  
+  // Create seeds that are more dependent on the image hash
   return {
-    brightness: (seed % 100) / 100, // 0-1 value
-    contrast: ((seed + 123) % 100) / 100,
-    saturation: ((seed + 456) % 100) / 100,
+    brightness: (hashDecimal * 0.7 + Math.random() * 0.3) % 1, // More variance
+    contrast: ((hashDecimal * 13 + 0.3) * 0.7 + Math.random() * 0.3) % 1,
+    saturation: ((hashDecimal * 23 + 0.5) * 0.7 + Math.random() * 0.3) % 1,
     imageSize: imageBlob.size,
+    imageHash: imageHash, // Store the hash for additional randomization
     timestamp: Date.now()
   };
 }
@@ -95,20 +100,21 @@ async function extractDominantColorFeatures(imageBlob: Blob) {
 // Interpret palm features and generate reading
 function interpretPalmFeatures(features: any) {
   // Use the image features to determine palm reading characteristics
+  // Make the results more dependent on the unique hash
   
-  // Generate consistent results based on the features
-  const lifeLineStrength = Math.floor(features.brightness * 30 + 70); // 70-100
-  const heartLineStrength = Math.floor(features.contrast * 30 + 70);
-  const headLineStrength = Math.floor(features.saturation * 30 + 70);
+  // Generate more varied results based on the features
+  const lifeLineStrength = Math.floor((features.brightness * 25) + (features.imageHash % 100) / 100 * 5 + 70); // 70-100
+  const heartLineStrength = Math.floor((features.contrast * 25) + (features.imageHash % 90) / 90 * 5 + 70);
+  const headLineStrength = Math.floor((features.saturation * 25) + (features.imageHash % 80) / 80 * 5 + 70);
   
-  // Determine fate line presence based on image size
-  const fateLinePresent = features.imageSize % 7 > 3;
+  // More varied fate line presence
+  const fateLinePresent = (features.imageHash % 19) > 9;
   
-  // Elemental influences based on combinations of features
-  const earthInfluence = Math.floor((features.brightness + features.imageSize % 100 / 100) * 50) % 30 + 70;
-  const waterInfluence = Math.floor((features.contrast + features.timestamp % 1000 / 1000) * 50) % 30 + 70;
-  const fireInfluence = Math.floor((features.saturation + features.brightness) * 50) % 30 + 70;
-  const airInfluence = Math.floor((features.contrast + features.saturation) * 50) % 30 + 70;
+  // Elemental influences with more variance
+  const earthInfluence = Math.floor((features.brightness * 20) + (features.imageHash % 70) / 70 * 10 + 70);
+  const waterInfluence = Math.floor((features.contrast * 20) + (features.imageHash % 60) / 60 * 10 + 70);
+  const fireInfluence = Math.floor((features.saturation * 20) + (features.imageHash % 50) / 50 * 10 + 70);
+  const airInfluence = Math.floor(((features.imageHash % 40) / 40 * 20) + (features.contrast + features.saturation) * 15 + 70);
   
   return {
     results: {
@@ -144,7 +150,7 @@ function interpretPalmFeatures(features: any) {
       },
       fateLinePresent: fateLinePresent,
       fate: fateLinePresent ? {
-        strength: Math.floor(features.imageSize % 30 + 70),
+        strength: Math.floor((features.imageHash % 30) + 70),
         prediction: `Your fate line is ${features.brightness > 0.7 ? 'remarkably defined' : 'clearly visible'}, indicating a ${features.contrast > 0.6 ? 'clear' : 'developing'} sense of purpose and direction. The ${features.saturation > 0.5 ? 'depth' : 'pattern'} suggests significant impact in your chosen field. The ${features.brightness > 0.6 ? 'straight trajectory' : 'general direction'} indicates consistency in your professional journey.`,
         insights: [
           `Your professional journey has a ${features.contrast > 0.7 ? 'coherent narrative' : 'progressive path'} that builds toward mastery`,
