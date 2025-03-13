@@ -9,6 +9,7 @@ interface PayPalButtonProps {
   description: string;
   onSuccess: () => void;
   onError?: (error: Error) => void;
+  clientId?: string; // Added client ID prop
 }
 
 // Add TypeScript type definition for PayPal SDK
@@ -18,7 +19,13 @@ declare global {
   }
 }
 
-const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonProps) => {
+const PayPalButton = ({ 
+  amount, 
+  description, 
+  onSuccess, 
+  onError,
+  clientId = "test" // Default to "test" for sandbox environment
+}: PayPalButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const { toast } = useToast();
@@ -36,7 +43,7 @@ const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonP
       }
 
       const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=sb&currency=USD`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
       script.async = true;
       script.onload = () => setScriptLoaded(true);
       script.onerror = () => {
@@ -59,7 +66,7 @@ const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonP
         document.body.removeChild(script);
       }
     };
-  }, [toast]);
+  }, [toast, clientId]);
 
   // Render PayPal buttons when SDK is loaded
   useEffect(() => {

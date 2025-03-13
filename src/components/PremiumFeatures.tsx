@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,8 @@ import PaymentButton from "./PaymentButton";
 import PayPalButton from "./PayPalButton";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
+
+const PAYPAL_CLIENT_ID = "sb";
 
 interface PremiumFeaturesProps {
   onSuccess: () => void;
@@ -195,6 +196,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
                   description={getPlanDescription()}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
+                  clientId={PAYPAL_CLIENT_ID}
                 />
               )}
             </div>
