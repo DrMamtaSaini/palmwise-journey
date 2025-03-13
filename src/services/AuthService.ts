@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -25,11 +24,9 @@ class AuthService {
   private listeners: ((state: AuthState) => void)[] = [];
 
   private constructor() {
-    // Check for existing session on init
     console.log("AuthService constructor - checking session");
     this.checkSession();
     
-    // Set up auth state change listener
     supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change event:", event, "Session:", session ? "exists" : "null");
       
@@ -140,10 +137,8 @@ class AuthService {
 
   public subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.push(listener);
-    // Immediately notify with current state
     listener(this.authState);
     
-    // Return unsubscribe function
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
@@ -240,7 +235,6 @@ class AuthService {
       console.log("Sign up response:", data);
       
       if (data.user) {
-        // Create a profile entry for the user
         const { error: profileError } = await supabase
           .from('profiles')
           .insert([
@@ -325,7 +319,6 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // Get the current site URL to use for the redirect
       const siteUrl = window.location.origin;
       
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -352,8 +345,6 @@ class AuthService {
       
       console.log("Google sign in initiated:", data);
       
-      // This won't actually return true in most cases as the user will be redirected
-      // to Google's authentication page
       return true;
     } catch (error: any) {
       console.error('Google sign in error:', error);
@@ -366,6 +357,86 @@ class AuthService {
         ...this.authState,
         isLoading: false,
       };
+      this.notifyListeners();
+      
+      return false;
+    }
+  }
+
+  public async forgotPassword(email: string): Promise<boolean> {
+    try {
+      console.log("Initiating password reset for email:", email);
+      this.authState = { ...this.authState, isLoading: true };
+      this.notifyListeners();
+      
+      const siteUrl = window.location.origin;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${siteUrl}/reset-password`,
+      });
+      
+      this.authState = { ...this.authState, isLoading: false };
+      this.notifyListeners();
+      
+      if (error) {
+        console.error("Password reset error:", error);
+        toast.error('Password reset failed', {
+          description: error.message || 'Please try again later.',
+        });
+        return false;
+      }
+      
+      toast.success('Password reset email sent', {
+        description: 'Please check your email for password reset instructions.',
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      
+      toast.error('Password reset failed', {
+        description: error.message || 'Please try again later.',
+      });
+      
+      this.authState = { ...this.authState, isLoading: false };
+      this.notifyListeners();
+      
+      return false;
+    }
+  }
+
+  public async updatePassword(newPassword: string): Promise<boolean> {
+    try {
+      console.log("Updating password");
+      this.authState = { ...this.authState, isLoading: true };
+      this.notifyListeners();
+      
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      
+      this.authState = { ...this.authState, isLoading: false };
+      this.notifyListeners();
+      
+      if (error) {
+        console.error("Password update error:", error);
+        toast.error('Password update failed', {
+          description: error.message || 'Please try again later.',
+        });
+        return false;
+      }
+      
+      toast.success('Password updated successfully', {
+        description: 'Your password has been updated.',
+      });
+      return true;
+    } catch (error: any) {
+      console.error('Password update error:', error);
+      
+      toast.error('Password update failed', {
+        description: error.message || 'Please try again later.',
+      });
+      
+      this.authState = { ...this.authState, isLoading: false };
       this.notifyListeners();
       
       return false;

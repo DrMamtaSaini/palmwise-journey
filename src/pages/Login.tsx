@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -131,13 +133,13 @@ const Login = () => {
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
-                <input
+                <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-palm-purple focus:border-transparent"
+                  className="w-full"
                   placeholder="Enter your email"
                 />
               </div>
@@ -147,13 +149,13 @@ const Login = () => {
                   Password
                 </label>
                 <div className="relative">
-                  <input
+                  <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-palm-purple focus:border-transparent"
+                    className="w-full pr-10"
                     placeholder="Enter your password"
                   />
                   <button
@@ -171,10 +173,10 @@ const Login = () => {
                 </div>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center hover:bg-palm-purple/90 transition-colors"
+                className="w-full bg-palm-purple hover:bg-palm-purple/90 text-white flex items-center justify-center"
               >
                 {isLoading ? (
                   <span className="animate-pulse">Logging in...</span>
@@ -184,7 +186,7 @@ const Login = () => {
                     <span>Login</span>
                   </>
                 )}
-              </button>
+              </Button>
 
               <div className="relative flex items-center justify-center">
                 <div className="border-t border-gray-200 flex-grow"></div>
@@ -192,11 +194,12 @@ const Login = () => {
                 <div className="border-t border-gray-200 flex-grow"></div>
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading || googleAuthError}
-                className={`w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
+                variant="outline"
+                className={`w-full flex items-center justify-center ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <img
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -204,7 +207,7 @@ const Login = () => {
                   className="w-5 h-5 mr-2"
                 />
                 <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
-              </button>
+              </Button>
 
               <p className="text-center text-gray-600 text-sm mt-8">
                 Don't have an account?{" "}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import AuthService from '../services/AuthService';
@@ -18,6 +17,8 @@ interface UseAuthResult {
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
   handleEmailVerificationError: (errorCode: string, errorDescription: string) => void;
 }
 
@@ -164,6 +165,38 @@ export const useAuth = (): UseAuthResult => {
     }
   }, []);
 
+  const forgotPassword = useCallback(async (email: string) => {
+    try {
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const success = await AuthService.forgotPassword(email);
+      return success;
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      toast.error("Password reset failed", {
+        description: error instanceof Error ? error.message : "Please try again later.",
+      });
+      return false;
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      setAuthState(prev => ({ ...prev, isLoading: true }));
+      const success = await AuthService.updatePassword(newPassword);
+      return success;
+    } catch (error) {
+      console.error("Update password error:", error);
+      toast.error("Password update failed", {
+        description: error instanceof Error ? error.message : "Please try again later.",
+      });
+      return false;
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, []);
+
   return {
     user: authState.user,
     isLoading: authState.isLoading,
@@ -172,6 +205,8 @@ export const useAuth = (): UseAuthResult => {
     signUp,
     signOut,
     signInWithGoogle,
+    forgotPassword,
+    updatePassword,
     handleEmailVerificationError,
   };
 };
