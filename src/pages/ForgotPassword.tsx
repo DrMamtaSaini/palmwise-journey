@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -12,8 +13,15 @@ import { Label } from "@/components/ui/label";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLocalhost, setIsLocalhost] = useState(false);
   const { forgotPassword, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if we're on localhost for special messaging
+    const hostname = window.location.hostname;
+    setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +81,13 @@ const ForgotPassword = () => {
                     We've sent a password reset link to <span className="font-medium">{email}</span>.
                     Please check your inbox and spam folder.
                   </p>
+                  
+                  {isLocalhost && (
+                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                      <p className="font-medium">Local Development Note:</p>
+                      <p>Password reset links may have issues in local environments. If you don't see the email or the link doesn't work, try in production or contact support.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col space-y-3">
@@ -110,6 +125,17 @@ const ForgotPassword = () => {
                     placeholder="Enter your email"
                   />
                 </div>
+
+                {isLocalhost && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
+                    <p className="font-medium">Testing on localhost:</p>
+                    <p>Password reset links may have issues in local environments. If testing, make sure Supabase URL settings include:</p>
+                    <ul className="list-disc pl-5 mt-1 space-y-1">
+                      <li>Site URL: {window.location.origin}</li>
+                      <li>Redirect URL: {window.location.origin}/reset-password</li>
+                    </ul>
+                  </div>
+                )}
 
                 <Button
                   type="submit"
