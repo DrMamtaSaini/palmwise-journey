@@ -26,9 +26,10 @@ const Login = () => {
       if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
         setGoogleAuthError(true);
         toast.error("Google authentication failed", {
-          description: "Google authentication is not properly configured. Please contact support.",
+          description: "Google authentication is not configured in Supabase. Please enable it in the Supabase dashboard.",
           duration: 8000,
         });
+        console.error("Google provider is not enabled in Supabase. Please enable it in the Supabase dashboard.");
       } else {
         handleEmailVerificationError(errorCode, errorDescription);
       }
@@ -60,7 +61,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     if (googleAuthError) {
       toast.error("Google authentication is not available", {
-        description: "Please use email/password login or contact support.",
+        description: "Google authentication is not configured in Supabase. Please use email/password login.",
         duration: 5000,
       });
       return;
@@ -83,6 +84,13 @@ const Login = () => {
                 Login to access your palm readings and insights
               </p>
             </div>
+
+            {googleAuthError && (
+              <div className="mb-6 p-4 border border-orange-200 bg-orange-50 text-orange-800 rounded-lg">
+                <p className="text-sm font-medium">Google authentication is not configured</p>
+                <p className="text-xs mt-1">Please use email/password login or contact the administrator to enable Google login.</p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
