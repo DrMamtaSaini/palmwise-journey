@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { v4 as uuidv4 } from 'uuid';
@@ -83,54 +82,38 @@ class PalmAnalysisService {
       const readingId = uuidv4();
       
       // Call the edge function to analyze the palm image
-      const { data: results, error } = await supabase.functions
+      const { data, error } = await supabase.functions
         .invoke('analyze-palm', {
           body: { imageUrl }
         });
-        
-      if (error) {
+
+      // If there's an error but fallbackData is provided, use that
+      if (error && data?.fallbackData) {
+        console.log('Using fallback data due to error:', error);
+        data.results = data.fallbackData;
+      } else if (error) {
         console.error('Edge function error:', error);
         throw new Error('AI analysis failed: ' + error.message);
       }
       
-      // Create the palm reading with real AI analysis
+      // Create the palm reading with real AI analysis or fallback data
+      const results = data || generateFallbackResults();
+      
+      // Make sure fate data is consistent with fateLinePresent flag
+      if (results.fateLinePresent && !results.fate) {
+        results.fate = {
+          strength: Math.random() * 100,
+          prediction: "Your fate line suggests a strong career trajectory with potential for leadership."
+        };
+      }
+      
       const reading: PalmReading = {
         id: readingId,
         userId,
         imageUrl,
         createdAt: new Date().toISOString(),
-        results: results || {
-          lifeLine: {
-            strength: Math.random() * 100,
-            prediction: "Your life line indicates a long and healthy life, with challenges that you will overcome."
-          },
-          heartLine: {
-            strength: Math.random() * 100,
-            prediction: "Your heart line shows a capacity for deep emotional connections and passion."
-          },
-          headLine: {
-            strength: Math.random() * 100,
-            prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities."
-          },
-          fateLinePresent: Math.random() > 0.3,
-          overallSummary: "Your palm reveals balance between emotion and intellect, with potential for growth in creative endeavors.",
-          personalityTraits: [
-            "Empathetic",
-            "Analytical",
-            "Creative",
-            "Resilient",
-            "Adaptable"
-          ]
-        }
+        results
       };
-      
-      // Add fate line data if present
-      if (reading.results.fateLinePresent && !reading.results.fate) {
-        reading.results.fate = {
-          strength: Math.random() * 100,
-          prediction: "Your fate line suggests a strong career trajectory with potential for leadership."
-        };
-      }
       
       // Save to Supabase database
       const { error: dbError } = await supabase
@@ -148,6 +131,8 @@ class PalmAnalysisService {
       if (dbError) {
         console.error('Error saving reading to database:', dbError);
         // Continue even if there's a DB error, so user can still see the reading
+      } else {
+        console.log('Successfully saved palm reading to database:', reading.id);
       }
       
       toast.success('Palm analysis complete', {
@@ -159,11 +144,27 @@ class PalmAnalysisService {
       console.error('Palm analysis error:', error);
       
       toast.error('Analysis failed', {
-        description: 'There was a problem analyzing your palm. Please try again.',
+        description: 'Using a default reading instead. You can try again later.',
+        duration: 5000
       });
       
-      throw error;
+      // Even if there's an error, return a fallback reading so the user sees something
+      const fallbackReading = this.createFallbackReading(imageUrl, userId);
+      return fallbackReading;
     }
+  }
+
+  private createFallbackReading(imageUrl: string, userId: string): PalmReading {
+    const readingId = uuidv4();
+    const results = generateFallbackResults();
+    
+    return {
+      id: readingId,
+      userId,
+      imageUrl,
+      createdAt: new Date().toISOString(),
+      results
+    };
   }
 
   public async getPalmReadings(userId: string): Promise<PalmReading[]> {
@@ -221,6 +222,33 @@ class PalmAnalysisService {
       return null;
     }
   }
+}
+
+// Fallback result generator for consistent readings even when AI fails
+function generateFallbackResults() {
+  return {
+    lifeLine: {
+      strength: Math.floor(Math.random() * 30) + 70,
+      prediction: "Your life line indicates a long and healthy life, with challenges that you will overcome."
+    },
+    heartLine: {
+      strength: Math.floor(Math.random() * 30) + 70,
+      prediction: "Your heart line shows a capacity for deep emotional connections and passion."
+    },
+    headLine: {
+      strength: Math.floor(Math.random() * 30) + 70,
+      prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities."
+    },
+    fateLinePresent: Math.random() > 0.3,
+    overallSummary: "Your palm reveals balance between emotion and intellect, with potential for growth in creative endeavors.",
+    personalityTraits: [
+      "Empathetic",
+      "Analytical",
+      "Creative",
+      "Resilient",
+      "Adaptable"
+    ]
+  };
 }
 
 export default PalmAnalysisService.getInstance();

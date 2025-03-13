@@ -26,7 +26,24 @@ const UploadPalm = () => {
       }
       
       const reading = await PalmAnalysisService.analyzePalm(imageUrl, user.id);
-      navigate(`/reading-results/${reading.id}`);
+      console.log("Palm reading created:", reading);
+      
+      // Ensure we have a valid reading ID before redirecting
+      if (reading && reading.id) {
+        toast.success("Reading ready", {
+          description: "Redirecting you to your palm reading results...",
+          duration: 3000
+        });
+        
+        // Add a small delay to make sure the toast is seen
+        setTimeout(() => {
+          navigate(`/reading-results/${reading.id}`);
+        }, 1000);
+      } else {
+        toast.error("Could not generate reading ID", {
+          description: "Please try again later."
+        });
+      }
     } catch (error) {
       console.error("Analysis error:", error);
       toast.error("Analysis failed", {
