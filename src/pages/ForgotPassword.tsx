@@ -27,10 +27,10 @@ const ForgotPassword = () => {
     }
 
     try {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const redirectUrl = isLocalhost 
-        ? `${window.location.origin}/reset-password` 
-        : `${window.location.origin}/reset-password`;
+      // Get the current origin
+      const origin = window.location.origin;
+      // Set the redirect URL to the reset-password page at the current origin
+      const redirectUrl = `${origin}/reset-password`;
       
       console.log('Using redirect URL:', redirectUrl);
       
