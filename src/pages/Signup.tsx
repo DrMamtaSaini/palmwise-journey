@@ -13,7 +13,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [googleAuthError, setGoogleAuthError] = useState(false);
+  const [googleAuthDisabled, setGoogleAuthDisabled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signUp, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
@@ -28,9 +28,9 @@ const Signup = () => {
       console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
       
       if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
-        setGoogleAuthError(true);
-        toast.error("Google authentication failed", {
-          description: "Email/password signup is available. Google auth may not be configured in Supabase.",
+        setGoogleAuthDisabled(true);
+        toast.error("Google authentication not available", {
+          description: "Google Sign In is not enabled for this application. Please use email/password to sign up.",
           duration: 8000,
         });
       } else {
@@ -89,9 +89,9 @@ const Signup = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    if (googleAuthError) {
-      toast.error("Google authentication is not available", {
-        description: "Please use email/password signup instead.",
+    if (googleAuthDisabled) {
+      toast.error("Google authentication not available", {
+        description: "Please use email/password to sign up.",
         duration: 5000,
       });
       return;

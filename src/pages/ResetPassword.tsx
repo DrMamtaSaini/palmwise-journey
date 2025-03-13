@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,39 +15,31 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validResetFlow, setValidResetFlow] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
+  const [isValidSession, setIsValidSession] = useState(false);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    const checkResetFlow = async () => {
-      // Handle code from different possible locations
-      const currentUrl = new URL(window.location.href);
-      let code = currentUrl.searchParams.get('code');
-      
-      console.log("Reset password page loaded, checking for code parameter");
-      console.log("Current path:", currentUrl.pathname);
-      console.log("Code parameter:", code);
-      console.log("Hash:", window.location.hash);
-      
-      // If we're on root path instead of /reset-password with a code, 
-      // detect this incorrect redirect case and handle it
-      if (currentUrl.pathname === '/' && code) {
-        console.log("Detected code on root path instead of reset-password path");
-        // We need to redirect to the correct path with the code
-        const newUrl = `${window.location.origin}/reset-password?code=${code}`;
-        console.log("Redirecting to the correct path:", newUrl);
-        window.location.href = newUrl;
-        return;
-      }
-
-      if (code) {
-        console.log("Code parameter found in URL, validating with Supabase");
-        setValidResetFlow(true);
-
-        try {
-          // Verify the token/code with Supabase
+    const validateResetSession = async () => {
+      try {
+        setIsValidating(true);
+        
+        // Check for code in URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        
+        // Check for hash based recovery flow (used by some Supabase auth methods)
+        const hash = window.location.hash;
+        const isHashRecovery = hash && (hash.includes('type=recovery') || hash.includes('access_token='));
+        
+        console.log("Validating reset session...");
+        console.log("Code in URL:", code);
+        console.log("Hash recovery detected:", isHashRecovery);
+        
+        // If we have a code, we need to exchange it for a session
+        if (code) {
+          console.log("Exchanging code for session...");
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           
           if (error) {
@@ -58,33 +50,36 @@ const ResetPassword = () => {
             navigate('/forgot-password');
             return;
           }
-
-          console.log("Successfully validated code, session established:", data);
-          // Valid code, we can continue with password reset
-        } catch (error) {
-          console.error("Error during code validation:", error);
-          toast.error("Error validating reset link", {
-            description: "Please try again or request a new reset link.",
-          });
-          navigate('/forgot-password');
-        }
-      } else {
-        // Check for hash-based recovery flow (#access_token=...)
-        const hash = window.location.hash;
-        if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
-          console.log("Hash-based recovery flow detected:", hash);
-          setValidResetFlow(true);
-        } else {
-          console.log("No valid reset parameters found, redirecting to login");
+          
+          console.log("Code exchange successful:", !!data);
+          setIsValidSession(true);
+        } 
+        // If we have a hash-based recovery flow
+        else if (isHashRecovery) {
+          console.log("Hash-based recovery flow detected");
+          setIsValidSession(true);
+        } 
+        // If we don't have either, the user shouldn't be on this page
+        else {
+          console.log("No valid reset parameters found");
           toast.error("Invalid reset link", {
             description: "This page can only be accessed from a password reset email.",
           });
           navigate('/login');
+          return;
         }
+      } catch (error) {
+        console.error("Session validation error:", error);
+        toast.error("Error validating reset link", {
+          description: "Please try again or request a new reset link.",
+        });
+        navigate('/forgot-password');
+      } finally {
+        setIsValidating(false);
       }
     };
     
-    checkResetFlow();
+    validateResetSession();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,6 +102,7 @@ const ResetPassword = () => {
     try {
       console.log("Attempting to update password");
       const success = await updatePassword(password);
+      
       if (success) {
         toast.success("Password updated", {
           description: "Your password has been successfully updated. You can now log in with your new password.",
@@ -123,7 +119,7 @@ const ResetPassword = () => {
     }
   };
 
-  if (!validResetFlow && isLoading) {
+  if (isValidating) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -131,6 +127,34 @@ const ResetPassword = () => {
           <div className="text-center">
             <p className="text-xl">Validating reset link...</p>
             <div className="mt-4 w-8 h-8 border-4 border-palm-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isValidSession) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
+          <div className="w-full max-w-md">
+            <div className="bg-white rounded-2xl shadow-soft p-8 animate-fade-in">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold mb-2">Invalid Reset Link</h1>
+                <p className="text-gray-600">
+                  This reset link is invalid or has expired.
+                </p>
+              </div>
+              <div className="text-center mt-6">
+                <Link to="/forgot-password">
+                  <Button className="w-full bg-palm-purple hover:bg-palm-purple/90">
+                    Request New Reset Link
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </main>
         <Footer />
