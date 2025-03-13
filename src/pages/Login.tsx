@@ -9,15 +9,26 @@ import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingInWithGoogle, setIsLoggingInWithGoogle] = useState(false);
+  const [portMismatch, setPortMismatch] = useState(false);
   const { signIn, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check if we have a port mismatch with Supabase config
+  useEffect(() => {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost && window.location.port !== '8080') {
+      console.log("Detected port mismatch with Supabase config");
+      setPortMismatch(true);
+    }
+  }, []);
 
   // Handle authentication redirects and errors
   useEffect(() => {
@@ -87,6 +98,16 @@ const Login = () => {
               <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
               <p className="text-gray-600">Sign in to continue to your account</p>
             </div>
+
+            {portMismatch && (
+              <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <p className="font-medium">Your app is running on port {window.location.port}, but Supabase expects port 8080.</p>
+                  <p className="text-sm mt-1">This may cause issues with authentication. Consider updating your Supabase redirect URLs or running your app on port 8080.</p>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

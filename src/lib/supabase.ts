@@ -21,10 +21,33 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Add useful debugging
+// Log the current environment details for debugging
 console.log("Supabase client initialized with URL:", supabaseUrl);
 console.log("Current browser location:", window.location.href);
 console.log("Current origin:", window.location.origin);
+console.log("Supabase redirect settings should match current origin or port 8080 equivalent");
+
+// Get the configured port for the application
+const getConfiguredPort = () => {
+  const currentPort = window.location.port;
+  console.log("Current application port:", currentPort);
+  return currentPort || (window.location.protocol === 'https:' ? '443' : '80');
+};
+
+// Get the origin that should be used for auth redirects
+export const getRedirectOrigin = () => {
+  // If we're on localhost and the port doesn't match 8080 (Supabase config),
+  // log a warning to help with debugging
+  if (window.location.hostname === 'localhost' && getConfiguredPort() !== '8080') {
+    console.warn(
+      "⚠️ Your app is running on port " + getConfiguredPort() + 
+      " but Supabase is configured for port 8080. " +
+      "Authentication redirects may not work correctly."
+    );
+  }
+  
+  return window.location.origin;
+};
 
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {

@@ -1,6 +1,6 @@
 
 import { toast } from "sonner";
-import { supabase } from "../lib/supabase";
+import { supabase, getRedirectOrigin } from "../lib/supabase";
 
 interface User {
   id: string;
@@ -320,9 +320,24 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // Important: Get the window location at the time of the request
-      const origin = window.location.origin;
+      // Important: Get the window location at the time of the request with proper port handling
+      const origin = getRedirectOrigin();
       console.log("Using origin for Google sign-in:", origin);
+      
+      // Check if this is a localhost environment
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        console.log("⚠️ Localhost environment detected for Google sign-in");
+        
+        // Alert about the port mismatch if different from 8080 (Supabase config)
+        if (window.location.port !== '8080') {
+          console.warn(
+            "⚠️ Your app is running on port " + window.location.port +
+            " but Supabase is configured for port 8080. " +
+            "OAuth redirects may not work correctly."
+          );
+        }
+      }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
