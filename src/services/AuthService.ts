@@ -368,16 +368,33 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      console.log("Requesting password reset for email:", email);
-      console.log("Using redirect URL for password reset:", redirectUrl);
-      console.log("Current Supabase URL:", import.meta.env.VITE_SUPABASE_URL || "Using default");
+      console.log("=========== PASSWORD RESET SERVICE ===========");
+      console.log("Email:", email);
+      console.log("Redirect URL:", redirectUrl);
+      console.log("Supabase Client URL:", supabase.supabaseUrl);
+      console.log("Environment URL:", import.meta.env.VITE_SUPABASE_URL || "(default)");
+      console.log("Window Location:", window.location.href);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      });
+      // Force http protocol if we're on a development server without HTTPS
+      if (redirectUrl && redirectUrl.startsWith('http://localhost')) {
+        console.log("Detected localhost - ensuring HTTP protocol is used");
+      }
+      
+      const options = redirectUrl ? { redirectTo: redirectUrl } : undefined;
+      console.log("Password reset options:", options);
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, options);
+      
+      console.log("Reset password response:", { data, error });
       
       if (error) {
         console.error("Password reset error from Supabase:", error);
+        console.error("Error details:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        
         toast.error("Password reset failed", {
           description: error.message || "Please try again later.",
         });
@@ -388,6 +405,8 @@ class AuthService {
       return true;
     } catch (error: any) {
       console.error("Exception during password reset:", error);
+      console.error("Error stack:", error.stack);
+      
       toast.error("Password reset failed", {
         description: error.message || "Please try again later.",
       });

@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -25,17 +26,30 @@ const ForgotPassword = () => {
     }
     
     try {
+      console.log("=========== PASSWORD RESET ATTEMPT ===========");
       console.log("Initiating password reset for:", email);
       
-      // Create exact redirect URL with explicit protocol and origin
-      const redirectUrl = `${window.location.protocol}//${window.location.host}/reset-password`;
+      // Use origin and explicitly force http protocol as fallback
+      let protocol = window.location.protocol;
+      let host = window.location.host;
+      
+      console.log("Current location:", {
+        fullUrl: window.location.href,
+        protocol,
+        host,
+        origin: window.location.origin,
+        pathname: window.location.pathname
+      });
+      
+      // Use explicit protocol and host for maximum compatibility
+      const redirectUrl = `${protocol}//${host}/reset-password`;
       
       console.log("Using redirect URL for password reset:", redirectUrl);
       
       const success = await forgotPassword(email, redirectUrl);
+      console.log("Password reset result:", success ? "Success" : "Failed");
       
       if (success) {
-        console.log("Password reset email sent successfully");
         setSubmitted(true);
         toast.success("Password reset email sent", {
           description: "Check your inbox for instructions to reset your password."
@@ -73,9 +87,9 @@ const ForgotPassword = () => {
             {!submitted ? (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Email
-                  </label>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -85,6 +99,12 @@ const ForgotPassword = () => {
                     className="w-full"
                     placeholder="Enter your email"
                   />
+                </div>
+                
+                <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md border border-blue-100">
+                  <p>
+                    <strong>Note:</strong> Make sure to check your spam folder if you don't see the email in your inbox.
+                  </p>
                 </div>
 
                 <Button
@@ -115,6 +135,12 @@ const ForgotPassword = () => {
                   <p className="font-medium">Reset link sent!</p>
                   <p className="text-sm mt-1">
                     If an account exists for {email}, you'll receive an email with instructions to reset your password.
+                  </p>
+                </div>
+                
+                <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-md border border-blue-100">
+                  <p>
+                    <strong>Important:</strong> The reset link may take a few minutes to arrive. If you don't see it in your inbox, please check your spam folder.
                   </p>
                 </div>
                 

@@ -10,14 +10,31 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create and export the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    flowType: 'pkce',
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    persistSession: true
+  }
+});
 
 // Add useful debugging
 console.log("Supabase client initialized with URL:", supabaseUrl);
+console.log("Current browser location:", window.location.href);
 
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
+  
+  // Additional logging for specific events
+  if (event === 'PASSWORD_RECOVERY') {
+    console.log("Password recovery event detected!");
+  }
+  
+  if (event === 'TOKEN_REFRESHED') {
+    console.log("Token refreshed event detected!");
+  }
 });
 
 // Define response type for better type safety
@@ -29,9 +46,12 @@ export type AuthTokenHandlerResult =
 // Handle URL with tokens on page load
 export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> {
   try {
+    console.log("============ CHECKING FOR AUTH TOKENS ===========");
+    console.log("Current URL:", window.location.href);
+    
     // First check for a hash in the URL (most likely when coming from an email link)
     if (window.location.hash && window.location.hash.length > 1) {
-      console.log("Found hash in URL, attempting to process");
+      console.log("Found hash in URL:", window.location.hash);
       
       // Process the hash - works for both recovery and verification
       // This handles the case where tokens are passed in the URL hash
@@ -46,7 +66,7 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     const code = params.get('code');
     
     if (code) {
-      console.log("Code parameter found, attempting to exchange for session");
+      console.log("Code parameter found:", code);
       const result = await handleCodeBasedToken(code);
       if (result.success) {
         return result;
@@ -82,6 +102,12 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
       const params = new URLSearchParams(hash);
       accessToken = params.get('access_token') || '';
       refreshToken = params.get('refresh_token') || '';
+      
+      // Also check for type=recovery which indicates a password reset flow
+      const type = params.get('type');
+      if (type === 'recovery') {
+        console.log("Recovery flow detected in hash");
+      }
     } else if (hash.startsWith('eyJ')) {
       // Raw JWT token
       accessToken = hash;
@@ -129,7 +155,7 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
 // Handle code parameter in URL (Supabase new style)
 async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResult> {
   try {
-    console.log("Exchanging code for session");
+    console.log("Exchanging code for session:", code);
     
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
