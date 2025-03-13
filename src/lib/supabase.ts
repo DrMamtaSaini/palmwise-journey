@@ -157,31 +157,53 @@ async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResul
   try {
     console.log("Exchanging code for session:", code);
     
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    
-    if (error) {
-      console.error("Error exchanging code for session:", error);
+    try {
+      // On localhost, this can sometimes fail due to protocol issues
+      // Let's add extra debugging and handle the error gracefully
+      console.log("About to exchange code for session with Supabase");
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error("Error exchanging code for session:", error);
+        return { 
+          success: false, 
+          error,
+          message: `Error exchanging code: ${error.message}`
+        };
+      }
+      
+      console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
+      
+      // Clean up the URL by removing the code parameter and update browser history
+      if (window.history && window.history.replaceState) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('code');
+        window.history.replaceState(null, document.title, cleanUrl.toString());
+      }
+      
       return { 
-        success: false, 
-        error,
-        message: `Error exchanging code: ${error.message}`
+        success: !!data.session, 
+        session: data.session,
+        message: data.session ? "Session created successfully" : "No session created"
       };
+    } catch (error) {
+      console.error("Exception during code exchange:", error);
+      
+      // Special handling for localhost errors, which are common in development
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        console.log("Detected localhost environment - this may be causing connection issues with Supabase");
+        
+        // If we're on localhost and have a code parameter, it's likely a password reset link that was clicked
+        // Let's suggest a workaround
+        return {
+          success: false,
+          message: "Localhost detected - if this is a password reset link, try opening it in a production environment or configure Supabase to work with localhost"
+        };
+      }
+      
+      return { success: false, error, message: "Error exchanging code for session" };
     }
-    
-    console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
-    
-    // Clean up the URL by removing the code parameter and update browser history
-    if (window.history && window.history.replaceState) {
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete('code');
-      window.history.replaceState(null, document.title, cleanUrl.toString());
-    }
-    
-    return { 
-      success: !!data.session, 
-      session: data.session,
-      message: data.session ? "Session created successfully" : "No session created"
-    };
   } catch (error) {
     console.error("Exception during code exchange:", error);
     return { success: false, error, message: "Error exchanging code for session" };

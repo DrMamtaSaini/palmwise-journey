@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
@@ -24,10 +23,12 @@ const ResetPassword = () => {
     async function verifyResetToken() {
       try {
         console.log("Verifying password reset token...");
+        console.log("Current URL:", window.location.href);
         setIsVerifying(true);
         
         // Try to handle any auth tokens in the URL
         const tokenResult = await handleAuthTokensOnLoad();
+        console.log("Token handling result:", tokenResult);
         
         if (tokenResult.success) {
           console.log("Valid auth token confirmed");

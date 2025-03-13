@@ -29,11 +29,24 @@ const ForgotPassword = () => {
       console.log("=========== PASSWORD RESET ATTEMPT ===========");
       console.log("Initiating password reset for:", email);
       
-      // Use the current domain for the redirect URL
-      const currentUrl = window.location.origin;
-      const redirectUrl = `${currentUrl}/reset-password`;
+      // Get the base URL
+      const origin = window.location.origin;
+      const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
       
-      console.log("Current domain:", currentUrl);
+      // For localhost development, we need to ensure we use http:// protocol explicitly
+      let redirectUrl;
+      if (isLocalhost) {
+        // Extract port from origin if it exists
+        const match = origin.match(/:(\d+)$/);
+        const port = match ? match[1] : '8080'; // Default to 8080 if no port found
+        redirectUrl = `http://localhost:${port}/reset-password`;
+      } else {
+        // For production deployments, use the origin directly
+        redirectUrl = `${origin}/reset-password`;
+      }
+      
+      console.log("Current origin:", origin);
+      console.log("Is localhost:", isLocalhost);
       console.log("Using redirect URL for password reset:", redirectUrl);
       
       const success = await forgotPassword(email, redirectUrl);
