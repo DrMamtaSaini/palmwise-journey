@@ -369,7 +369,7 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      const siteUrl = redirectUrl || `${window.location.origin}`;
+      const siteUrl = redirectUrl || `${window.location.origin}/reset-password`;
       console.log("Using redirect URL for password reset:", siteUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -450,3 +450,4 @@ class AuthService {
 }
 
 export default AuthService.getInstance();
+

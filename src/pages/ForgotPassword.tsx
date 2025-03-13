@@ -27,13 +27,13 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // For password resets, we want to use the absolute base URL only
-      // The hash-based auth flow will handle the rest
-      const baseUrl = window.location.origin;
+      // We need to properly setup the redirect URL to the reset page
+      // The ?next= query param is important for handling auth redirects properly
+      const redirectUrl = `${window.location.origin}/reset-password`;
       
-      console.log("Using redirect URL for password reset:", baseUrl);
+      console.log("Using redirect URL for password reset:", redirectUrl);
       
-      const success = await forgotPassword(email, baseUrl);
+      const success = await forgotPassword(email, redirectUrl);
       
       if (success) {
         console.log("Password reset email sent successfully");

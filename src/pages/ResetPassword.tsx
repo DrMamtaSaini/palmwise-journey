@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase, checkForAuthInUrl } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -25,46 +25,12 @@ const ResetPassword = () => {
     const verifyResetFlow = async () => {
       console.log("Reset password page loaded, URL:", window.location.href);
       
-      // First check for hash-based auth (more common)
-      if (window.location.hash) {
-        console.log("Hash detected in URL:", window.location.hash);
-        
-        try {
-          // First check if we can extract a session from the URL hash
-          const { success, error } = await checkForAuthInUrl();
-          
-          if (success) {
-            console.log("Successfully got session from URL hash");
-            setValidResetFlow(true);
-            setAuthChecked(true);
-            return;
-          } else if (error) {
-            console.error("Error extracting session from hash:", error);
-          }
-          
-          // If that failed, try another approach with getSession
-          const { data, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            console.error("Error getting auth session:", sessionError);
-          } else if (data.session) {
-            console.log("Found existing session");
-            setValidResetFlow(true);
-            setAuthChecked(true);
-            return;
-          }
-        } catch (err) {
-          console.error("Error in hash-based auth flow:", err);
-        }
-      }
-      
-      // Then check for code-based flow (via URL parameter)
+      // Check for code parameter (most common for password reset)
       const params = new URLSearchParams(location.search);
       const code = params.get('code');
       
       if (code) {
         console.log("Code parameter found:", code);
-        
         try {
           // Exchange the code for a session
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -92,8 +58,32 @@ const ResetPassword = () => {
           });
           navigate('/forgot-password');
         }
-      } else if (!window.location.hash) {
-        // No code or hash found
+      } else if (window.location.hash && window.location.hash.includes('type=recovery')) {
+        // For hash-based recovery flow
+        console.log("Hash recovery flow detected:", window.location.hash);
+        try {
+          // Check if we already have a session
+          const { data: sessionData } = await supabase.auth.getSession();
+          
+          if (sessionData.session) {
+            console.log("User has an active session, proceeding with password reset");
+            setValidResetFlow(true);
+          } else {
+            console.warn("No session found with recovery hash");
+            toast.error("Authentication failed", {
+              description: "Please try again or request a new password reset link.",
+            });
+            navigate('/forgot-password');
+          }
+        } catch (err) {
+          console.error("Error processing recovery hash:", err);
+          toast.error("Error processing recovery data", {
+            description: "Please request a new password reset link.",
+          });
+          navigate('/forgot-password');
+        }
+      } else {
+        // No valid reset parameters found
         console.log("No valid reset parameters found");
         toast.error("Invalid reset link", {
           description: "This page can only be accessed from a password reset email.",

@@ -15,8 +15,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storageKey: 'supabase.auth.token', // Consistent storage key
-    flowType: 'pkce' // Using PKCE flow for better security
+    storageKey: 'supabase.auth.token',
+    flowType: 'pkce'
   }
 });
 
@@ -31,21 +31,52 @@ supabase.auth.onAuthStateChange((event, session) => {
 // Export a function to explicitly check URL hash for auth flows
 export async function checkForAuthInUrl() {
   try {
-    console.log("Checking for auth in URL hash");
-    const { data, error } = await supabase.auth.getSessionFromUrl();
+    console.log("Checking for auth in URL hash/params");
     
-    if (error) {
-      console.error("Error getting session from URL:", error);
-      return { success: false, error };
+    // Use the correct method for checking for auth in URL
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      // Process the hash part manually
+      console.log("Hash contains access_token, attempting to extract session");
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error getting session from hash:", error);
+        return { success: false, error };
+      }
+      
+      if (data?.session) {
+        console.log("Successfully retrieved session from hash");
+        return { success: true, session: data.session };
+      }
+    } else if (window.location.search && window.location.search.includes('code=')) {
+      // Process the code parameter
+      console.log("URL contains code parameter");
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      
+      if (code) {
+        console.log("Attempting to exchange code for session");
+        try {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            console.error("Error exchanging code for session:", error);
+            return { success: false, error };
+          }
+          
+          if (data?.session) {
+            console.log("Successfully exchanged code for session");
+            return { success: true, session: data.session };
+          }
+        } catch (exchangeError) {
+          console.error("Exception during code exchange:", exchangeError);
+          return { success: false, error: exchangeError };
+        }
+      }
     }
     
-    if (data?.session) {
-      console.log("Successfully retrieved session from URL");
-      return { success: true, session: data.session };
-    } else {
-      console.log("No session found in URL");
-      return { success: false };
-    }
+    console.log("No auth parameters found in URL");
+    return { success: false };
   } catch (error) {
     console.error("Exception checking for auth in URL:", error);
     return { success: false, error };
