@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -12,9 +12,9 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { signUp, isLoading, isAuthenticated } = useAuth();
+  const { signUp, signInWithGoogle, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     // If user is already authenticated, redirect to dashboard
@@ -26,10 +26,32 @@ const Signup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!termsAccepted) {
+      toast.error("Please accept the terms", {
+        description: "You must accept the Terms of Service and Privacy Policy to continue."
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password too short", {
+        description: "Your password must be at least 8 characters long."
+      });
+      return;
+    }
+    
     const success = await signUp(name, email, password);
     if (success) {
-      navigate("/dashboard");
+      toast.success("Email verification sent", {
+        description: "Please check your email to verify your account before logging in."
+      });
+      navigate("/login");
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    await signInWithGoogle();
+    // No need to navigate as the redirect will happen automatically
   };
 
   return (
@@ -88,6 +110,7 @@ const Signup = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={8}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-palm-purple focus:border-transparent"
                     placeholder="Create a password"
                   />
@@ -108,7 +131,8 @@ const Signup = () => {
                 <input
                   id="terms"
                   type="checkbox"
-                  required
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
                   className="h-4 w-4 text-palm-purple focus:ring-palm-purple border-gray-300 rounded"
                 />
                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
@@ -146,6 +170,8 @@ const Signup = () => {
 
               <button
                 type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
                 className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
               >
                 <img
@@ -153,7 +179,7 @@ const Signup = () => {
                   alt="Google logo"
                   className="w-5 h-5 mr-2"
                 />
-                <span>Continue with Google</span>
+                <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
               </button>
 
               <p className="text-center text-gray-600 text-sm mt-8">

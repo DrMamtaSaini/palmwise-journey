@@ -49,10 +49,8 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    const success = await signInWithGoogle();
-    if (success) {
-      navigate("/dashboard");
-    }
+    await signInWithGoogle();
+    // No need to navigate here as the redirect will happen automatically
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -216,7 +217,8 @@ class AuthService {
         options: {
           data: {
             name,
-          }
+          },
+          emailRedirectTo: window.location.origin + '/login'
         }
       });
       
@@ -250,11 +252,23 @@ class AuthService {
         }
         
         toast.success('Account created', {
-          description: 'Your account has been successfully created.',
+          description: 'Please check your email to verify your account.',
         });
+        
+        this.authState = {
+          ...this.authState,
+          isLoading: false,
+        };
+        this.notifyListeners();
         
         return true;
       }
+      
+      this.authState = {
+        ...this.authState,
+        isLoading: false,
+      };
+      this.notifyListeners();
       
       return false;
     } catch (error: any) {
@@ -314,7 +328,7 @@ class AuthService {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: `${window.location.origin}/dashboard`
         }
       });
       
