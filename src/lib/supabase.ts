@@ -56,7 +56,7 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     return { success: false, message: "No auth tokens found in URL" };
   } catch (error) {
     console.error("Exception handling auth tokens:", error);
-    return { success: false, error };
+    return { success: false, error, message: "Error processing authentication tokens" };
   }
 }
 
@@ -69,25 +69,40 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
     
     // Remove the # character and parse the parameters
     const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
     
-    // Check for access_token which appears in recovery and magic link flows
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    const type = params.get('type');
+    // Log the raw hash for debugging
+    console.log("Processing hash:", hash);
+    
+    // Handle multiple formats - some implementations use URLSearchParams format, others use direct hash
+    let accessToken = '';
+    let refreshToken = '';
+    
+    if (hash.includes('=')) {
+      // Standard format with key=value pairs
+      const params = new URLSearchParams(hash);
+      accessToken = params.get('access_token') || '';
+      refreshToken = params.get('refresh_token') || '';
+    } else if (hash.startsWith('eyJ')) {
+      // Raw JWT token
+      accessToken = hash;
+    }
     
     if (accessToken) {
-      console.log("Processing hash with access token, type:", type);
+      console.log("Found access token in hash, setting session");
       
       // Set the session using the tokens
       const { data, error } = await supabase.auth.setSession({
         access_token: accessToken,
-        refresh_token: refreshToken || '',
+        refresh_token: refreshToken,
       });
       
       if (error) {
         console.error("Error processing token from hash:", error);
-        return { success: false, error };
+        return { 
+          success: false, 
+          error, 
+          message: `Error setting session: ${error.message}` 
+        };
       }
       
       console.log("Successfully processed token from hash:", data.session ? "Session created" : "No session");
@@ -97,13 +112,17 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
         window.history.replaceState(null, document.title, window.location.pathname);
       }
       
-      return { success: !!data.session, session: data.session };
+      return { 
+        success: !!data.session, 
+        session: data.session,
+        message: data.session ? "Session created successfully" : "No session created" 
+      };
     }
     
     return { success: false, message: "No access token found in hash" };
   } catch (error) {
     console.error("Exception handling hash tokens:", error);
-    return { success: false, error };
+    return { success: false, error, message: "Error processing hash tokens" };
   }
 }
 
@@ -116,7 +135,11 @@ async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResul
     
     if (error) {
       console.error("Error exchanging code for session:", error);
-      return { success: false, error };
+      return { 
+        success: false, 
+        error,
+        message: `Error exchanging code: ${error.message}`
+      };
     }
     
     console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
@@ -128,10 +151,14 @@ async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResul
       window.history.replaceState(null, document.title, cleanUrl.toString());
     }
     
-    return { success: !!data.session, session: data.session };
+    return { 
+      success: !!data.session, 
+      session: data.session,
+      message: data.session ? "Session created successfully" : "No session created"
+    };
   } catch (error) {
     console.error("Exception during code exchange:", error);
-    return { success: false, error };
+    return { success: false, error, message: "Error exchanging code for session" };
   }
 }
 
