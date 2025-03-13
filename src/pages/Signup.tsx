@@ -98,14 +98,23 @@ const Signup = () => {
     
     try {
       console.log("Initiating Google sign in from Signup page");
+      
+      // Show loading state and notification
       toast.info("Redirecting to Google", {
         description: "You will be redirected to Google for authentication...",
       });
       
-      // Add a slight delay before initiating Google sign-in to ensure toast is shown
+      // This is a direct, simpler approach to sign in with Google
+      // Sometimes the browser blocks redirects that happen too quickly after a user action
+      // Adding this short timeout can help avoid that issue
       setTimeout(async () => {
-        await signInWithGoogle();
-      }, 500);
+        const result = await signInWithGoogle();
+        if (!result) {
+          toast.error("Google sign-in could not be initiated", {
+            description: "Please try again or use email/password signup instead.",
+          });
+        }
+      }, 800);
     } catch (error) {
       console.error("Google sign in error:", error);
       toast.error("Google signup failed", {

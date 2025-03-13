@@ -315,12 +315,18 @@ class AuthService {
 
   public async signInWithGoogle(): Promise<boolean> {
     try {
-      console.log("Signing in with Google - simplified approach");
+      console.log("Initiating Google sign-in via standard OAuth flow");
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            prompt: 'select_account'
+          }
+        }
       });
       
       if (error) {
@@ -338,7 +344,7 @@ class AuthService {
         return false;
       }
       
-      console.log("Google sign in initiated:", data);
+      console.log("Google sign in initiated successfully with URL:", data.url);
       return true;
     } catch (error: any) {
       console.error('Google sign in error:', error);
