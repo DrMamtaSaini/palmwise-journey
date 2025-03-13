@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json();
+    const { imageUrl, language = 'english' } = await req.json();
     
     if (!imageUrl) {
       return new Response(
@@ -24,9 +24,10 @@ serve(async (req) => {
     }
 
     console.log("Analyzing palm image:", imageUrl);
+    console.log("Requested language:", language);
     
     // Generate enhanced palm analysis data
-    const analysis = generateDetailedPalmAnalysis();
+    const analysis = generateDetailedPalmAnalysis(language);
     
     return new Response(
       JSON.stringify(analysis),
@@ -39,7 +40,7 @@ serve(async (req) => {
         error: "Failed to analyze palm image", 
         details: error.message,
         // Return fallback data to prevent app from breaking
-        fallbackData: generateDetailedPalmAnalysis()
+        fallbackData: generateDetailedPalmAnalysis('english')
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
@@ -47,7 +48,14 @@ serve(async (req) => {
 });
 
 // This function generates more detailed palm reading data with enhanced predictions
-function generateDetailedPalmAnalysis() {
+function generateDetailedPalmAnalysis(language = 'english') {
+  // For now, we'll return the English version as a placeholder
+  // In a real implementation, this would translate the content based on the language parameter
+  console.log(`Generating palm analysis in ${language}`);
+  
+  // In a real implementation, we could use a translation API here
+  // or have pre-translated content for common languages
+  
   return {
     lifeLine: {
       strength: Math.floor(Math.random() * 30) + 70, // 70-100
@@ -57,6 +65,12 @@ function generateDetailedPalmAnalysis() {
         "You've developed effective stress management techniques",
         "Your physical energy reserves are substantial",
         "You approach health holistically, benefiting your longevity"
+      ],
+      remedies: [
+        "Practice regular grounding exercises like walking barefoot on natural surfaces for 10-15 minutes daily",
+        "Incorporate adaptogenic herbs like Ashwagandha into your daily routine to balance energy levels",
+        "Establish consistent sleep and wake cycles aligned with natural rhythms",
+        "Regularly engage in moderate physical activity that brings you joy rather than depletes your energy"
       ]
     },
     heartLine: {
@@ -67,6 +81,12 @@ function generateDetailedPalmAnalysis() {
         "Your emotional boundaries are healthy and well-defined",
         "You process emotional setbacks constructively",
         "Your capacity for love grows stronger with each relationship experience"
+      ],
+      remedies: [
+        "Practice heart-centered meditation for 10 minutes daily, focusing on breathing into your heart space",
+        "Wear or carry rose quartz to amplify your natural heart energy and protective boundaries",
+        "Cultivate relationships with those who match your emotional depth and authenticity",
+        "Express your feelings through creative outlets like writing or art when they feel too intense to verbalize"
       ]
     },
     headLine: {
@@ -77,6 +97,12 @@ function generateDetailedPalmAnalysis() {
         "You possess the rare ability to simplify complex concepts",
         "Your mental stamina allows sustained intellectual effort",
         "You naturally see patterns that others miss"
+      ],
+      remedies: [
+        "Practice Brahmi (Bacopa monnieri) supplementation, an Ayurvedic herb known to enhance cognitive function",
+        "Engage in regular mental challenges that combine logic and creativity, like strategic games",
+        "Practice Tratak meditation (candle gazing) to enhance focus and mental clarity",
+        "Implement intentional breaks between deep work sessions to allow integration of insights"
       ]
     },
     fateLinePresent: Math.random() > 0.2, // 80% chance of having a fate line
@@ -88,6 +114,12 @@ function generateDetailedPalmAnalysis() {
         "You naturally align with opportunities that match your core strengths",
         "Your work will likely have lasting impact beyond your immediate circle",
         "You find ways to maintain your direction despite external pressures"
+      ],
+      remedies: [
+        "Perform regular Dharma contemplation to clarify your life's purpose and trajectory",
+        "Wear or carry tigers eye stone to enhance focus on your path while protecting against distractions",
+        "Create visual representations of your long-term vision and review them weekly",
+        "Periodically seek counsel from mentors who embody the qualities you wish to develop"
       ]
     },
     past: {
@@ -98,6 +130,12 @@ function generateDetailedPalmAnalysis() {
         "A pivotal relationship in your formative years expanded your emotional range",
         "You experienced a period of questioning that strengthened your core beliefs",
         "Intellectual discoveries in your past continue to influence your approach today"
+      ],
+      remedies: [
+        "Practice ancestral healing meditation to resolve inherited patterns that may still influence you",
+        "Create a timeline of key transformative experiences and identify their positive gifts",
+        "Write letters of gratitude (without necessarily sending them) to those who challenged you to grow",
+        "Use the Vedic practice of japa with mantras like 'So Ham' to integrate past experiences"
       ]
     },
     present: {
@@ -108,6 +146,12 @@ function generateDetailedPalmAnalysis() {
         "You're in a phase where your authentic self-expression resonates strongly with others",
         "The present alignment of your skills and opportunities is particularly favorable",
         "You're developing a new perspective that will serve as a foundation for future growth"
+      ],
+      remedies: [
+        "Practice daily mindfulness meditation to remain fully present and receptive to opportunities",
+        "Maintain a gratitude journal focused specifically on present circumstances",
+        "Engage in regular pranayama practices like Nadi Shodhana (alternate nostril breathing) to balance current energies",
+        "Create clear boundaries around technology use to enhance presence and receptivity"
       ]
     },
     future: {
@@ -118,6 +162,12 @@ function generateDetailedPalmAnalysis() {
         "Your capacity to blend different knowledge areas will create unique opportunities",
         "A relationship development will provide both emotional fulfillment and practical support",
         "Your future includes a period of recognition after persistent, focused effort"
+      ],
+      remedies: [
+        "Create a vision board that represents your highest aspirations and review it regularly",
+        "Practice Sankalpa (intention setting) during yoga nidra to align with your optimal future",
+        "Work with citrine crystal to enhance manifestation of positive future outcomes",
+        "Develop a personal ritual to mark the completion of cycles and welcome new beginnings"
       ]
     },
     relationships: {
@@ -129,6 +179,13 @@ function generateDetailedPalmAnalysis() {
         "The subtle variations in your heart line indicate you experience love languages differently at different life stages",
         "Your relationship patterns show evidence of intentional growth rather than repeated cycles",
         "The connection between heart and fate lines suggests romantic relationships significantly influence your life direction"
+      ],
+      remedies: [
+        "Practice Metta (loving-kindness) meditation directed specifically toward challenging relationships",
+        "Wear or carry rose quartz to amplify heart energy and green aventurine to attract harmonious connections",
+        "Create a relationship altar with symbols of balanced partnership and revisit it weekly",
+        "Practice conscious communication techniques like non-violent communication in all interactions",
+        "Incorporate the Vedic practice of seeing the divine in others (namaste) in daily encounters"
       ]
     },
     career: {
@@ -140,6 +197,13 @@ function generateDetailedPalmAnalysis() {
         "Your leadership approach balances necessary structure with space for individual contribution",
         "Your career satisfaction is closely tied to creating tangible impact rather than status",
         "The alignment between your fate and heart lines suggests you'll find increasing integration of personal purpose and professional contribution"
+      ],
+      remedies: [
+        "Recite the Gayatri mantra daily to align your work with universal intelligence and higher purpose",
+        "Create a workspace that incorporates elements representing your core values and aspirations",
+        "Wear or carry pyrite to enhance confidence and manifestation in professional contexts",
+        "Perform weekly career dharma contemplation to ensure alignment with your authentic path",
+        "Develop a personal success ritual to mark achievements before moving to next challenges"
       ]
     },
     health: {
@@ -151,6 +215,13 @@ function generateDetailedPalmAnalysis() {
         "Your natural health rhythms align closely with seasonal changes",
         "Preventative health practices yield exceptionally strong results for your constitution",
         "The balance between rest and activity is more critical for your wellbeing than specific diets or exercise regimens"
+      ],
+      remedies: [
+        "Practice daily oil pulling with sesame or coconut oil according to Ayurvedic tradition",
+        "Incorporate triphala, an Ayurvedic herbal blend, to support digestive harmony and elimination",
+        "Establish a regular dinacharya (Ayurvedic daily routine) aligned with natural rhythms",
+        "Practice marma point therapy focused on the points corresponding to your specific constitution",
+        "Use abhyanga (self-massage with warm oil) appropriate for your dosha before bathing"
       ]
     },
     overallSummary: "Your palm reveals an exceptional integration of intellect, emotion, and purpose that creates remarkable potential for both personal fulfillment and meaningful contribution. The harmonious relationship between your head and heart lines indicates natural balance between analytical thinking and emotional intelligence. The depth and clarity of your life line shows fundamental vitality and resilience that allows you to transform challenges into growth. Your fate line suggests purpose-driven work that aligns with your authentic strengths and values. The supportive minor lines throughout your palm indicate a natural ability to build meaningful connections that enhance all areas of your life. The distinctive formation where your heart line extends toward your Jupiter mount reveals idealism tempered by practical wisdom. The connection patterns between your main lines show unusual capacity for integrating different aspects of life rather than compartmentalizing. The overall proportion and spacing of your palm's features suggest adaptability paired with persistence – you maintain core direction while adjusting tactics as needed. The coming period appears particularly significant for integration of disparate skills and experiences into a cohesive whole, suggesting a time of both consolidation and expansion.",
@@ -168,7 +239,49 @@ function generateDetailedPalmAnalysis() {
       water: Math.floor(Math.random() * 30) + 70,
       fire: Math.floor(Math.random() * 30) + 70,
       air: Math.floor(Math.random() * 30) + 70,
-      description: "The elemental composition of your palm reveals a fascinating and rare balance. The substantial earth influence is evident in the firm texture and practical grounding of your palm, providing stability and persistence. This earth energy manifests in your natural ability to create tangible results from abstract ideas. The water element flows strongly through the fluidity of your heart line and the emotional sensitivity revealed in the mount of the moon, giving you intuitive depth and emotional intelligence that allows you to connect authentically with others. The fire element burns clearly in the distinct fate line and the animated quality of your hand movements, fueling your passion, creativity, and capacity to inspire others. The air element sweeps through your well-developed fingers and the clarity of your head line, enhancing your intellectual agility and communication skills. What makes your palm particularly unique is not just the strength of each element but their harmonious integration. The balanced proportion between your palm and fingers indicates you naturally draw on different elemental strengths as needed without becoming overly dominated by any single element. This elemental versatility explains your ability to adapt to different environments while maintaining your essential nature, and suggests you often serve as a bridge between different types of people and perspectives."
+      description: "The elemental composition of your palm reveals a fascinating and rare balance. The substantial earth influence is evident in the firm texture and practical grounding of your palm, providing stability and persistence. This earth energy manifests in your natural ability to create tangible results from abstract ideas. The water element flows strongly through the fluidity of your heart line and the emotional sensitivity revealed in the mount of the moon, giving you intuitive depth and emotional intelligence that allows you to connect authentically with others. The fire element burns clearly in the distinct fate line and the animated quality of your hand movements, fueling your passion, creativity, and capacity to inspire others. The air element sweeps through your well-developed fingers and the clarity of your head line, enhancing your intellectual agility and communication skills. What makes your palm particularly unique is not just the strength of each element but their harmonious integration. The balanced proportion between your palm and fingers indicates you naturally draw on different elemental strengths as needed without becoming overly dominated by any single element. This elemental versatility explains your ability to adapt to different environments while maintaining your essential nature, and suggests you often serve as a bridge between different types of people and perspectives.",
+      remedies: [
+        "Practice pranayama techniques that balance your specific elemental composition",
+        "Work with crystals corresponding to elements needing strengthening (earth: hematite, water: moonstone, fire: carnelian, air: clear quartz)",
+        "Incorporate dietary choices that balance your dominant elements according to Ayurvedic principles",
+        "Practice elemental meditation where you consciously connect with each element in nature",
+        "Create a living or working environment that incorporates balanced elemental influences"
+      ]
+    },
+    remedies: {
+      general: [
+        "Establish a daily meditation practice incorporating both mindfulness and visualization",
+        "Practice regular grounding by spending time in nature and walking barefoot on natural surfaces",
+        "Use of rudraksha mala for japa meditation to strengthen your natural spiritual inclinations",
+        "Incorporate Ayurvedic principles into your daily routine based on your dominant dosha",
+        "Create intentional transitions between different activities to maintain presence and integration"
+      ],
+      specific: {
+        relationships: [
+          "Practice conscious communication techniques in all interactions",
+          "Wear or carry rose quartz to enhance heart energy and compassion",
+          "Create clear boundaries in relationships where energy feels imbalanced",
+          "Engage in regular heart-centered meditation to maintain emotional clarity"
+        ],
+        career: [
+          "Align daily work with broader purpose through morning intention setting",
+          "Create visual representations of your professional vision and review weekly",
+          "Establish regular periods of deep work without digital interruptions",
+          "Seek mentorship from those who embody your aspirational qualities"
+        ],
+        health: [
+          "Establish a consistent sleep schedule aligned with natural rhythms",
+          "Incorporate adaptogenic herbs appropriate for your constitution",
+          "Practice yoga asanas that balance your specific elemental composition",
+          "Maintain regular self-massage with oils suited to your dosha"
+        ],
+        spiritual: [
+          "Develop a personal ritual practice that honors transitions and achievements",
+          "Study spiritual texts that resonate with your intuitive understanding",
+          "Create a dedicated meditation space incorporating meaningful symbols",
+          "Practice karma yoga through regular service aligned with your values"
+        ]
+      }
     }
   };
 }

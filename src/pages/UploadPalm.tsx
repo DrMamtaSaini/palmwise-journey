@@ -7,11 +7,13 @@ import Footer from "../components/Footer";
 import UploadSection from "../components/UploadSection";
 import PalmAnalysisService from "../services/PalmAnalysisService";
 import { useAuth } from "../hooks/useAuth";
+import LanguageSelector from "../components/LanguageSelector";
 
 const UploadPalm = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("english");
 
   const handleAnalyze = async (imageUrl: string) => {
     setIsProcessing(true);
@@ -25,7 +27,7 @@ const UploadPalm = () => {
         return;
       }
       
-      const reading = await PalmAnalysisService.analyzePalm(imageUrl, user.id);
+      const reading = await PalmAnalysisService.analyzePalm(imageUrl, user.id, selectedLanguage);
       console.log("Palm reading created:", reading);
       
       // Ensure we have a valid reading ID before redirecting
@@ -54,6 +56,13 @@ const UploadPalm = () => {
     }
   };
 
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+    toast.info(`Reading language set to ${language.charAt(0).toUpperCase() + language.slice(1)}`, {
+      description: "Your palm reading will be provided in this language."
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -65,6 +74,17 @@ const UploadPalm = () => {
               <h1 className="text-4xl font-bold mb-4">Begin Your Palm Reading</h1>
               <p className="text-lg text-gray-600">
                 Upload a clear image of your palm to receive detailed insights about your past, present, and future.
+              </p>
+            </div>
+
+            <div className="mb-8 animate-fade-in">
+              <h3 className="text-lg font-semibold mb-3">Select Your Reading Language</h3>
+              <LanguageSelector 
+                selectedLanguage={selectedLanguage}
+                onLanguageChange={handleLanguageChange}
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                Choose the language in which you would like to receive your palm reading.
               </p>
             </div>
 

@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { v4 as uuidv4 } from 'uuid';
@@ -8,57 +7,68 @@ export interface PalmReading {
   userId: string;
   imageUrl: string;
   createdAt: string;
+  language?: string;
   results: {
     lifeLine: {
       strength: number;
       prediction: string;
       insights?: string[];
+      remedies?: string[];
     };
     heartLine: {
       strength: number;
       prediction: string;
       insights?: string[];
+      remedies?: string[];
     };
     headLine: {
       strength: number;
       prediction: string;
       insights?: string[];
+      remedies?: string[];
     };
     fateLinePresent: boolean;
     fate?: {
       strength: number;
       prediction: string;
       insights?: string[];
+      remedies?: string[];
     };
     past?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     present?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     future?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     relationships?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     career?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     health?: {
       prediction: string;
       significance: number;
       insights?: string[];
+      remedies?: string[];
     };
     elementalInfluences?: {
       earth: number;
@@ -66,9 +76,16 @@ export interface PalmReading {
       fire: number;
       air: number;
       description: string;
+      remedies?: string[];
     };
     overallSummary: string;
     personalityTraits: string[];
+    remedies?: {
+      general: string[];
+      specific: {
+        [key: string]: string[];
+      };
+    };
   };
 }
 
@@ -86,7 +103,6 @@ class PalmAnalysisService {
 
   public async uploadPalmImage(file: File, userId: string): Promise<string | null> {
     try {
-      // Generate unique file path for palm image
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/palm-images/${Date.now()}.${fileExt}`;
       
@@ -98,7 +114,6 @@ class PalmAnalysisService {
         throw uploadError;
       }
       
-      // Get public URL for the uploaded image
       const { data } = supabase.storage
         .from('palm-images')
         .getPublicUrl(filePath);
@@ -113,23 +128,20 @@ class PalmAnalysisService {
     }
   }
 
-  public async analyzePalm(imageUrl: string, userId: string): Promise<PalmReading> {
+  public async analyzePalm(imageUrl: string, userId: string, language?: string): Promise<PalmReading> {
     try {
       toast.info('Analyzing your palm...', {
         description: 'This may take a moment as our AI works its magic.',
         duration: 5000
       });
       
-      // Generate a proper UUID for the reading
       const readingId = uuidv4();
       
-      // Call the edge function to analyze the palm image
       const { data, error } = await supabase.functions
         .invoke('analyze-palm', {
-          body: { imageUrl }
+          body: { imageUrl, language }
         });
 
-      // If there's an error but fallbackData is provided, use that
       if (error && data?.fallbackData) {
         console.log('Using fallback data due to error:', error);
         data.results = data.fallbackData;
@@ -138,10 +150,8 @@ class PalmAnalysisService {
         throw new Error('AI analysis failed: ' + error.message);
       }
       
-      // Create the palm reading with real AI analysis or fallback data
       const results = data || generateFallbackResults();
       
-      // Make sure fate data is consistent with fateLinePresent flag
       if (results.fateLinePresent && !results.fate) {
         results.fate = {
           strength: Math.random() * 100,
@@ -154,10 +164,10 @@ class PalmAnalysisService {
         userId,
         imageUrl,
         createdAt: new Date().toISOString(),
+        language: language || 'english',
         results
       };
       
-      // Save to Supabase database
       const { error: dbError } = await supabase
         .from('palm_readings')
         .insert([
@@ -166,13 +176,13 @@ class PalmAnalysisService {
             user_id: reading.userId,
             image_url: reading.imageUrl,
             created_at: reading.createdAt,
+            language: reading.language,
             results: reading.results
           }
         ]);
         
       if (dbError) {
         console.error('Error saving reading to database:', dbError);
-        // Continue even if there's a DB error, so user can still see the reading
       } else {
         console.log('Successfully saved palm reading to database:', reading.id);
       }
@@ -190,13 +200,12 @@ class PalmAnalysisService {
         duration: 5000
       });
       
-      // Even if there's an error, return a fallback reading so the user sees something
       const fallbackReading = this.createFallbackReading(imageUrl, userId);
       return fallbackReading;
     }
   }
 
-  private createFallbackReading(imageUrl: string, userId: string): PalmReading {
+  private createFallbackReading(imageUrl: string, userId: string, language: string = 'english'): PalmReading {
     const readingId = uuidv4();
     const results = generateFallbackResults();
     
@@ -204,6 +213,7 @@ class PalmAnalysisService {
       id: readingId,
       userId,
       imageUrl,
+      language,
       createdAt: new Date().toISOString(),
       results
     };
@@ -221,17 +231,16 @@ class PalmAnalysisService {
         throw error;
       }
       
-      // Transform from database schema to application schema
       return (data || []).map(item => ({
         id: item.id,
         userId: item.user_id,
         imageUrl: item.image_url,
         createdAt: item.created_at,
+        language: item.language,
         results: item.results
       }));
     } catch (error) {
       console.error('Get palm readings error:', error);
-      // Return empty array if there was an error
       return [];
     }
   }
@@ -257,6 +266,7 @@ class PalmAnalysisService {
         userId: data.user_id,
         imageUrl: data.image_url,
         createdAt: data.created_at,
+        language: data.language,
         results: data.results
       };
     } catch (error) {
@@ -266,7 +276,6 @@ class PalmAnalysisService {
   }
 }
 
-// Fallback result generator for consistent readings even when AI fails
 function generateFallbackResults() {
   return {
     lifeLine: {
@@ -277,6 +286,12 @@ function generateFallbackResults() {
         "You have an intuitive sense of when to conserve versus expend energy",
         "Your health responds strongly to preventative rather than reactive approaches",
         "The connection between your mental and physical wellbeing is particularly pronounced"
+      ],
+      remedies: [
+        "Practice regular grounding exercises like walking barefoot on natural surfaces for 10-15 minutes daily",
+        "Incorporate adaptogenic herbs like Ashwagandha into your daily routine to balance energy levels",
+        "Establish consistent sleep and wake cycles aligned with natural rhythms",
+        "Regularly engage in moderate physical activity that brings you joy rather than depletes your energy"
       ]
     },
     heartLine: {
@@ -287,6 +302,12 @@ function generateFallbackResults() {
         "Your capacity for emotional self-regulation has developed through intentional practice",
         "You perceive emotional nuances that others often miss",
         "Your relationships deepen rather than diminish through navigating conflict"
+      ],
+      remedies: [
+        "Practice heart-centered meditation for 10 minutes daily, focusing on breathing into your heart space",
+        "Wear or carry rose quartz to amplify your natural heart energy and protective boundaries",
+        "Cultivate relationships with those who match your emotional depth and authenticity",
+        "Express your feelings through creative outlets like writing or art when they feel too intense to verbalize"
       ]
     },
     headLine: {
@@ -297,6 +318,12 @@ function generateFallbackResults() {
         "Your mental energy is sustained longest when engaged with complex, meaningful problems",
         "You have an unusual ability to shift perspectives to understand different viewpoints",
         "Your mental clarity remains accessible even during emotional intensity"
+      ],
+      remedies: [
+        "Practice Brahmi (Bacopa monnieri) supplementation, an Ayurvedic herb known to enhance cognitive function",
+        "Engage in regular mental challenges that combine logic and creativity, like strategic games",
+        "Practice Tratak meditation (candle gazing) to enhance focus and mental clarity",
+        "Implement intentional breaks between deep work sessions to allow integration of insights"
       ]
     },
     fateLinePresent: Math.random() > 0.3,
@@ -308,6 +335,12 @@ function generateFallbackResults() {
         "Your professional impact extends beyond obvious metrics through subtle ripple effects",
         "You find creative solutions to obstacles that would deter others from their path",
         "Your sense of purpose provides resilience during challenging professional periods"
+      ],
+      remedies: [
+        "Perform regular Dharma contemplation to clarify your life's purpose and trajectory",
+        "Wear or carry tigers eye stone to enhance focus on your path while protecting against distractions",
+        "Create visual representations of your long-term vision and review them weekly",
+        "Periodically seek counsel from mentors who embody the qualities you wish to develop"
       ]
     },
     past: {
@@ -318,6 +351,12 @@ function generateFallbackResults() {
         "A pivotal relationship reframed your understanding of authentic connection",
         "Educational experiences sparked intellectual curiosity that continues to expand",
         "A period of questioning established values that ultimately strengthened your core convictions"
+      ],
+      remedies: [
+        "Practice ancestral healing meditation to resolve inherited patterns that may still influence you",
+        "Create a timeline of key transformative experiences and identify their positive gifts",
+        "Write letters of gratitude (without necessarily sending them) to those who challenged you to grow",
+        "Use the Vedic practice of japa with mantras like 'So Ham' to integrate past experiences"
       ]
     },
     present: {
@@ -328,6 +367,12 @@ function generateFallbackResults() {
         "Present circumstances are developing your capacity to maintain calm amid intensity",
         "Current relationships are reflecting your authentic self-expression back to you",
         "This period is building skills that will prove essential in your future path"
+      ],
+      remedies: [
+        "Practice daily mindfulness meditation to remain fully present and receptive to opportunities",
+        "Maintain a gratitude journal focused specifically on present circumstances",
+        "Engage in regular pranayama practices like Nadi Shodhana (alternate nostril breathing) to balance current energies",
+        "Create clear boundaries around technology use to enhance presence and receptivity"
       ]
     },
     future: {
@@ -338,36 +383,66 @@ function generateFallbackResults() {
         "Your capacity to integrate different knowledge areas will create unique contributions",
         "A meaningful mentorship will accelerate your development in a key area",
         "Your future includes a period of recognition after sustained, focused effort"
+      ],
+      remedies: [
+        "Create a vision board that represents your highest aspirations and review it regularly",
+        "Practice Sankalpa (intention setting) during yoga nidra to align with your optimal future",
+        "Work with citrine crystal to enhance manifestation of positive future outcomes",
+        "Develop a personal ritual to mark the completion of cycles and welcome new beginnings"
       ]
     },
     relationships: {
-      prediction: "The formation of your heart line reveals a relationship approach characterized by emotional depth, authenticity, and discernment. The smoothness and clarity indicate emotional stability that allows you to remain present during relational intensity. The upward curve suggests inherent optimism in how you view and engage with others. The well-defined mount beneath your little finger indicates sensitivity that allows you to perceive subtle emotional nuances. The connection between your heart and head lines shows integration of feeling and thinking that creates relational wisdom. The supportive lines near your heart line suggest meaningful connections that form a strong interpersonal foundation. The overall pattern reveals evolution toward increasing authenticity and mutual growth in your significant relationships.",
+      prediction: "The formation of your heart line reveals a relationship approach characterized by emotional depth, authenticity, and discernment. The smoothness and clarity indicate emotional stability that allows you to remain present during relational intensity. The upward curve suggests inherent optimism in how you view and engage with others. The well-defined mount beneath your little finger indicates sensitivity that allows you to perceive subtle emotional nuances. The connection between your heart and head lines shows integration of feeling and thinking that creates relational wisdom. The supportive lines near your heart line suggest meaningful connections that form a strong interpersonal foundation. The overall pattern reveals evolution toward increasing authenticity and mutual growth in your significant relationships. The branches extending from your heart line reveal multiple significant connections that have each contributed unique lessons and gifts to your emotional development. The way your heart line curves near your Jupiter mount indicates idealism balanced with discernment, allowing you to see the best in others while maintaining healthy boundaries. The depth of your heart line particularly evident in the central section suggests current relationships that engage your authentic self rather than superficial connections. The quality of your heart line as it intersects with other lines shows relationships as a central theme in your life's unfolding narrative rather than a separate compartment.",
       significance: Math.floor(Math.random() * 30) + 70,
       insights: [
         "You naturally create spaces where authentic connection can flourish",
         "Your relationships increasingly reflect and support your core values",
         "You maintain healthy boundaries while creating deep connection",
-        "Your relationship patterns show conscious evolution rather than unconscious repetition"
+        "Your relationship patterns show conscious evolution rather than unconscious repetition",
+        "You intuitively understand the need for both connection and autonomy in healthy relationships"
+      ],
+      remedies: [
+        "Practice Metta (loving-kindness) meditation directed specifically toward challenging relationships",
+        "Wear or carry rose quartz to amplify heart energy and green aventurine to attract harmonious connections",
+        "Create a relationship altar with symbols of balanced partnership and revisit it weekly",
+        "Practice conscious communication techniques like non-violent communication in all interactions",
+        "Incorporate the Vedic practice of seeing the divine in others (namaste) in daily encounters"
       ]
     },
     career: {
-      prediction: "Your fate line reveals exceptional professional potential characterized by purpose-driven contribution and strategic influence. The clarity and directness suggest consistency of effort that builds meaningful momentum over time. The depth particularly evident in the middle section indicates current work that aligns with your authentic strengths and values. The positioning of your fate line in relation to your other main lines suggests work that increasingly integrates different aspects of your abilities rather than compartmentalizing your talents. The supportive lines connecting to your fate line reveal collaborative relationships that enhance your effectiveness and reach. The overall quality suggests evolution toward work that creates lasting impact aligned with your deepest values.",
+      prediction: "Your fate line reveals exceptional professional potential characterized by purpose-driven contribution and strategic influence. The clarity and directness suggest consistency of effort that builds meaningful momentum over time. The depth particularly evident in the middle section indicates current work that aligns with your authentic strengths and values. The positioning of your fate line in relation to your other main lines suggests work that increasingly integrates different aspects of your abilities rather than compartmentalizing your talents. The supportive lines connecting to your fate line reveal collaborative relationships that enhance your effectiveness and reach. The overall quality suggests evolution toward work that creates lasting impact aligned with your deepest values. The way your fate line begins from your life line indicates a career path that emerged organically from your natural interests and abilities rather than external expectations. The clear definition throughout suggests focused intention that allows sustained effort toward meaningful goals. The subtle branches extending from your fate line indicate diverse skills and experiences that have enriched rather than fragmented your professional development. The depth variations show periods of immersion and consolidation alternating with expansion and visibility. The quality of connection between your fate and head lines suggests work that engages your intellectual gifts while allowing creative expression.",
       significance: Math.floor(Math.random() * 30) + 70,
       insights: [
         "Your strategic thinking abilities will become increasingly valuable in your field",
         "You naturally excel in roles requiring both analytical and interpersonal skills",
         "Your work will increasingly align with your authentic purpose",
-        "You're developing a unique professional approach that draws on multiple disciplines"
+        "You're developing a unique professional approach that draws on multiple disciplines",
+        "Your capacity to maintain vision while attending to details creates unusual effectiveness"
+      ],
+      remedies: [
+        "Recite the Gayatri mantra daily to align your work with universal intelligence and higher purpose",
+        "Create a workspace that incorporates elements representing your core values and aspirations",
+        "Wear or carry pyrite to enhance confidence and manifestation in professional contexts",
+        "Perform weekly career dharma contemplation to ensure alignment with your authentic path",
+        "Develop a personal success ritual to mark achievements before moving to next challenges"
       ]
     },
     health: {
-      prediction: "The formation of your life line indicates exceptional vitality with natural cycles of energy that, when honored, support optimal wellbeing. The clarity and depth suggest strong recuperative abilities and fundamental resilience. The supportive lines near your life line indicate effective energy management and recovery systems. The minimal breaks or islands suggest few major health disruptions, with periods of lower energy serving as necessary recalibration rather than depletion. The connection between your head and life lines reveals the significant influence of your mental state on your physical wellbeing. The overall pattern suggests health that responds strongly to preventative practices, consistent small habits, and alignment between your daily activities and deeper values.",
+      prediction: "The formation of your life line indicates exceptional vitality with natural cycles of energy that, when honored, support optimal wellbeing. The clarity and depth suggest strong recuperative abilities and fundamental resilience. The supportive lines near your life line indicate effective energy management and recovery systems. The minimal breaks or islands suggest few major health disruptions, with periods of lower energy serving as necessary recalibration rather than depletion. The connection between your head and life lines reveals the significant influence of your mental state on your physical wellbeing. The overall pattern suggests health that responds strongly to preventative practices, consistent small habits, and alignment between your daily activities and deeper values. The way your life line curves around your thumb mount reveals constitutional strength that provides a foundation for sustained health. The smooth quality throughout most sections indicates systems that function harmoniously together rather than working at cross-purposes. The subtle variations in depth show natural rhythms of energy that, when recognized and respected, enhance overall vitality. The branch lines connecting to your life line indicate periods where your health has been strengthened through challenge rather than diminished. The position of your life line in relation to your head line suggests strong mind-body connection that can be leveraged for healing and optimization.",
       significance: Math.floor(Math.random() * 30) + 70,
       insights: [
         "Your body shows unusual responsiveness to mind-body integration practices",
         "Your natural health rhythms align with seasonal changes",
         "Small, consistent health practices yield stronger results than intensive but inconsistent approaches",
-        "Your physical wellbeing is particularly influenced by your sense of purpose and meaning"
+        "Your physical wellbeing is particularly influenced by your sense of purpose and meaning",
+        "You have an innate ability to detect and respond to subtle body signals before they become problematic"
+      ],
+      remedies: [
+        "Practice daily oil pulling with sesame or coconut oil according to Ayurvedic tradition",
+        "Incorporate triphala, an Ayurvedic herbal blend, to support digestive harmony and elimination",
+        "Establish a regular dinacharya (Ayurvedic daily routine) aligned with natural rhythms",
+        "Practice marma point therapy focused on the points corresponding to your specific constitution",
+        "Use abhyanga (self-massage with warm oil) appropriate for your dosha before bathing"
       ]
     },
     elementalInfluences: {
@@ -375,7 +450,14 @@ function generateFallbackResults() {
       water: Math.floor(Math.random() * 30) + 70,
       fire: Math.floor(Math.random() * 30) + 70,
       air: Math.floor(Math.random() * 30) + 70,
-      description: "The elemental composition of your palm reveals a fascinating and rare balance. The substantial earth influence is evident in the firm texture and practical grounding of your palm, providing stability and persistence. This earth energy manifests in your natural ability to create tangible results from abstract ideas. The water element flows strongly through the fluidity of your heart line and the emotional sensitivity revealed in the mount of the moon, giving you intuitive depth and emotional intelligence that allows you to connect authentically with others. The fire element burns clearly in the distinct fate line and the animated quality of your hand movements, fueling your passion, creativity, and capacity to inspire others. The air element sweeps through your well-developed fingers and the clarity of your head line, enhancing your intellectual agility and communication skills. What makes your palm particularly unique is not just the strength of each element but their harmonious integration. The balanced proportion between your palm and fingers indicates you naturally draw on different elemental strengths as needed without becoming overly dominated by any single element. This elemental versatility explains your ability to adapt to different environments while maintaining your essential nature, and suggests you often serve as a bridge between different types of people and perspectives."
+      description: "The elemental composition of your palm reveals a fascinating and rare balance. The substantial earth influence is evident in the firm texture and practical grounding of your palm, providing stability and persistence. This earth energy manifests in your natural ability to create tangible results from abstract ideas. The water element flows strongly through the fluidity of your heart line and the emotional sensitivity revealed in the mount of the moon, giving you intuitive depth and emotional intelligence that allows you to connect authentically with others. The fire element burns clearly in the distinct fate line and the animated quality of your hand movements, fueling your passion, creativity, and capacity to inspire others. The air element sweeps through your well-developed fingers and the clarity of your head line, enhancing your intellectual agility and communication skills. What makes your palm particularly unique is not just the strength of each element but their harmonious integration. The balanced proportion between your palm and fingers indicates you naturally draw on different elemental strengths as needed without becoming overly dominated by any single element. This elemental versatility explains your ability to adapt to different environments while maintaining your essential nature, and suggests you often serve as a bridge between different types of people and perspectives.",
+      remedies: [
+        "Practice pranayama techniques that balance your specific elemental composition",
+        "Work with crystals corresponding to elements needing strengthening (earth: hematite, water: moonstone, fire: carnelian, air: clear quartz)",
+        "Incorporate dietary choices that balance your dominant elements according to Ayurvedic principles",
+        "Practice elemental meditation where you consciously connect with each element in nature",
+        "Create a living or working environment that incorporates balanced elemental influences"
+      ]
     },
     overallSummary: "Your palm reveals an exceptional integration of intellect, emotion, and purpose that creates remarkable potential for both personal fulfillment and meaningful contribution. The harmonious relationship between your head and heart lines indicates natural balance between analytical thinking and emotional intelligence. The depth and clarity of your life line shows fundamental vitality and resilience that allows you to transform challenges into growth. Your fate line suggests purpose-driven work that aligns with your authentic strengths and values. The supportive minor lines throughout your palm indicate a natural ability to build meaningful connections that enhance all areas of your life. The distinctive formation where your heart line extends toward your Jupiter mount reveals idealism tempered by practical wisdom. The connection patterns between your main lines show unusual capacity for integrating different aspects of life rather than compartmentalizing. The overall proportion and spacing of your palm's features suggest adaptability paired with persistence – you maintain core direction while adjusting tactics as needed. The coming period appears particularly significant for integration of disparate skills and experiences into a cohesive whole, suggesting a time of both consolidation and expansion.",
     personalityTraits: [
@@ -386,8 +468,45 @@ function generateFallbackResults() {
       "Authentically diplomatic",
       "Thoughtfully expressive",
       "Adaptively persistent"
-    ]
+    ],
+    remedies: {
+      general: [
+        "Establish a daily meditation practice incorporating both mindfulness and visualization",
+        "Practice regular grounding by spending time in nature and walking barefoot on natural surfaces",
+        "Use of rudraksha mala for japa meditation to strengthen your natural spiritual inclinations",
+        "Incorporate Ayurvedic principles into your daily routine based on your dominant dosha",
+        "Create intentional transitions between different activities to maintain presence and integration"
+      ],
+      specific: {
+        relationships: [
+          "Practice conscious communication techniques in all interactions",
+          "Wear or carry rose quartz to enhance heart energy and compassion",
+          "Create clear boundaries in relationships where energy feels imbalanced",
+          "Engage in regular heart-centered meditation to maintain emotional clarity"
+        ],
+        career: [
+          "Align daily work with broader purpose through morning intention setting",
+          "Create visual representations of your professional vision and review weekly",
+          "Establish regular periods of deep work without digital interruptions",
+          "Seek mentorship from those who embody your aspirational qualities"
+        ],
+        health: [
+          "Establish a consistent sleep schedule aligned with natural rhythms",
+          "Incorporate adaptogenic herbs appropriate for your constitution",
+          "Practice yoga asanas that balance your specific elemental composition",
+          "Maintain regular self-massage with oils suited to your dosha"
+        ],
+        spiritual: [
+          "Develop a personal ritual practice that honors transitions and achievements",
+          "Study spiritual texts that resonate with your intuitive understanding",
+          "Create a dedicated meditation space incorporating meaningful symbols",
+          "Practice karma yoga through regular service aligned with your values"
+        ]
+      }
+    }
   };
 }
 
 export default PalmAnalysisService.getInstance();
+
+
