@@ -25,8 +25,8 @@ const ForgotPassword = () => {
     }
     
     try {
-      // Create absolute URL for redirect
-      // Use full absolute URL to ensure Supabase handles the redirect correctly
+      // Make sure to specify the proper route format
+      // Include the route in the redirect path, not just domain
       const baseUrl = window.location.origin;
       const redirectUrl = `${baseUrl}/reset-password`;
       

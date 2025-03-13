@@ -22,53 +22,56 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkResetFlow = async () => {
-      console.log("Reset password page loaded with URL params:", location.search);
-      console.log("Hash parts:", window.location.hash);
+      // Get the code from the URL
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
       
-      // Check URL parameters for recovery token
-      const searchParams = new URLSearchParams(location.search);
-      const code = searchParams.get('code');
-      const typeParam = searchParams.get('type');
-      
-      // Check hash for recovery token (Supabase sometimes uses hash instead)
-      const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
-      const hashType = hashParams.get('type');
-      
-      console.log("URL code parameter:", code);
-      console.log("URL type parameter:", typeParam);
-      console.log("Hash type parameter:", hashType);
-      
-      // Check for recovery flow in either query params or hash
-      const isRecoveryFlow = 
-        (typeParam === 'recovery') || 
-        (hashType === 'recovery') || 
-        window.location.hash.includes('type=recovery');
-      
-      if (code || isRecoveryFlow) {
-        console.log("Valid reset flow detected");
+      console.log("Reset password page loaded, checking URL for code parameter:", code);
+
+      if (code) {
+        console.log("Code parameter found in URL, validating with Supabase");
         setValidResetFlow(true);
-        
-        // If we have a code but Supabase hasn't processed it yet, confirm the token
-        if (code) {
-          try {
-            // Check the session - this should process the code parameter
-            const { data, error } = await supabase.auth.getSession();
-            console.log("Current session after loading with code:", data, error);
-          } catch (error) {
-            console.error("Error checking session:", error);
+
+        try {
+          // Verify the token/code with Supabase
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (error) {
+            console.error("Error exchanging code for session:", error);
+            toast.error("Invalid or expired reset link", {
+              description: "Please request a new password reset link.",
+            });
+            navigate('/forgot-password');
+            return;
           }
+
+          console.log("Successfully validated code, session established:", data);
+          // Valid code, we can continue with password reset
+        } catch (error) {
+          console.error("Error during code validation:", error);
+          toast.error("Error validating reset link", {
+            description: "Please try again or request a new reset link.",
+          });
+          navigate('/forgot-password');
         }
       } else {
-        console.log("Invalid reset flow - redirecting to login");
-        toast.error("Invalid reset link", {
-          description: "This page can only be accessed from a password reset email.",
-        });
-        navigate('/login');
+        // Check for hash-based recovery flow (#access_token=...)
+        const hash = window.location.hash;
+        if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
+          console.log("Hash-based recovery flow detected:", hash);
+          setValidResetFlow(true);
+        } else {
+          console.log("No valid reset parameters found, redirecting to login");
+          toast.error("Invalid reset link", {
+            description: "This page can only be accessed from a password reset email.",
+          });
+          navigate('/login');
+        }
       }
     };
     
     checkResetFlow();
-  }, [navigate, location]);
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
