@@ -14,6 +14,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          language: string | null
           results: Json | null
           user_id: string
         }
@@ -21,6 +22,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          language?: string | null
           results?: Json | null
           user_id: string
         }
@@ -28,6 +30,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          language?: string | null
           results?: Json | null
           user_id?: string
         }

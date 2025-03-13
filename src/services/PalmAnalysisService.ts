@@ -189,6 +189,7 @@ class PalmAnalysisService {
         
       if (dbError) {
         console.error('Error saving reading to database:', dbError);
+        throw new Error('Failed to save reading: ' + dbError.message);
       } else {
         console.log('Successfully saved palm reading to database:', reading.id);
       }
@@ -215,7 +216,7 @@ class PalmAnalysisService {
     const readingId = uuidv4();
     const results = generateFallbackResults();
     
-    return {
+    const reading = {
       id: readingId,
       userId,
       imageUrl,
@@ -223,6 +224,28 @@ class PalmAnalysisService {
       createdAt: new Date().toISOString(),
       results
     };
+    
+    supabase
+      .from('palm_readings')
+      .insert([
+        {
+          id: reading.id,
+          user_id: reading.userId,
+          image_url: reading.imageUrl,
+          created_at: reading.createdAt,
+          language: reading.language,
+          results: reading.results
+        }
+      ])
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error saving fallback reading:', error);
+        } else {
+          console.log('Successfully saved fallback reading:', reading.id);
+        }
+      });
+    
+    return reading;
   }
 
   public async getPalmReadings(userId: string): Promise<PalmReading[]> {
