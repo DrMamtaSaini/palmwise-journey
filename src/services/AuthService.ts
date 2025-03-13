@@ -315,22 +315,12 @@ class AuthService {
 
   public async signInWithGoogle(): Promise<boolean> {
     try {
-      console.log("Signing in with Google");
+      console.log("Signing in with Google - simplified approach");
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      const siteUrl = window.location.origin;
-      console.log("Using site URL for redirect:", siteUrl);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${siteUrl}/dashboard`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
-        }
+        provider: 'google'
       });
       
       if (error) {
@@ -349,7 +339,6 @@ class AuthService {
       }
       
       console.log("Google sign in initiated:", data);
-      
       return true;
     } catch (error: any) {
       console.error('Google sign in error:', error);

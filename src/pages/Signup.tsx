@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, UserPlus, AlertCircle } from "lucide-react";
@@ -101,7 +102,10 @@ const Signup = () => {
         description: "You will be redirected to Google for authentication...",
       });
       
-      await signInWithGoogle();
+      // Add a slight delay before initiating Google sign-in to ensure toast is shown
+      setTimeout(async () => {
+        await signInWithGoogle();
+      }, 500);
     } catch (error) {
       console.error("Google sign in error:", error);
       toast.error("Google signup failed", {
