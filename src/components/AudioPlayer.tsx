@@ -13,27 +13,30 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContentRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Create audio element if it doesn't exist
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      
+      // Add event listeners
       audioRef.current.addEventListener("timeupdate", updateProgress);
-      audioRef.current.addEventListener("ended", () => {
-        setIsPlaying(false);
-        setProgress(0);
-      });
+      audioRef.current.addEventListener("ended", handleAudioEnded);
+      audioRef.current.addEventListener("error", handleAudioError);
+      audioRef.current.addEventListener("canplaythrough", handleCanPlayThrough);
     }
 
+    // Clean up on component unmount
     return () => {
       if (audioRef.current) {
-        audioRef.current.removeEventListener("timeupdate", updateProgress);
-        audioRef.current.removeEventListener("ended", () => {
-          setIsPlaying(false);
-          setProgress(0);
-        });
         audioRef.current.pause();
+        audioRef.current.removeEventListener("timeupdate", updateProgress);
+        audioRef.current.removeEventListener("ended", handleAudioEnded);
+        audioRef.current.removeEventListener("error", handleAudioError);
+        audioRef.current.removeEventListener("canplaythrough", handleCanPlayThrough);
       }
     };
   }, []);
@@ -45,7 +48,57 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
     }
   };
 
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+    setProgress(0);
+  };
+
+  const handleAudioError = (e: Event) => {
+    console.error("Audio error:", e);
+    
+    // Get more detailed error information if available
+    let errorMsg = "Unknown audio error";
+    if (audioRef.current) {
+      const mediaError = audioRef.current.error;
+      if (mediaError) {
+        errorMsg = `Audio error: ${mediaError.code} - ${mediaError.message}`;
+      }
+    }
+    
+    setAudioError(errorMsg);
+    setIsLoading(false);
+    setIsPlaying(false);
+    
+    toast.error("Failed to play audio", {
+      description: errorMsg
+    });
+  };
+
+  const handleCanPlayThrough = () => {
+    console.log("Audio can play through");
+    if (isLoading && audioRef.current) {
+      audioRef.current.play()
+        .then(() => {
+          setIsLoading(false);
+          setIsPlaying(true);
+        })
+        .catch(error => {
+          console.error("Error playing audio after load:", error);
+          setIsLoading(false);
+          setAudioError("Failed to play audio after loading");
+          toast.error("Failed to play audio", {
+            description: "Browser prevented autoplay. Please try clicking play again."
+          });
+        });
+    }
+  };
+
   const togglePlay = async () => {
+    // If we have an error, reset it when trying to play again
+    if (audioError) {
+      setAudioError(null);
+    }
+
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -53,34 +106,60 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
         return;
       }
 
-      // If we already have an audio URL, just play it
+      // If we already have audio content loaded, just play it
       if (audioRef.current.src && audioRef.current.src !== window.location.href) {
-        audioRef.current.play();
-        setIsPlaying(true);
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Error playing existing audio:", error);
+          toast.error("Failed to play audio", {
+            description: "Please try again"
+          });
+        }
         return;
       }
 
-      // Otherwise, generate audio from text
+      // If we have cached audio content but haven't set it as src yet
+      if (audioContentRef.current) {
+        try {
+          const audioSrc = `data:audio/mp3;base64,${audioContentRef.current}`;
+          audioRef.current.src = audioSrc;
+          
+          setIsLoading(true);
+          // playback will be initiated by the canplaythrough event
+        } catch (error) {
+          console.error("Error setting cached audio content:", error);
+          setIsLoading(false);
+          toast.error("Failed to set audio source", {
+            description: "Please try again"
+          });
+        }
+        return;
+      }
+
+      // Otherwise, generate new audio from text
       try {
         setIsLoading(true);
+        
         // Limit text length for the API call
         const limitedText = text.length > 4000 ? text.substring(0, 4000) + "..." : text;
         const audioBase64 = await TextToSpeechService.generateSpeech(limitedText);
+        
+        // Store the audio content for future use
+        audioContentRef.current = audioBase64;
         
         // Create audio from base64
         const audioSrc = `data:audio/mp3;base64,${audioBase64}`;
         audioRef.current.src = audioSrc;
         
-        // Play audio
-        await audioRef.current.play();
-        setIsPlaying(true);
+        // We'll wait for the canplaythrough event before playing
       } catch (error) {
-        console.error("Error playing audio:", error);
-        toast.error("Failed to play audio", {
-          description: "Please try again later"
-        });
-      } finally {
+        console.error("Error generating speech:", error);
         setIsLoading(false);
+        toast.error("Failed to generate speech", {
+          description: error instanceof Error ? error.message : "Please try again later"
+        });
       }
     }
   };
@@ -128,6 +207,7 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
       <p className="text-sm text-gray-500">
         {isLoading ? "Generating audio..." : 
           isPlaying ? "Playing audio reading..." : 
+          audioError ? "Error playing audio. Try again." :
           "Click play to listen to your palm reading"}
       </p>
     </div>

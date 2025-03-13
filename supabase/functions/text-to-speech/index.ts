@@ -19,6 +19,8 @@ serve(async (req) => {
       throw new Error('Text is required')
     }
 
+    console.log(`Generating speech with OpenAI TTS. Text length: ${text.length}, voice: ${voice}`)
+
     // Initialize OpenAI for TTS
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -35,8 +37,9 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error?.message || 'Failed to generate speech')
+      const errorBody = await response.text()
+      console.error('OpenAI API error:', errorBody)
+      throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`)
     }
 
     // Convert audio buffer to base64
@@ -45,6 +48,8 @@ serve(async (req) => {
       String.fromCharCode(...new Uint8Array(arrayBuffer))
     )
 
+    console.log(`Speech generated successfully. Base64 length: ${base64Audio.length}`)
+
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
       {
@@ -52,6 +57,8 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error in text-to-speech function:', error)
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       {
