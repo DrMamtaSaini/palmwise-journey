@@ -10,6 +10,12 @@ import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { getLanguageInfo, IndianLanguage } from "../components/LanguageSelector";
 
+// Extend the PalmReading type to include the translationNote property
+interface ExtendedPalmReading extends PalmReading {
+  translationNote?: string;
+  language?: string;
+}
+
 const ReadingResults = () => {
   const navigate = useNavigate();
   const params = useParams();
@@ -17,7 +23,7 @@ const ReadingResults = () => {
   const [activeTab, setActiveTab] = useState("lifeLine");
   const [isPremium, setIsPremium] = useState(false);
   const [isPremiumTest, setIsPremiumTest] = useState(false); // For testing premium features
-  const [reading, setReading] = useState<PalmReading | null>(null);
+  const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,7 +52,7 @@ const ReadingResults = () => {
         
         if (result) {
           console.log("Fetched reading data:", result);
-          setReading(result);
+          setReading(result as ExtendedPalmReading);
         } else {
           toast.error("Reading not found", {
             description: "We couldn't find this palm reading"

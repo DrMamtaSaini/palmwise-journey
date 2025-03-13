@@ -17,26 +17,6 @@ export interface IndianLanguage {
 export const indianLanguages: IndianLanguage[] = [
   { code: "english", name: "English" },
   { code: "hindi", name: "Hindi", nativeName: "हिन्दी" },
-  { code: "bengali", name: "Bengali", nativeName: "বাংলা" },
-  { code: "marathi", name: "Marathi", nativeName: "मराठी" },
-  { code: "telugu", name: "Telugu", nativeName: "తెలుగు" },
-  { code: "tamil", name: "Tamil", nativeName: "தமிழ்" },
-  { code: "gujarati", name: "Gujarati", nativeName: "ગુજરાતી" },
-  { code: "urdu", name: "Urdu", nativeName: "اردو" },
-  { code: "kannada", name: "Kannada", nativeName: "ಕನ್ನಡ" },
-  { code: "odia", name: "Odia", nativeName: "ଓଡ଼ିଆ" },
-  { code: "malayalam", name: "Malayalam", nativeName: "മലയാളം" },
-  { code: "punjabi", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ" },
-  { code: "assamese", name: "Assamese", nativeName: "অসমীয়া" },
-  { code: "maithili", name: "Maithili", nativeName: "मैथिली" },
-  { code: "sanskrit", name: "Sanskrit", nativeName: "संस्कृतम्" },
-  { code: "kashmiri", name: "Kashmiri", nativeName: "कॉशुर" },
-  { code: "nepali", name: "Nepali", nativeName: "नेपाली" },
-  { code: "konkani", name: "Konkani", nativeName: "कोंकणी" },
-  { code: "sindhi", name: "Sindhi", nativeName: "سنڌي" },
-  { code: "bodo", name: "Bodo", nativeName: "बड़ो" },
-  { code: "santali", name: "Santali", nativeName: "ᱥᱟᱱᱛᱟᱲᱤ" },
-  { code: "dogri", name: "Dogri", nativeName: "डोगरी" },
 ];
 
 // Helper function to get language info from language code

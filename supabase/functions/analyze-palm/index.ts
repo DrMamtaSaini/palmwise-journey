@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -40,11 +39,23 @@ serve(async (req) => {
       );
     }
     
-    // For non-English languages, translate the content
-    const translatedAnalysis = translatePalmAnalysis(analysis, language);
+    // For Hindi language, translate the content
+    if (language === 'hindi') {
+      const translatedAnalysis = translatePalmAnalysis(analysis, language);
+      
+      return new Response(
+        JSON.stringify(translatedAnalysis),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
+    // For any other language, return English with a message
     return new Response(
-      JSON.stringify(translatedAnalysis),
+      JSON.stringify({
+        ...analysis,
+        language: 'english',
+        translationNote: `Translation for ${language} is not currently supported. This content is in English.`
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -67,146 +78,53 @@ function translatePalmAnalysis(analysis, targetLanguage) {
     return { ...analysis, language: 'english' };
   }
 
-  // Basic translation dictionaries for common phrases in different languages
-  const translationDictionaries = {
-    hindi: {
-      // Life-related terms
-      'life line': 'जीवन रेखा',
-      'vitality': 'जीवन शक्ति',
-      'resilience': 'लचीलापन',
-      'energy': 'ऊर्जा',
-      'health': 'स्वास्थ्य',
-      // Heart-related terms
-      'heart line': 'हृदय रेखा',
-      'emotions': 'भावनाएँ',
-      'relationships': 'रिश्ते',
-      'love': 'प्रेम',
-      'emotional': 'भावनात्मक',
-      // Head-related terms
-      'head line': 'मस्तिष्क रेखा',
-      'intelligence': 'बुद्धि',
-      'thinking': 'सोच',
-      'mental': 'मानसिक',
-      'analytical': 'विश्लेषणात्मक',
-      // Fate-related terms
-      'fate line': 'भाग्य रेखा',
-      'destiny': 'नियति',
-      'career': 'करियर',
-      'purpose': 'उद्देश्य',
-      'professional': 'पेशेवर',
-      // Time-related terms
-      'past': 'अतीत',
-      'present': 'वर्तमान',
-      'future': 'भविष्य',
-      // Palm parts
-      'palm': 'हथेली',
-      'mount': 'पर्वत',
-      'line': 'रेखा',
-      // Elemental terms
-      'earth': 'पृथ्वी',
-      'water': 'जल',
-      'fire': 'अग्नि',
-      'air': 'वायु',
-      // Common words
-      'strength': 'शक्ति',
-      'significance': 'महत्व',
-      'prediction': 'भविष्यवाणी',
-      'insight': 'अंतर्दृष्टि',
-      'remedy': 'उपाय',
-      'practice': 'अभ्यास'
-    },
-    gujarati: {
-      'life line': 'જીવન રેખા',
-      'vitality': 'જીવન શક્તિ',
-      'resilience': 'સ્થિતિસ્થાપકતા',
-      'energy': 'ઊર્જા',
-      'health': 'સ્વાસ્થ્ય',
-      'heart line': 'હૃદય રેખા',
-      'emotions': 'લાગણીઓ',
-      'relationships': 'સંબંધો',
-      'love': 'પ્રેમ',
-      'emotional': 'ભાવનાત્મક',
-      'head line': 'મસ્તક રેખા',
-      'intelligence': 'બુદ્ધિ',
-      'thinking': 'વિચારધારા',
-      'mental': 'માનસિક',
-      'analytical': 'વિશ્લેષણાત્મક',
-      'fate line': 'ભાગ્ય રેખા',
-      'destiny': 'નિયતિ',
-      'career': 'કારકિર્દી',
-      'purpose': 'હેતુ',
-      'professional': 'વ્યાવસાયિક',
-      'past': 'ભૂતકાળ',
-      'present': 'વર્તમાન',
-      'future': 'ભવિષ્ય',
-      'palm': 'હથેળી',
-      'mount': 'પર્વત',
-      'line': 'રેખા',
-      'earth': 'પૃથ્વી',
-      'water': 'પાણી',
-      'fire': 'અગ્નિ',
-      'air': 'હવા',
-      'strength': 'શક્તિ',
-      'significance': 'મહત્વ',
-      'prediction': 'આગાહી',
-      'insight': 'અંતર્દૃષ્ટિ',
-      'remedy': 'ઉપાય',
-      'practice': 'અભ્યાસ'
-    },
-    tamil: {
-      'life line': 'வாழ்க்கை ரேகை',
-      'vitality': 'உயிர்த்திறன்',
-      'resilience': 'மீள்திறன்',
-      'energy': 'ஆற்றல்',
-      'health': 'ஆரோக்கியம்',
-      'heart line': 'இதய ரேகை',
-      'emotions': 'உணர்வுகள்',
-      'relationships': 'உறவுகள்',
-      'love': 'அன்பு',
-      'emotional': 'உணர்ச்சி',
-      'head line': 'தலை ரேகை',
-      'intelligence': 'நுண்ணறிவு',
-      'thinking': 'சிந்தனை',
-      'mental': 'மன',
-      'analytical': 'பகுப்பாய்வு',
-      'fate line': 'விதி ரேகை',
-      'destiny': 'தலைவிதி',
-      'career': 'தொழில்',
-      'purpose': 'நோக்கம்',
-      'professional': 'தொழில்முறை',
-      'past': 'கடந்த காலம்',
-      'present': 'நிகழ்காலம்',
-      'future': 'எதிர்காலம்',
-      'palm': 'உள்ளங்கை',
-      'mount': 'மேடு',
-      'line': 'ரேகை',
-      'earth': 'மண்',
-      'water': 'நீர்',
-      'fire': 'நெருப்பு',
-      'air': 'காற்று',
-      'strength': 'வலிமை',
-      'significance': 'முக்கியத்துவம்',
-      'prediction': 'கணிப்பு',
-      'insight': 'உள்ளுணர்வு',
-      'remedy': 'தீர்வு',
-      'practice': 'பயிற்சி'
-    },
-    // Add more languages as needed
-    // This is just a basic dictionary - in a production environment,
-    // you would use a more comprehensive dictionary or a translation API
+  // Translation dictionary for Hindi
+  const hindiDictionary = {
+    // Life-related terms
+    'life line': 'जीवन रेखा',
+    'vitality': 'जीवन शक्ति',
+    'resilience': 'लचीलापन',
+    'energy': 'ऊर्जा',
+    'health': 'स्वास्थ्य',
+    // Heart-related terms
+    'heart line': 'हृदय रेखा',
+    'emotions': 'भावनाएँ',
+    'relationships': 'रिश्ते',
+    'love': 'प्रेम',
+    'emotional': 'भावनात्मक',
+    // Head-related terms
+    'head line': 'मस्तिष्क ��ेखा',
+    'intelligence': 'बुद्धि',
+    'thinking': 'सोच',
+    'mental': 'मानसिक',
+    'analytical': 'विश्लेषणात्मक',
+    // Fate-related terms
+    'fate line': 'भाग्य रेखा',
+    'destiny': 'नियति',
+    'career': 'करियर',
+    'purpose': 'उद्देश्य',
+    'professional': 'पेशेवर',
+    // Time-related terms
+    'past': 'अतीत',
+    'present': 'वर्तमान',
+    'future': 'भविष्य',
+    // Palm parts
+    'palm': 'हथेली',
+    'mount': 'पर्वत',
+    'line': 'रेखा',
+    // Elemental terms
+    'earth': 'पृथ्वी',
+    'water': 'जल',
+    'fire': 'अग्नि',
+    'air': 'वायु',
+    // Common words
+    'strength': 'शक्ति',
+    'significance': 'महत्व',
+    'prediction': 'भविष्यवाणी',
+    'insight': 'अंतर्दृष्टि',
+    'remedy': 'उपाय',
+    'practice': 'अभ्यास'
   };
-
-  // Get the translation dictionary for the target language
-  const dictionary = translationDictionaries[targetLanguage];
-  
-  // If we don't have a dictionary for this language, return original with a note
-  if (!dictionary) {
-    return {
-      ...analysis,
-      language: targetLanguage,
-      translationNote: `Translation for ${targetLanguage} is not fully supported yet. This content is in English.`
-    };
-  }
 
   // Create a deep copy of the analysis to modify
   const translatedAnalysis = JSON.parse(JSON.stringify(analysis));
@@ -217,7 +135,7 @@ function translatePalmAnalysis(analysis, targetLanguage) {
     
     let translatedText = text;
     // Replace each term in the dictionary with its translation
-    for (const [term, translation] of Object.entries(dictionary)) {
+    for (const [term, translation] of Object.entries(hindiDictionary)) {
       // Create a regex that matches the term as a whole word, case insensitive
       const regex = new RegExp(`\\b${term}\\b`, 'gi');
       translatedText = translatedText.replace(regex, translation);
@@ -247,15 +165,13 @@ function translatePalmAnalysis(analysis, targetLanguage) {
   
   // Add language and translation metadata
   translatedAnalysis.language = targetLanguage;
-  translatedAnalysis.translationNote = `This is a partial translation to ${targetLanguage} using a basic dictionary approach. Some content may still be in English.`;
+  translatedAnalysis.translationNote = `This is a partial translation to Hindi using a basic dictionary approach. Some content may still be in English.`;
   
   return translatedAnalysis;
 }
 
 // This function generates more detailed palm reading data with enhanced predictions
 function generateDetailedPalmAnalysis(language = 'english') {
-  // For now, we'll return the English version as a placeholder
-  // In a real implementation, this would translate the content based on the language parameter
   console.log(`Generating palm analysis in ${language}`);
   
   // In a real implementation, we could use a translation API here
@@ -387,7 +303,7 @@ function generateDetailedPalmAnalysis(language = 'english') {
       ],
       remedies: [
         "Practice Metta (loving-kindness) meditation directed specifically toward challenging relationships",
-        "Wear or carry rose quartz to amplify heart energy and green aventurine to attract harmonious connections",
+        "Wear or carry rose quartz to enhance heart energy and green aventurine to attract harmonious connections",
         "Create a relationship altar with symbols of balanced partnership and revisit it weekly",
         "Practice conscious communication techniques like non-violent communication in all interactions",
         "Incorporate the Vedic practice of seeing the divine in others (namaste) in daily encounters"
