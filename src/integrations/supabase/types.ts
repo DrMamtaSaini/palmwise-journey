@@ -59,7 +59,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      insert_payment: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description: string
+          p_payment_method: string
+          p_payment_id: string
+          p_billing_period: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
