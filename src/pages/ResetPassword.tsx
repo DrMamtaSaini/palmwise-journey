@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,101 +15,87 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validResetFlow, setValidResetFlow] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [validToken, setValidToken] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    const verifyResetFlow = async () => {
-      console.log("Reset password page loaded, URL:", window.location.href);
-      
-      // Check for code parameter (most common for password reset)
-      const params = new URLSearchParams(location.search);
-      const code = params.get('code');
-      
-      if (code) {
-        console.log("Code parameter found:", code);
-        try {
-          // Exchange the code for a session
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    async function verifyResetToken() {
+      try {
+        console.log("Verifying password reset token...");
+        setIsVerifying(true);
+        
+        // The most reliable approach - check if we have a code in the URL
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        
+        if (code) {
+          console.log("Found code parameter in URL, verifying...");
           
-          if (error) {
-            console.error("Error exchanging code for session:", error);
-            toast.error("Invalid or expired reset link", {
-              description: "Please request a new password reset link.",
-            });
-            navigate('/forgot-password');
-          } else if (data.session) {
-            console.log("Successfully exchanged code for session");
-            setValidResetFlow(true);
-          } else {
-            console.warn("No session returned after code exchange");
-            toast.error("Unable to verify reset link", {
-              description: "Please request a new password reset link.",
-            });
-            navigate('/forgot-password');
+          try {
+            // Exchange the code for a session which validates it
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            
+            if (error) {
+              console.error("Error validating reset token:", error);
+              toast.error("Invalid or expired reset link", {
+                description: "Please request a new password reset link."
+              });
+              setValidToken(false);
+            } else if (data?.session) {
+              console.log("Valid reset token confirmed, session established");
+              setValidToken(true);
+            } else {
+              console.warn("No session returned after code exchange");
+              toast.error("Unable to verify reset link");
+              setValidToken(false);
+            }
+          } catch (err) {
+            console.error("Error processing reset token:", err);
+            toast.error("Error processing reset link");
+            setValidToken(false);
           }
-        } catch (err) {
-          console.error("Error in code-based auth flow:", err);
-          toast.error("Error processing reset link", {
-            description: "Please try again or request a new reset link.",
-          });
-          navigate('/forgot-password');
-        }
-      } else if (window.location.hash && window.location.hash.includes('type=recovery')) {
-        // For hash-based recovery flow
-        console.log("Hash recovery flow detected:", window.location.hash);
-        try {
-          // Check if we already have a session
-          const { data: sessionData } = await supabase.auth.getSession();
+        } else {
+          // Check if we already have a valid session from a type=recovery flow
+          const { data } = await supabase.auth.getSession();
           
-          if (sessionData.session) {
-            console.log("User has an active session, proceeding with password reset");
-            setValidResetFlow(true);
+          if (data?.session) {
+            console.log("User already has a valid recovery session");
+            setValidToken(true);
           } else {
-            console.warn("No session found with recovery hash");
-            toast.error("Authentication failed", {
-              description: "Please try again or request a new password reset link.",
+            console.log("No valid token or session found");
+            toast.error("Invalid reset link", {
+              description: "Please request a new password reset link."
             });
-            navigate('/forgot-password');
+            setValidToken(false);
           }
-        } catch (err) {
-          console.error("Error processing recovery hash:", err);
-          toast.error("Error processing recovery data", {
-            description: "Please request a new password reset link.",
-          });
-          navigate('/forgot-password');
         }
-      } else {
-        // No valid reset parameters found
-        console.log("No valid reset parameters found");
-        toast.error("Invalid reset link", {
-          description: "This page can only be accessed from a password reset email.",
-        });
-        navigate('/login');
+      } catch (error) {
+        console.error("Error in token verification:", error);
+        toast.error("Error verifying reset link");
+        setValidToken(false);
+      } finally {
+        setIsVerifying(false);
       }
-      
-      setAuthChecked(true);
-    };
+    }
     
-    verifyResetFlow();
-  }, [navigate, location.search]);
+    verifyResetToken();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password.length < 8) {
       toast.error("Password too short", {
-        description: "Your password must be at least 8 characters long.",
+        description: "Your password must be at least 8 characters long."
       });
       return;
     }
     
     if (password !== confirmPassword) {
       toast.error("Passwords don't match", {
-        description: "Please make sure both passwords match.",
+        description: "Please make sure both passwords match."
       });
       return;
     }
@@ -117,29 +103,36 @@ const ResetPassword = () => {
     try {
       console.log("Attempting to update password");
       const success = await updatePassword(password);
+      
       if (success) {
-        toast.success("Password updated", {
-          description: "Your password has been successfully updated. You can now log in with your new password.",
+        toast.success("Password updated successfully", {
+          description: "You can now log in with your new password."
         });
+        
+        // Redirect to login after success
         setTimeout(() => {
           navigate('/login');
         }, 2000);
+      } else {
+        toast.error("Failed to update password", {
+          description: "Please try again or request a new reset link."
+        });
       }
     } catch (error) {
       console.error("Password update error:", error);
       toast.error("Password update failed", {
-        description: "Please try again later.",
+        description: "Please try again later."
       });
     }
   };
 
-  if (!authChecked) {
+  if (isVerifying) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
           <div className="text-center">
-            <p className="text-xl">Validating reset link...</p>
+            <p className="text-xl">Verifying reset link...</p>
             <div className="mt-4 w-8 h-8 border-4 border-palm-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         </main>
@@ -162,7 +155,7 @@ const ResetPassword = () => {
               </p>
             </div>
 
-            {validResetFlow ? (
+            {validToken ? (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">

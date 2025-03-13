@@ -27,8 +27,7 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // We need to properly setup the redirect URL to the reset page
-      // The ?next= query param is important for handling auth redirects properly
+      // Use the current origin without any additional path for simplest redirect
       const redirectUrl = `${window.location.origin}/reset-password`;
       
       console.log("Using redirect URL for password reset:", redirectUrl);
@@ -38,8 +37,14 @@ const ForgotPassword = () => {
       if (success) {
         console.log("Password reset email sent successfully");
         setSubmitted(true);
+        toast.success("Password reset email sent", {
+          description: "Check your inbox for instructions to reset your password."
+        });
       } else {
         console.error("Password reset failed in UI layer");
+        toast.error("Failed to send reset email", {
+          description: "Please try again later or contact support."
+        });
       }
     } catch (error) {
       console.error("Password reset error in UI layer:", error);

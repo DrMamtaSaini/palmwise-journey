@@ -10,73 +10,43 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create and export the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storageKey: 'supabase.auth.token',
-    flowType: 'pkce'
-  }
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Add useful debugging
 console.log("Supabase client initialized with URL:", supabaseUrl);
 
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log(`Auth state changed: ${event}`, session ? "Session exists" : "No session");
+  console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
 });
 
-// Export a function to explicitly check URL hash for auth flows
+// Check for auth code in URL - simplified and more reliable approach
 export async function checkForAuthInUrl() {
   try {
-    console.log("Checking for auth in URL hash/params");
+    // Check if we have a code parameter (most common for password reset)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
     
-    // Use the correct method for checking for auth in URL
-    if (window.location.hash && window.location.hash.includes('access_token')) {
-      // Process the hash part manually
-      console.log("Hash contains access_token, attempting to extract session");
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error getting session from hash:", error);
-        return { success: false, error };
-      }
-      
-      if (data?.session) {
-        console.log("Successfully retrieved session from hash");
-        return { success: true, session: data.session };
-      }
-    } else if (window.location.search && window.location.search.includes('code=')) {
-      // Process the code parameter
-      console.log("URL contains code parameter");
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      
-      if (code) {
-        console.log("Attempting to exchange code for session");
-        try {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-          
-          if (error) {
-            console.error("Error exchanging code for session:", error);
-            return { success: false, error };
-          }
-          
-          if (data?.session) {
-            console.log("Successfully exchanged code for session");
-            return { success: true, session: data.session };
-          }
-        } catch (exchangeError) {
-          console.error("Exception during code exchange:", exchangeError);
-          return { success: false, error: exchangeError };
+    if (code) {
+      console.log("Code parameter found, attempting to exchange for session");
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          console.error("Error exchanging code for session:", error);
+          return { success: false, error };
         }
+        
+        console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
+        return { success: !!data.session, session: data.session };
+      } catch (error) {
+        console.error("Exception during code exchange:", error);
+        return { success: false, error };
       }
     }
     
-    console.log("No auth parameters found in URL");
-    return { success: false };
+    console.log("No auth code found in URL");
+    return { success: false, message: "No auth parameters found" };
   } catch (error) {
     console.error("Exception checking for auth in URL:", error);
     return { success: false, error };
