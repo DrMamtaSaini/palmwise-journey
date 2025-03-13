@@ -15,13 +15,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    persistSession: true
+    persistSession: true,
+    // Add debug mode for development environments
+    debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   }
 });
 
 // Add useful debugging
 console.log("Supabase client initialized with URL:", supabaseUrl);
 console.log("Current browser location:", window.location.href);
+console.log("Current origin:", window.location.origin);
 
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {
@@ -30,6 +33,12 @@ supabase.auth.onAuthStateChange((event, session) => {
   // Additional logging for specific events
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
+    console.log("Session details:", session);
+  }
+  
+  if (event === 'SIGNED_IN') {
+    console.log("User signed in successfully!");
+    console.log("User details:", session?.user);
   }
   
   if (event === 'TOKEN_REFRESHED') {
@@ -152,6 +161,7 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
     // Handle multiple formats - some implementations use URLSearchParams format, others use direct hash
     let accessToken = '';
     let refreshToken = '';
+    let type = '';
     
     if (hash.includes('=')) {
       // Standard format with key=value pairs
@@ -160,7 +170,7 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
       refreshToken = params.get('refresh_token') || '';
       
       // Also check for type=recovery which indicates a password reset flow
-      const type = params.get('type');
+      type = params.get('type') || '';
       if (type === 'recovery') {
         console.log("Recovery flow detected in hash");
       }

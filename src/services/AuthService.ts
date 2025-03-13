@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -213,7 +214,7 @@ class AuthService {
           data: {
             name,
           },
-          emailRedirectTo: window.location.origin + '/login'
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
       
@@ -315,16 +316,21 @@ class AuthService {
 
   public async signInWithGoogle(): Promise<boolean> {
     try {
-      console.log("Initiating Google sign-in via standard OAuth flow");
+      console.log("Initiating Google sign-in");
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
+      
+      // Get the current origin for proper redirection
+      const redirectTo = window.location.origin;
+      console.log("Using redirectTo for Google sign-in:", redirectTo);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectTo,
           queryParams: {
-            prompt: 'select_account'
+            prompt: 'select_account',
+            access_type: 'offline'
           }
         }
       });
@@ -344,8 +350,25 @@ class AuthService {
         return false;
       }
       
-      console.log("Google sign in initiated successfully with URL:", data.url);
-      return true;
+      if (data.url) {
+        console.log("Google sign in initiated successfully with URL:", data.url);
+        
+        // The URL will be used for redirection by the browser
+        window.location.href = data.url;
+        return true;
+      }
+      
+      toast.error('Google authentication failed', {
+        description: 'Failed to initialize Google sign-in.',
+      });
+      
+      this.authState = {
+        ...this.authState,
+        isLoading: false,
+      };
+      this.notifyListeners();
+      
+      return false;
     } catch (error: any) {
       console.error('Google sign in error:', error);
       
@@ -372,21 +395,22 @@ class AuthService {
       console.log("Email:", email);
       console.log("Redirect URL:", redirectUrl);
       
-      const supabaseBaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vvaextxqyrvcpjwndgby.supabase.co';
-      console.log("Supabase URL from env:", supabaseBaseUrl);
-      console.log("Environment URL:", import.meta.env.VITE_SUPABASE_URL || "(default)");
-      console.log("Window Location:", window.location.href);
+      // Ensure we have a valid redirect URL
+      const finalRedirectUrl = redirectUrl || `${window.location.origin}/reset-password`;
+      console.log("Final redirect URL:", finalRedirectUrl);
       
-      if (redirectUrl && redirectUrl.startsWith('http://localhost')) {
-        console.log("Detected localhost - ensuring HTTP protocol is used");
+      // Check if we're on localhost
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocalhost) {
+        console.log("⚠️ Localhost environment detected for password reset");
+        console.log("⚠️ Password reset links may not work correctly in local development");
       }
       
-      const options = redirectUrl ? { redirectTo: redirectUrl } : undefined;
-      console.log("Password reset options:", options);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: finalRedirectUrl
+      });
       
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, options);
-      
-      console.log("Reset password response:", { data, error });
+      console.log("Reset password response:", data ? "Success" : "No data", error ? `Error: ${error.message}` : "No error");
       
       if (error) {
         console.error("Password reset error from Supabase:", error);

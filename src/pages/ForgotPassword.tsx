@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle } from "lucide-react";
@@ -27,9 +26,8 @@ const ForgotPassword = () => {
     }
 
     try {
-      // Get the current origin
+      // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
-      // Set the redirect URL to the reset-password page at the current origin
       const redirectUrl = `${origin}/reset-password`;
       
       console.log('Using redirect URL:', redirectUrl);
