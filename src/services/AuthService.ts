@@ -320,14 +320,14 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // Get the current origin for proper redirection
-      const redirectTo = window.location.origin;
-      console.log("Using redirectTo for Google sign-in:", redirectTo);
+      // Important: Get the window location at the time of the request
+      const origin = window.location.origin;
+      console.log("Using origin for Google sign-in:", origin);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo,
+          redirectTo: origin,
           queryParams: {
             prompt: 'select_account',
             access_type: 'offline'
