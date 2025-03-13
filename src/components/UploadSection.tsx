@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Upload, Camera, SparklesIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import PalmAnalysisService from "../services/PalmAnalysisService";
@@ -15,6 +15,8 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -60,30 +62,14 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
 
   const takePicture = () => {
     try {
-      // Create an input element for capturing photos
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      
-      // On mobile browsers, the "capture" attribute enables camera access
-      // Note: We're setting it as property, not attribute
-      input.setAttribute('capture', 'environment'); // Use the back camera if available
-      
-      input.onchange = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        const selectedFile = target.files?.[0];
-        if (selectedFile) {
-          setFile(selectedFile);
-          const reader = new FileReader();
-          reader.onload = () => {
-            setPreviewUrl(reader.result as string);
-          };
-          reader.readAsDataURL(selectedFile);
-        }
-      };
-      
-      // This triggers the file selection dialog
-      input.click();
+      // Instead of dynamically creating an input, use the reference to the existing one
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      } else {
+        toast.error("Camera access error", {
+          description: "Could not access your camera. Please try uploading an image instead."
+        });
+      }
     } catch (error) {
       console.error("Error activating camera:", error);
       toast.error("Camera error", {
@@ -98,7 +84,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
 
       <div 
         className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px] cursor-pointer"
-        onClick={() => !isProcessing && !isUploading && document.getElementById('file-upload')?.click()}
+        onClick={() => !isProcessing && !isUploading && fileInputRef.current?.click()}
       >
         {previewUrl ? (
           <div className="mb-4 w-full max-w-sm">
@@ -127,6 +113,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         <label className={`flex-1 ${(isProcessing || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <input
             id="file-upload"
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
@@ -148,6 +135,17 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
           <Camera size={20} className="mr-2" />
           <span>Take Photo</span>
         </button>
+        
+        {/* Hidden camera input with capture attribute */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileChange}
+          disabled={isProcessing || isUploading}
+        />
       </div>
 
       <button
