@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, UserPlus, AlertCircle } from "lucide-react";
@@ -15,18 +14,13 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showGoogleButton, setShowGoogleButton] = useState(false); // Default to hidden until we check provider status
+  const [showGoogleButton, setShowGoogleButton] = useState(true);
   const [googleAuthError, setGoogleAuthError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signUp, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
 
   useEffect(() => {
-    // Check if Google auth provider is enabled in Supabase
-    // For now, we'll hide it by default based on the error shown in the screenshots
-    setGoogleAuthError(true);
-    
-    // Check for auth errors in URL
     const searchParams = new URLSearchParams(location.search);
     const errorCode = searchParams.get('error_code');
     const errorDescription = searchParams.get('error_description');
@@ -36,7 +30,6 @@ const Signup = () => {
       
       if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
         setGoogleAuthError(true);
-        setShowGoogleButton(false);
         toast.error("Google authentication failed", {
           description: "Email/password signup is available. Google auth is not enabled in Supabase project settings.",
           duration: 8000,
@@ -45,7 +38,6 @@ const Signup = () => {
         handleEmailVerificationError(errorCode, errorDescription);
       }
       
-      // Clean the URL
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('error_code');
       cleanUrl.searchParams.delete('error_description');
@@ -54,7 +46,6 @@ const Signup = () => {
   }, [location.search, handleEmailVerificationError]);
 
   useEffect(() => {
-    // If user is already authenticated, redirect to dashboard
     if (isAuthenticated) {
       navigate("/dashboard");
     }
@@ -83,7 +74,6 @@ const Signup = () => {
         toast.success("Account created successfully", {
           description: "Please check your email to verify your account before logging in."
         });
-        // Redirect to login page after successful signup
         setTimeout(() => {
           navigate("/login");
         }, 2000);
@@ -107,7 +97,6 @@ const Signup = () => {
     
     try {
       await signInWithGoogle();
-      // No need to navigate as the redirect will happen automatically
     } catch (error) {
       console.error("Google sign in error:", error);
       toast.error("Google signup failed", {
@@ -116,10 +105,8 @@ const Signup = () => {
     }
   };
 
-  // Function to handle enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
-      // Submit the form when enter key is pressed
       const form = e.currentTarget.closest('form');
       if (form) form.requestSubmit();
     }
@@ -139,15 +126,17 @@ const Signup = () => {
               </p>
             </div>
 
-            <div className="mb-6 p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
-              <div className="flex items-start">
-                <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">Google authentication is not enabled</p>
-                  <p className="text-xs mt-1">Please use email/password signup. To enable Google authentication, it needs to be configured in the Supabase dashboard.</p>
+            {googleAuthError && (
+              <div className="mb-6 p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+                <div className="flex items-start">
+                  <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Google authentication is not enabled</p>
+                    <p className="text-xs mt-1">Please use email/password signup. To enable Google authentication, it needs to be configured in the Supabase dashboard.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyPress}>
               <div>
