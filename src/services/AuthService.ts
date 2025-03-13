@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -369,7 +370,8 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      const siteUrl = redirectUrl || window.location.origin;
+      // Explicitly use the provided redirect URL or default to the origin
+      const siteUrl = redirectUrl || `${window.location.origin}/reset-password`;
       console.log("Using redirect URL for password reset:", siteUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {

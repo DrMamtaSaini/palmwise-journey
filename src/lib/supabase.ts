@@ -80,6 +80,12 @@ export async function checkForAuthInUrl() {
         }
         
         console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
+        
+        // Clean up the URL by removing the code parameter
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('code');
+        window.history.replaceState(null, '', cleanUrl.toString());
+        
         return { success: !!data.session, session: data.session };
       } catch (error) {
         console.error("Exception during code exchange:", error);
