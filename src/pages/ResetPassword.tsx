@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
+import { supabase, checkForAuthInUrl } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -16,74 +16,57 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validResetFlow, setValidResetFlow] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const checkResetFlow = async () => {
-      console.log("Reset password page loaded");
-      console.log("Current URL:", window.location.href);
+    const verifyResetFlow = async () => {
+      console.log("Reset password page loaded, URL:", window.location.href);
       
-      // Check for hash-based recovery flow (#access_token=...)
-      const hash = window.location.hash;
-      if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
-        console.log("Hash-based recovery flow detected");
-        setValidResetFlow(true);
+      // First check for hash-based auth (more common)
+      if (window.location.hash) {
+        console.log("Hash detected in URL:", window.location.hash);
         
         try {
-          // Let Supabase client handle the token from the URL
-          const { data, error } = await supabase.auth.getSession();
+          // First check if we can extract a session from the URL hash
+          const { success, error } = await checkForAuthInUrl();
           
-          if (error) {
-            console.error("Error getting session from URL:", error);
-            toast.error("Invalid or expired reset link", {
-              description: "Please request a new password reset link.",
-            });
-            navigate('/forgot-password');
+          if (success) {
+            console.log("Successfully got session from URL hash");
+            setValidResetFlow(true);
+            setAuthChecked(true);
+            return;
+          } else if (error) {
+            console.error("Error extracting session from hash:", error);
+          }
+          
+          // If that failed, try another approach with getSession
+          const { data, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error("Error getting auth session:", sessionError);
+          } else if (data.session) {
+            console.log("Found existing session");
+            setValidResetFlow(true);
+            setAuthChecked(true);
             return;
           }
-
-          if (data.session) {
-            console.log("Session established from recovery token");
-          } else {
-            console.log("No session found from recovery token");
-            toast.error("Invalid reset link", {
-              description: "Unable to validate your reset token. Please request a new one.",
-            });
-            navigate('/forgot-password');
-          }
-        } catch (error) {
-          console.error("Error processing hash-based token:", error);
-          toast.error("Error validating reset link", {
-            description: "Please try again or request a new reset link.",
-          });
-          navigate('/forgot-password');
+        } catch (err) {
+          console.error("Error in hash-based auth flow:", err);
         }
-        return;
       }
       
-      // Get code from URL parameters (for code-based flow)
-      const currentUrl = new URL(window.location.href);
-      let code = currentUrl.searchParams.get('code');
+      // Then check for code-based flow (via URL parameter)
+      const params = new URLSearchParams(location.search);
+      const code = params.get('code');
       
-      console.log("Code parameter:", code);
-      
-      // If we're on root path with a code, redirect to the reset-password path with the code
-      if (currentUrl.pathname === '/' && code) {
-        console.log("Detected code on root path, redirecting to reset-password path");
-        const newUrl = `${window.location.origin}/reset-password?code=${code}`;
-        console.log("Redirecting to:", newUrl);
-        window.location.href = newUrl;
-        return;
-      }
-
       if (code) {
-        console.log("Code parameter found, validating with Supabase");
-        setValidResetFlow(true);
-
+        console.log("Code parameter found:", code);
+        
         try {
-          // Verify the token/code with Supabase
+          // Exchange the code for a session
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           
           if (error) {
@@ -92,30 +75,37 @@ const ResetPassword = () => {
               description: "Please request a new password reset link.",
             });
             navigate('/forgot-password');
-            return;
+          } else if (data.session) {
+            console.log("Successfully exchanged code for session");
+            setValidResetFlow(true);
+          } else {
+            console.warn("No session returned after code exchange");
+            toast.error("Unable to verify reset link", {
+              description: "Please request a new password reset link.",
+            });
+            navigate('/forgot-password');
           }
-
-          console.log("Successfully validated code, session established:", data);
-          // Valid code, we can continue with password reset
-        } catch (error) {
-          console.error("Error during code validation:", error);
-          toast.error("Error validating reset link", {
+        } catch (err) {
+          console.error("Error in code-based auth flow:", err);
+          toast.error("Error processing reset link", {
             description: "Please try again or request a new reset link.",
           });
           navigate('/forgot-password');
         }
-      } else if (!hash) {
-        // No valid parameters found
-        console.log("No valid reset parameters found, redirecting to login");
+      } else if (!window.location.hash) {
+        // No code or hash found
+        console.log("No valid reset parameters found");
         toast.error("Invalid reset link", {
           description: "This page can only be accessed from a password reset email.",
         });
         navigate('/login');
       }
+      
+      setAuthChecked(true);
     };
     
-    checkResetFlow();
-  }, [navigate]);
+    verifyResetFlow();
+  }, [navigate, location.search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +143,7 @@ const ResetPassword = () => {
     }
   };
 
-  if (!validResetFlow && isLoading) {
+  if (!authChecked) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -182,74 +172,96 @@ const ResetPassword = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  New Password
-                </label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    className="w-full pr-10"
-                    placeholder="Enter new password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+            {validResetFlow ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className="w-full pr-10"
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Password must be at least 8 characters long
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Password must be at least 8 characters long
-                </p>
-              </div>
 
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="w-full pr-10"
-                    placeholder="Confirm new password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="w-full pr-10"
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-palm-purple hover:bg-palm-purple/90"
+                >
+                  {isLoading ? (
+                    <span className="animate-pulse">Updating...</span>
+                  ) : (
+                    <>
+                      <Save size={18} className="mr-2" />
+                      <span>Update Password</span>
+                    </>
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                  <p className="font-medium">Invalid or expired reset link</p>
+                  <p className="text-sm mt-1">
+                    Please request a new password reset link from the login page.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <Link to="/forgot-password">
+                    <Button 
+                      variant="outline" 
+                      className="mt-4 w-full"
+                    >
+                      Request New Reset Link
+                    </Button>
+                  </Link>
                 </div>
               </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-palm-purple hover:bg-palm-purple/90"
-              >
-                {isLoading ? (
-                  <span className="animate-pulse">Updating...</span>
-                ) : (
-                  <>
-                    <Save size={18} className="mr-2" />
-                    <span>Update Password</span>
-                  </>
-                )}
-              </Button>
-            </form>
+            )}
           </div>
         </div>
       </main>

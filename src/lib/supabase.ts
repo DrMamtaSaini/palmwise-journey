@@ -15,8 +15,39 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storageKey: 'supabase.auth.token', // Consistent storage key
     flowType: 'pkce' // Using PKCE flow for better security
   }
 });
 
+// Add useful debugging
 console.log("Supabase client initialized with URL:", supabaseUrl);
+
+// Handle auth state changes for debugging
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log(`Auth state changed: ${event}`, session ? "Session exists" : "No session");
+});
+
+// Export a function to explicitly check URL hash for auth flows
+export async function checkForAuthInUrl() {
+  try {
+    console.log("Checking for auth in URL hash");
+    const { data, error } = await supabase.auth.getSessionFromUrl();
+    
+    if (error) {
+      console.error("Error getting session from URL:", error);
+      return { success: false, error };
+    }
+    
+    if (data?.session) {
+      console.log("Successfully retrieved session from URL");
+      return { success: true, session: data.session };
+    } else {
+      console.log("No session found in URL");
+      return { success: false };
+    }
+  } catch (error) {
+    console.error("Exception checking for auth in URL:", error);
+    return { success: false, error };
+  }
+}

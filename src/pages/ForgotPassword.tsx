@@ -25,21 +25,24 @@ const ForgotPassword = () => {
     }
     
     try {
-      // Make sure to use the ABSOLUTE URL with protocol (http/https)
+      console.log("Initiating password reset for:", email);
+      
+      // For password resets, we want to use the absolute base URL only
+      // The hash-based auth flow will handle the rest
       const baseUrl = window.location.origin;
       
-      // For a deployed app, this is the correct URL format
-      // For local development with hash-based auth, we don't actually need a specific path
-      const redirectUrl = baseUrl;
+      console.log("Using redirect URL for password reset:", baseUrl);
       
-      console.log("Using redirect URL for password reset:", redirectUrl);
+      const success = await forgotPassword(email, baseUrl);
       
-      const success = await forgotPassword(email, redirectUrl);
       if (success) {
+        console.log("Password reset email sent successfully");
         setSubmitted(true);
+      } else {
+        console.error("Password reset failed in UI layer");
       }
     } catch (error) {
-      console.error("Password reset error:", error);
+      console.error("Password reset error in UI layer:", error);
       toast.error("Password reset failed", {
         description: "Please try again later.",
       });
