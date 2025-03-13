@@ -19,53 +19,66 @@ serve(async (req) => {
       throw new Error('Text is required')
     }
 
-    // Check if OpenAI API key is set
-    const apiKey = Deno.env.get('OPENAI_API_KEY')
+    // Check if Gemini API key is set
+    const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
-      console.error('OPENAI_API_KEY is not set')
-      throw new Error('OpenAI API key is not configured')
+      console.error('GEMINI_API_KEY is not set')
+      throw new Error('Gemini API key is not configured')
     }
 
-    console.log(`Generating speech with OpenAI TTS. Text length: ${text.length}, voice: ${voice}`)
+    console.log(`Generating speech with Gemini API. Text length: ${text.length}, voice: ${voice}`)
 
-    // Initialize OpenAI for TTS
+    // Generate text for audio narration using Gemini
     try {
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: voice,
-          response_format: 'mp3',
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Generate an audio narration of the following text. The voice should be clear, natural, and engaging. Make sure to maintain a conversational tone throughout:
+
+${text}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 4096,
+          }
         }),
       })
 
       if (!response.ok) {
         const errorBody = await response.text()
-        console.error('OpenAI API error:', errorBody)
-        throw new Error(`OpenAI API error: ${response.status} - ${errorBody}`)
+        console.error('Gemini API error:', errorBody)
+        throw new Error(`Gemini API error: ${response.status} - ${errorBody}`)
       }
 
-      // Convert audio buffer to base64
-      const arrayBuffer = await response.arrayBuffer()
-      const base64Audio = btoa(
-        String.fromCharCode(...new Uint8Array(arrayBuffer))
-      )
+      const data = await response.json()
+      const narratedText = data.candidates[0]?.content?.parts[0]?.text || text
 
-      console.log(`Speech generated successfully. Base64 length: ${base64Audio.length}`)
+      // Since Gemini doesn't have a direct text-to-speech API, we're returning the narrated text
+      // The frontend will use the browser's SpeechSynthesis API to convert this to speech
+      console.log(`Speech text generated successfully. Length: ${narratedText.length}`)
 
       return new Response(
-        JSON.stringify({ audioContent: base64Audio }),
+        JSON.stringify({ 
+          narratedText: narratedText,
+          // Indicate that we're using the browser's speech synthesis
+          useBrowserSynthesis: true 
+        }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         },
       )
     } catch (error) {
-      console.error('Error calling OpenAI API:', error)
+      console.error('Error calling Gemini API:', error)
       throw error
     }
   } catch (error) {

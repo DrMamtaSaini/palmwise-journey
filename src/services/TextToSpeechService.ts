@@ -13,7 +13,7 @@ class TextToSpeechService {
     return TextToSpeechService.instance;
   }
 
-  public async generateSpeech(text: string, voice: string = 'alloy'): Promise<string> {
+  public async generateSpeech(text: string, voice: string = 'alloy'): Promise<{ audio: string | null, text: string | null, useBrowserSynthesis: boolean }> {
     try {
       console.log("Generating speech for text:", text.substring(0, 50) + "...");
       console.log("Using voice:", voice);
@@ -41,13 +41,24 @@ class TextToSpeechService {
         throw new Error(`Error from speech service: ${data.error}`);
       }
       
-      if (!data.audioContent) {
-        console.error("No audio content returned from server");
-        throw new Error("No audio content returned from server");
+      // Check if we're using browser synthesis or base64 audio
+      if (data.useBrowserSynthesis) {
+        console.log("Speech text generated successfully, length:", data.narratedText?.length);
+        return { 
+          audio: null, 
+          text: data.narratedText || truncatedText,
+          useBrowserSynthesis: true
+        };
+      } else if (data.audioContent) {
+        console.log("Speech generated successfully, audio content length:", data.audioContent.length);
+        return { 
+          audio: data.audioContent,  // Base64 encoded audio
+          text: null,
+          useBrowserSynthesis: false
+        };
       }
       
-      console.log("Speech generated successfully, audio content length:", data.audioContent.length);
-      return data.audioContent; // Base64 encoded audio
+      throw new Error("Invalid response format from speech service");
     } catch (error) {
       console.error("Error in generateSpeech:", error);
       
@@ -64,9 +75,9 @@ class TextToSpeechService {
     }
   }
 
-  // OpenAI TTS has a limit on the input length, so we need to truncate the text
+  // Limit on the input length
   private truncateText(text: string): string {
-    const MAX_CHARS = 4000; // OpenAI TTS limit
+    const MAX_CHARS = 4000; // API limit
     if (text.length <= MAX_CHARS) {
       return text;
     }
