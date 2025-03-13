@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
@@ -16,6 +17,7 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validToken, setValidToken] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
+  const [tokenError, setTokenError] = useState<string | null>(null);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -26,41 +28,60 @@ const ResetPassword = () => {
         console.log("Current URL:", window.location.href);
         setIsVerifying(true);
         
-        // Try to handle any auth tokens in the URL
-        const tokenResult = await handleAuthTokensOnLoad();
-        console.log("Token handling result:", tokenResult);
+        // Check for code parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
         
-        if (tokenResult.success) {
-          console.log("Valid auth token confirmed");
-          setValidToken(true);
-          setIsVerifying(false);
-          return;
-        } else {
-          // Safely extract error message using optional chaining and fallbacks
-          const errorMessage = tokenResult.error 
-            ? `Error: ${tokenResult.error.message || "Unknown error"}` 
-            : (tokenResult.message || "No valid token found");
+        if (code) {
+          console.log("Found code parameter in URL:", code.substring(0, 10) + "...");
           
-          console.log("Token verification failed:", errorMessage);
-        }
-        
-        // If we couldn't handle the token automatically, check if there's already a valid session
-        // This is useful when the user has already processed the token but is still on the reset page
-        const { data } = await supabase.auth.getSession();
-        
-        if (data?.session) {
-          console.log("User already has a valid session");
-          setValidToken(true);
+          try {
+            // Try to exchange the code for a session
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            
+            if (error) {
+              console.error("Error exchanging code:", error);
+              setTokenError(`Error: ${error.message}`);
+              setValidToken(false);
+            } else if (data?.session) {
+              console.log("Successfully exchanged code for session");
+              setValidToken(true);
+            } else {
+              console.log("No session returned after code exchange");
+              setTokenError("No valid session created from reset link");
+              setValidToken(false);
+            }
+          } catch (exchangeError) {
+            console.error("Exception during code exchange:", exchangeError);
+            setTokenError("Error processing reset code");
+            setValidToken(false);
+          }
         } else {
-          console.log("No valid token or session found");
-          toast.error("Invalid reset link", {
-            description: "Please request a new password reset link."
-          });
-          setValidToken(false);
+          // Try to handle any auth tokens in the URL if no code parameter
+          console.log("No code parameter, checking for hash tokens");
+          const tokenResult = await handleAuthTokensOnLoad();
+          console.log("Token handling result:", tokenResult);
+          
+          if (tokenResult.success) {
+            console.log("Valid auth token confirmed");
+            setValidToken(true);
+          } else {
+            // Check if there's already a valid session
+            const { data } = await supabase.auth.getSession();
+            
+            if (data?.session) {
+              console.log("User already has a valid session");
+              setValidToken(true);
+            } else {
+              console.log("No valid token or session found");
+              setTokenError("Invalid or expired reset link");
+              setValidToken(false);
+            }
+          }
         }
       } catch (error) {
         console.error("Error in token verification:", error);
-        toast.error("Error verifying reset link");
+        setTokenError("Error verifying reset link");
         setValidToken(false);
       } finally {
         setIsVerifying(false);
@@ -216,8 +237,13 @@ const ResetPassword = () => {
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                   <p className="font-medium">Invalid or expired reset link</p>
                   <p className="text-sm mt-1">
-                    Please request a new password reset link from the login page.
+                    {tokenError || "Please request a new password reset link from the login page."}
                   </p>
+                  {window.location.hostname === 'localhost' && (
+                    <p className="text-sm mt-2 font-medium">
+                      Note: Password reset links often have issues in local development environments.
+                    </p>
+                  )}
                 </div>
                 
                 <div className="text-center">

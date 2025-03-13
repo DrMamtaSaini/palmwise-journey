@@ -49,28 +49,84 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     console.log("============ CHECKING FOR AUTH TOKENS ===========");
     console.log("Current URL:", window.location.href);
     
-    // First check for a hash in the URL (most likely when coming from an email link)
+    // First check for a code parameter in the URL (preferred method)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    
+    if (code) {
+      console.log("Code parameter found:", code.substring(0, 10) + "...");
+      try {
+        // For localhost, provide special handling
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (isLocalhost) {
+          console.log("⚠️ Localhost detected - this environment often has issues with password reset");
+          console.log("Attempting to exchange code for session anyway...");
+        }
+        
+        // Try the standard flow first
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          console.error("Error exchanging code for session:", error);
+          return { 
+            success: false, 
+            error,
+            message: `Error exchanging code: ${error.message}`
+          };
+        }
+        
+        if (!data.session) {
+          console.warn("Code exchange succeeded but no session was returned");
+          return {
+            success: false,
+            message: "Authentication succeeded but no session was created"
+          };
+        }
+        
+        console.log("Successfully exchanged code for session");
+        
+        // Clean up the URL by removing the code parameter
+        if (window.history && window.history.replaceState) {
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('code');
+          window.history.replaceState(null, document.title, cleanUrl.toString());
+        }
+        
+        return { 
+          success: true, 
+          session: data.session,
+          message: "Session created successfully" 
+        };
+      } catch (error) {
+        console.error("Exception during code exchange:", error);
+        
+        // For localhost, add special instructions
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocalhost) {
+          return {
+            success: false,
+            error,
+            message: "Error on localhost - open the reset link in production or configure Supabase Site URL for localhost"
+          };
+        }
+        
+        return { 
+          success: false, 
+          error, 
+          message: "Error exchanging code for session" 
+        };
+      }
+    }
+    
+    // Then check for a hash in the URL (older style, backup method)
     if (window.location.hash && window.location.hash.length > 1) {
       console.log("Found hash in URL:", window.location.hash);
       
       // Process the hash - works for both recovery and verification
       // This handles the case where tokens are passed in the URL hash
       const result = await handleHashTokens();
-      if (result.success) {
-        return result;
-      }
-    }
-    
-    // Then check for a code parameter in the URL (newer Supabase style)
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    
-    if (code) {
-      console.log("Code parameter found:", code);
-      const result = await handleCodeBasedToken(code);
-      if (result.success) {
-        return result;
-      }
+      return result;
     }
     
     return { success: false, message: "No auth tokens found in URL" };
@@ -149,64 +205,6 @@ async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
   } catch (error) {
     console.error("Exception handling hash tokens:", error);
     return { success: false, error, message: "Error processing hash tokens" };
-  }
-}
-
-// Handle code parameter in URL (Supabase new style)
-async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResult> {
-  try {
-    console.log("Exchanging code for session:", code);
-    
-    try {
-      // On localhost, this can sometimes fail due to protocol issues
-      // Let's add extra debugging and handle the error gracefully
-      console.log("About to exchange code for session with Supabase");
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      
-      if (error) {
-        console.error("Error exchanging code for session:", error);
-        return { 
-          success: false, 
-          error,
-          message: `Error exchanging code: ${error.message}`
-        };
-      }
-      
-      console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
-      
-      // Clean up the URL by removing the code parameter and update browser history
-      if (window.history && window.history.replaceState) {
-        const cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('code');
-        window.history.replaceState(null, document.title, cleanUrl.toString());
-      }
-      
-      return { 
-        success: !!data.session, 
-        session: data.session,
-        message: data.session ? "Session created successfully" : "No session created"
-      };
-    } catch (error) {
-      console.error("Exception during code exchange:", error);
-      
-      // Special handling for localhost errors, which are common in development
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocalhost) {
-        console.log("Detected localhost environment - this may be causing connection issues with Supabase");
-        
-        // If we're on localhost and have a code parameter, it's likely a password reset link that was clicked
-        // Let's suggest a workaround
-        return {
-          success: false,
-          message: "Localhost detected - if this is a password reset link, try opening it in a production environment or configure Supabase to work with localhost"
-        };
-      }
-      
-      return { success: false, error, message: "Error exchanging code for session" };
-    }
-  } catch (error) {
-    console.error("Exception during code exchange:", error);
-    return { success: false, error, message: "Error exchanging code for session" };
   }
 }
 

@@ -33,13 +33,15 @@ const ForgotPassword = () => {
       const origin = window.location.origin;
       const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
       
-      // For localhost development, we need to ensure we use http:// protocol explicitly
+      // For development environments, use absolute URL with http:// protocol
+      // Note: Supabase needs a fully qualified URL to redirect properly
       let redirectUrl;
       if (isLocalhost) {
-        // Extract port from origin if it exists
-        const match = origin.match(/:(\d+)$/);
-        const port = match ? match[1] : '8080'; // Default to 8080 if no port found
+        // Get port from current URL 
+        const port = window.location.port || '8080';
+        // Force http:// protocol for localhost
         redirectUrl = `http://localhost:${port}/reset-password`;
+        console.log("Using localhost reset URL:", redirectUrl);
       } else {
         // For production deployments, use the origin directly
         redirectUrl = `${origin}/reset-password`;
@@ -108,6 +110,12 @@ const ForgotPassword = () => {
                   <p>
                     <strong>Note:</strong> Make sure to check your spam folder if you don't see the email in your inbox.
                   </p>
+                  {isLocalhost && (
+                    <p className="mt-2">
+                      <strong>Local Development:</strong> Password reset links may not work properly in localhost environment. 
+                      If you encounter issues, try testing in a deployed environment.
+                    </p>
+                  )}
                 </div>
 
                 <Button
