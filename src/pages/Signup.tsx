@@ -96,11 +96,16 @@ const Signup = () => {
     }
     
     try {
+      console.log("Initiating Google sign in from Signup page");
+      toast.info("Redirecting to Google", {
+        description: "You will be redirected to Google for authentication...",
+      });
+      
       await signInWithGoogle();
     } catch (error) {
       console.error("Google sign in error:", error);
       toast.error("Google signup failed", {
-        description: "Please try using email/password signup instead.",
+        description: "Please check your Google OAuth configuration or try using email/password signup instead.",
       });
     }
   };
@@ -132,7 +137,14 @@ const Signup = () => {
                   <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium">Google authentication is not enabled</p>
-                    <p className="text-xs mt-1">Please use email/password signup. To enable Google authentication, it needs to be configured in the Supabase dashboard.</p>
+                    <p className="text-xs mt-1">
+                      Please use email/password signup. To enable Google authentication, you need to:
+                      <ol className="list-decimal ml-4 mt-1">
+                        <li>Configure OAuth client in Google Cloud Console</li>
+                        <li>Add the Supabase callback URL: https://vvaextxqyrvcpjwndgby.supabase.co/auth/v1/callback</li>
+                        <li>Enable the Google provider in Supabase authentication settings</li>
+                      </ol>
+                    </p>
                   </div>
                 </div>
               </div>

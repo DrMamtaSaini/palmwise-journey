@@ -320,11 +320,16 @@ class AuthService {
       this.notifyListeners();
       
       const siteUrl = window.location.origin;
+      console.log("Using site URL for redirect:", siteUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${siteUrl}/dashboard`
+          redirectTo: `${siteUrl}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
       
