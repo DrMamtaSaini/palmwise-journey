@@ -1,0 +1,10 @@
+
+{
+  "deploymentId": "get-paypal-key",
+  "entrypoint": "index.ts",
+  "envVars": {
+    "PAYPAL_CLIENT_ID": {
+      "name": "PAYPAL_CLIENT_ID"
+    }
+  }
+}

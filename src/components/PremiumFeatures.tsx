@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaymentButton from "./PaymentButton";
 import PayPalButton from "./PayPalButton";
 import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
-
-const PAYPAL_CLIENT_ID = "sb";
+import { getPayPalClientId, recordPayment } from "@/services/PaymentService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PremiumFeaturesProps {
   onSuccess: () => void;
@@ -15,14 +15,63 @@ interface PremiumFeaturesProps {
 const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [paypalClientId, setPaypalClientId] = useState<string>("sb");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  const handlePaymentSuccess = () => {
-    toast({
-      title: "Premium Access Granted",
-      description: "You now have access to all premium features!",
-    });
-    onSuccess();
+  useEffect(() => {
+    async function fetchPayPalClientId() {
+      try {
+        const clientId = await getPayPalClientId();
+        setPaypalClientId(clientId);
+      } catch (error) {
+        console.error("Failed to fetch PayPal client ID:", error);
+        setPaypalClientId("sb");
+      }
+    }
+    
+    fetchPayPalClientId();
+  }, []);
+  
+  const handlePaymentSuccess = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to complete this purchase.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await recordPayment({
+        user_id: user.id,
+        amount: billingPeriod === "monthly" ? 10 : 100,
+        description: getPlanDescription(),
+        payment_method: paymentMethod,
+        billing_period: billingPeriod,
+      });
+      
+      toast({
+        title: "Premium Access Granted",
+        description: "You now have access to all premium features!",
+      });
+      
+      onSuccess();
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      toast({
+        title: "Payment Processing Error",
+        description: "There was an issue recording your payment. Please contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handlePaymentError = (error: Error) => {
@@ -196,7 +245,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
                   description={getPlanDescription()}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
-                  clientId={PAYPAL_CLIENT_ID}
+                  clientId={paypalClientId}
                 />
               )}
             </div>
