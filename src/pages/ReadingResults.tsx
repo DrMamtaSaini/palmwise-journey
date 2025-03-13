@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Info } from "lucide-react";
@@ -390,5 +391,40 @@ const ReadingResults = () => {
                                     <li key={idx} className="text-gray-700">{insight}</li>
                                   ))}
                                 </ul>
-                              </div
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </div>
+                </div>
 
+                {!isPremium && !isPremiumTest && (
+                  <div className="bg-white rounded-2xl shadow-soft p-8 mt-8">
+                    <h2 className="text-2xl font-semibold mb-4">Unlock Premium Features</h2>
+                    <p className="text-gray-600 mb-6">
+                      Get access to detailed readings on your relationships, career, health and more with our premium plan.
+                    </p>
+                    <PaymentButton onSuccess={handlePayment} />
+                  </div>
+                )}
+
+                {(isPremium || isPremiumTest) && reading && readingId && (
+                  <PersonalizedQuestionForm 
+                    palmImageUrl={reading.imageUrl || ""}
+                    readingId={readingId}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default ReadingResults;
