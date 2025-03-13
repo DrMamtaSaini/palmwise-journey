@@ -12,31 +12,60 @@ export interface PalmReading {
     lifeLine: {
       strength: number;
       prediction: string;
+      insights?: string[];
     };
     heartLine: {
       strength: number;
       prediction: string;
+      insights?: string[];
     };
     headLine: {
       strength: number;
       prediction: string;
+      insights?: string[];
     };
     fateLinePresent: boolean;
     fate?: {
       strength: number;
       prediction: string;
+      insights?: string[];
     };
     past?: {
       prediction: string;
       significance: number;
+      insights?: string[];
     };
     present?: {
       prediction: string;
       significance: number;
+      insights?: string[];
     };
     future?: {
       prediction: string;
       significance: number;
+      insights?: string[];
+    };
+    relationships?: {
+      prediction: string;
+      significance: number;
+      insights?: string[];
+    };
+    career?: {
+      prediction: string;
+      significance: number;
+      insights?: string[];
+    };
+    health?: {
+      prediction: string;
+      significance: number;
+      insights?: string[];
+    };
+    elementalInfluences?: {
+      earth: number;
+      water: number;
+      fire: number;
+      air: number;
+      description: string;
     };
     overallSummary: string;
     personalityTraits: string[];
@@ -242,28 +271,111 @@ function generateFallbackResults() {
   return {
     lifeLine: {
       strength: Math.floor(Math.random() * 30) + 70,
-      prediction: "Your life line indicates a long and healthy life, with challenges that you will overcome."
+      prediction: "Your life line indicates a long and healthy life, with challenges that you will overcome.",
+      insights: [
+        "You have strong recuperative abilities",
+        "Your energy levels tend to remain consistent",
+        "You approach challenges with practical solutions",
+        "You value preventative health measures"
+      ]
     },
     heartLine: {
       strength: Math.floor(Math.random() * 30) + 70,
-      prediction: "Your heart line shows a capacity for deep emotional connections and passion."
+      prediction: "Your heart line shows a capacity for deep emotional connections and passion.",
+      insights: [
+        "You value authenticity in relationships",
+        "You process emotions thoughtfully before reacting",
+        "You have a strong capacity for empathy",
+        "You maintain healthy boundaries in relationships"
+      ]
     },
     headLine: {
       strength: Math.floor(Math.random() * 30) + 70,
-      prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities."
+      prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities.",
+      insights: [
+        "You consider multiple angles before making decisions",
+        "You learn best through practical application",
+        "You communicate complex ideas effectively",
+        "You balance logic with intuition"
+      ]
     },
     fateLinePresent: Math.random() > 0.3,
+    fate: {
+      strength: Math.floor(Math.random() * 30) + 70,
+      prediction: "Your fate line indicates a strong sense of purpose and direction in your life path.",
+      insights: [
+        "You find meaning in your work beyond material rewards",
+        "You naturally gravitate toward roles that utilize your strengths",
+        "You make decisions that align with your long-term vision",
+        "You adapt to changing circumstances while maintaining your core direction"
+      ]
+    },
     past: {
       prediction: "Your past shows a journey of growth through challenges. The experiences you've had have shaped your resilience and determination.",
-      significance: Math.floor(Math.random() * 30) + 70
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "A challenging early experience developed your problem-solving abilities",
+        "You've transformed setbacks into valuable learning",
+        "Relationships from your past continue to influence your approach today",
+        "Your adaptability was developed through necessity"
+      ]
     },
     present: {
       prediction: "In the present, you're navigating a period of transformation. Your adaptability is your greatest strength during this time.",
-      significance: Math.floor(Math.random() * 30) + 70
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "You're currently in a phase of gathering information for future decisions",
+        "Your relationship dynamics are shifting in positive ways",
+        "You're developing a new perspective that will benefit your future",
+        "Current challenges are developing valuable new skills"
+      ]
     },
     future: {
       prediction: "Your future path indicates opportunities for success in creative endeavors. Trust your intuition to guide your decisions.",
-      significance: Math.floor(Math.random() * 30) + 70
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "An upcoming opportunity will match your unique combination of skills",
+        "Your ability to connect disparate ideas will lead to innovation",
+        "A period of focused effort will yield significant results",
+        "Maintaining flexibility while pursuing goals will be key"
+      ]
+    },
+    relationships: {
+      prediction: "Your relationship patterns show a movement toward deeper, more authentic connections. You value quality over quantity in your social circle.",
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "You communicate most effectively through thoughtful conversation",
+        "You naturally cultivate relationships that encourage growth",
+        "Your relationship expectations have evolved through experience",
+        "You balance independence with deep connection"
+      ]
+    },
+    career: {
+      prediction: "Your career trajectory suggests leadership potential and the ability to innovate within your field. You're drawn to work that aligns with your values.",
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "You excel in roles requiring both analytical and interpersonal skills",
+        "Your capacity for seeing the big picture is a professional asset",
+        "You find fulfillment in mentoring others",
+        "Your career path may take unexpected but rewarding turns"
+      ]
+    },
+    health: {
+      prediction: "Your health patterns indicate good fundamental vitality with potential for improvement through mindful practices. Balance is key to your wellbeing.",
+      significance: Math.floor(Math.random() * 30) + 70,
+      insights: [
+        "Your body responds particularly well to consistent routines",
+        "Mental and emotional balance significantly impacts your physical health",
+        "You benefit from alternating between different types of activities",
+        "Preventative health measures yield strong results for you"
+      ]
+    },
+    elementalInfluences: {
+      earth: Math.floor(Math.random() * 30) + 70,
+      water: Math.floor(Math.random() * 30) + 70,
+      fire: Math.floor(Math.random() * 30) + 70,
+      air: Math.floor(Math.random() * 30) + 70,
+      description: "Your palm shows a balanced elemental composition with slightly stronger water (emotional) and air (intellectual) influences. This creates a harmonious blend of intuition and analysis in your approach to life."
     },
     overallSummary: "Your palm reveals balance between emotion and intellect, with potential for growth in creative endeavors.",
     personalityTraits: [
