@@ -25,8 +25,11 @@ const ForgotPassword = () => {
     }
     
     try {
-      // Make sure we're using the correct origin URL
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      // Create absolute URL for redirect
+      // Use full absolute URL to ensure Supabase handles the redirect correctly
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}/reset-password`;
+      
       console.log("Using redirect URL:", redirectUrl);
       
       const success = await forgotPassword(email, redirectUrl);

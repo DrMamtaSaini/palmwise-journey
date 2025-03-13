@@ -8,34 +8,66 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validResetFlow, setValidResetFlow] = useState(false);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Check for authentication parameters in the URL
-    const searchParams = new URLSearchParams(location.search);
-    const code = searchParams.get('code');
-    
-    console.log("Reset password page loaded with URL params:", location.search);
-    console.log("Authentication code found:", code);
-    
-    if (!code) {
-      console.log("No reset code found in URL");
-      // If we don't have a code parameter and we're not in a hash recovery flow
-      if (!window.location.hash.includes('type=recovery')) {
+    const checkResetFlow = async () => {
+      console.log("Reset password page loaded with URL params:", location.search);
+      console.log("Hash parts:", window.location.hash);
+      
+      // Check URL parameters for recovery token
+      const searchParams = new URLSearchParams(location.search);
+      const code = searchParams.get('code');
+      const typeParam = searchParams.get('type');
+      
+      // Check hash for recovery token (Supabase sometimes uses hash instead)
+      const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+      const hashType = hashParams.get('type');
+      
+      console.log("URL code parameter:", code);
+      console.log("URL type parameter:", typeParam);
+      console.log("Hash type parameter:", hashType);
+      
+      // Check for recovery flow in either query params or hash
+      const isRecoveryFlow = 
+        (typeParam === 'recovery') || 
+        (hashType === 'recovery') || 
+        window.location.hash.includes('type=recovery');
+      
+      if (code || isRecoveryFlow) {
+        console.log("Valid reset flow detected");
+        setValidResetFlow(true);
+        
+        // If we have a code but Supabase hasn't processed it yet, confirm the token
+        if (code) {
+          try {
+            // Check the session - this should process the code parameter
+            const { data, error } = await supabase.auth.getSession();
+            console.log("Current session after loading with code:", data, error);
+          } catch (error) {
+            console.error("Error checking session:", error);
+          }
+        }
+      } else {
+        console.log("Invalid reset flow - redirecting to login");
         toast.error("Invalid reset link", {
           description: "This page can only be accessed from a password reset email.",
         });
         navigate('/login');
       }
-    }
+    };
+    
+    checkResetFlow();
   }, [navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +105,21 @@ const ResetPassword = () => {
       });
     }
   };
+
+  if (!validResetFlow && isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
+          <div className="text-center">
+            <p className="text-xl">Validating reset link...</p>
+            <div className="mt-4 w-8 h-8 border-4 border-palm-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
