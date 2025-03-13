@@ -20,7 +20,48 @@ supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
 });
 
-// Check for auth code in URL - simplified and more reliable approach
+// Check for hash-based recovery token in URL (Supabase old style)
+export async function handleHashRecoveryToken() {
+  try {
+    // Only check if there's a hash with recovery data
+    if (window.location.hash && window.location.hash.includes('access_token') && window.location.hash.includes('type=recovery')) {
+      console.log("Found recovery token in URL hash, attempting to set session");
+      
+      // We need to manually extract the tokens and set the session
+      const hash = window.location.hash.substring(1); // Remove the # character
+      const params = new URLSearchParams(hash);
+      
+      // Check if this is a recovery flow
+      if (params.get('type') === 'recovery') {
+        console.log("Processing recovery token");
+        
+        // Set the recovery token
+        const { data, error } = await supabase.auth.setSession({
+          access_token: params.get('access_token') || '',
+          refresh_token: params.get('refresh_token') || ''
+        });
+        
+        if (error) {
+          console.error("Error processing recovery token:", error);
+          return { success: false, error };
+        }
+        
+        // Clean up the URL by removing the hash
+        window.history.replaceState(null, '', window.location.pathname);
+        
+        console.log("Successfully processed recovery token:", data.session ? "Session created" : "No session");
+        return { success: !!data.session, session: data.session };
+      }
+    }
+    
+    return { success: false, message: "No recovery token found in URL hash" };
+  } catch (error) {
+    console.error("Exception handling recovery token:", error);
+    return { success: false, error };
+  }
+}
+
+// Check for code parameter in URL (Supabase new style)
 export async function checkForAuthInUrl() {
   try {
     // Check if we have a code parameter (most common for password reset)

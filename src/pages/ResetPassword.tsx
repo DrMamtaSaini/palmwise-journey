@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
+import { supabase, handleHashRecoveryToken, checkForAuthInUrl } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -26,50 +26,38 @@ const ResetPassword = () => {
         console.log("Verifying password reset token...");
         setIsVerifying(true);
         
-        // The most reliable approach - check if we have a code in the URL
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
+        // First, check for a hash-based recovery token (Supabase old style)
+        const hashResult = await handleHashRecoveryToken();
         
-        if (code) {
-          console.log("Found code parameter in URL, verifying...");
-          
-          try {
-            // Exchange the code for a session which validates it
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (error) {
-              console.error("Error validating reset token:", error);
-              toast.error("Invalid or expired reset link", {
-                description: "Please request a new password reset link."
-              });
-              setValidToken(false);
-            } else if (data?.session) {
-              console.log("Valid reset token confirmed, session established");
-              setValidToken(true);
-            } else {
-              console.warn("No session returned after code exchange");
-              toast.error("Unable to verify reset link");
-              setValidToken(false);
-            }
-          } catch (err) {
-            console.error("Error processing reset token:", err);
-            toast.error("Error processing reset link");
-            setValidToken(false);
-          }
+        if (hashResult.success) {
+          console.log("Valid hash-based recovery token confirmed");
+          setValidToken(true);
+          setIsVerifying(false);
+          return;
+        }
+        
+        // If no hash token, try the code parameter (Supabase new style)
+        const codeResult = await checkForAuthInUrl();
+        
+        if (codeResult.success) {
+          console.log("Valid code-based recovery token confirmed");
+          setValidToken(true);
+          setIsVerifying(false);
+          return;
+        }
+        
+        // Last resort: check if there's already a valid session
+        const { data } = await supabase.auth.getSession();
+        
+        if (data?.session) {
+          console.log("User already has a valid session");
+          setValidToken(true);
         } else {
-          // Check if we already have a valid session from a type=recovery flow
-          const { data } = await supabase.auth.getSession();
-          
-          if (data?.session) {
-            console.log("User already has a valid recovery session");
-            setValidToken(true);
-          } else {
-            console.log("No valid token or session found");
-            toast.error("Invalid reset link", {
-              description: "Please request a new password reset link."
-            });
-            setValidToken(false);
-          }
+          console.log("No valid token or session found");
+          toast.error("Invalid reset link", {
+            description: "Please request a new password reset link."
+          });
+          setValidToken(false);
         }
       } catch (error) {
         console.error("Error in token verification:", error);
