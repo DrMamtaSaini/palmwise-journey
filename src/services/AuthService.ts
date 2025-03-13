@@ -371,11 +371,12 @@ class AuthService {
       console.log("=========== PASSWORD RESET SERVICE ===========");
       console.log("Email:", email);
       console.log("Redirect URL:", redirectUrl);
-      console.log("Supabase Client URL:", supabase.supabaseUrl);
+      
+      const supabaseBaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vvaextxqyrvcpjwndgby.supabase.co';
+      console.log("Supabase URL from env:", supabaseBaseUrl);
       console.log("Environment URL:", import.meta.env.VITE_SUPABASE_URL || "(default)");
       console.log("Window Location:", window.location.href);
       
-      // Force http protocol if we're on a development server without HTTPS
       if (redirectUrl && redirectUrl.startsWith('http://localhost')) {
         console.log("Detected localhost - ensuring HTTP protocol is used");
       }
