@@ -33,14 +33,31 @@ serve(async (req) => {
     // to translate the content based on the requested language
     console.log(`Generated palm analysis for language: ${language}`);
     
-    // Apply simple translation simulation for demo purposes
-    const translatedAnalysis = simulateTranslation(analysis, language);
+    // For demo purposes, we'll return the English version for all non-English languages
+    // with a note that real translation would be implemented in production
+    
+    // Don't modify the analysis for English
+    if (language === 'english') {
+      return new Response(
+        JSON.stringify({
+          ...analysis,
+          language,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // For non-English languages, add a note explaining this is a demo
+    const translationNote = `Note: In a production environment, this content would be properly translated to ${language}. For this demo, we're showing English content.`;
+    
+    const analysisWithNote = {
+      ...analysis,
+      language,
+      translationNote
+    };
     
     return new Response(
-      JSON.stringify({
-        ...translatedAnalysis,
-        language, // Ensure language is returned in the response
-      }),
+      JSON.stringify(analysisWithNote),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

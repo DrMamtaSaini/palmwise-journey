@@ -16,7 +16,7 @@ export interface IndianLanguage {
 
 export const indianLanguages: IndianLanguage[] = [
   { code: "english", name: "English" },
-  { code: "hindi", name: "हिन्दी (Hindi)", nativeName: "हिन्दी" },
+  { code: "hindi", name: "Hindi", nativeName: "हिन्दी" },
   { code: "bengali", name: "Bengali", nativeName: "বাংলা" },
   { code: "marathi", name: "Marathi", nativeName: "मराठी" },
   { code: "telugu", name: "Telugu", nativeName: "తెలుగు" },
@@ -66,17 +66,15 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       >
         <SelectTrigger className="w-full bg-white">
           <SelectValue placeholder="Select Language">
-            {selectedLanguageInfo && selectedLanguageInfo.nativeName 
-              ? `${selectedLanguageInfo.nativeName} (${selectedLanguageInfo.name.split(' ')[0]})`
-              : selectedLanguageInfo?.name}
+            {selectedLanguageInfo?.name}
+            {selectedLanguageInfo?.nativeName && ` (${selectedLanguageInfo.nativeName})`}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {indianLanguages.map((language) => (
             <SelectItem key={language.code} value={language.code}>
-              {language.nativeName 
-                ? `${language.nativeName} (${language.name.split(' ')[0]})`
-                : language.name}
+              {language.name}
+              {language.nativeName && ` (${language.nativeName})`}
             </SelectItem>
           ))}
         </SelectContent>

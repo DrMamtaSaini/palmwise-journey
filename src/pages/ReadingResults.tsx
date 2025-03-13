@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Info } from "lucide-react";
@@ -83,9 +82,11 @@ const ReadingResults = () => {
     const languageInfo = getLanguageInfo(reading.language);
     if (!languageInfo) return reading.language;
     
-    return languageInfo.nativeName 
-      ? `${languageInfo.nativeName} (${languageInfo.name.split(' ')[0]})` 
-      : languageInfo.name;
+    if (languageInfo.code === "english") {
+      return languageInfo.name;
+    }
+    
+    return `${languageInfo.name} (${languageInfo.nativeName})`;
   };
 
   // Map reading data to tabs content
@@ -326,6 +327,12 @@ const ReadingResults = () => {
                       </button>
                     </div>
                   </div>
+
+                  {reading.language !== 'english' && reading.translationNote && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-yellow-800 text-sm">{reading.translationNote}</p>
+                    </div>
+                  )}
 
                   {(isPremium || isPremiumTest) && (
                     <div className="mb-8">
