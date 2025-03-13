@@ -33,10 +33,13 @@ serve(async (req) => {
     // to translate the content based on the requested language
     console.log(`Generated palm analysis for language: ${language}`);
     
+    // Apply simple translation simulation for demo purposes
+    const translatedAnalysis = simulateTranslation(analysis, language);
+    
     return new Response(
       JSON.stringify({
-        ...analysis,
-        translationNote: `This reading was requested in ${language} language. In a production environment, the content would be translated accordingly.`
+        ...translatedAnalysis,
+        language, // Ensure language is returned in the response
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -53,6 +56,56 @@ serve(async (req) => {
     );
   }
 });
+
+// This function simulates translation for demo purposes
+// In production, you would use a proper translation API
+function simulateTranslation(analysis, language) {
+  if (language === 'english') {
+    return analysis;
+  }
+  
+  // For demo purpose, we'll modify the text to simulate translation
+  // In a real implementation, you would use a translation API or pre-translated content
+  const simulateLanguagePrefix = {
+    'hindi': 'हिन्दी: ',
+    'sanskrit': 'संस्कृतम्: ',
+    'tamil': 'தமிழ்: ',
+    'telugu': 'తెలుగు: ',
+    'bengali': 'বাংলা: ',
+    'marathi': 'मराठी: ',
+    'gujarati': 'ગુજરાતી: ',
+    'urdu': 'اردو: ',
+    'punjabi': 'ਪੰਜਾਬੀ: ',
+    'kannada': 'ಕನ್ನಡ: ',
+  };
+  
+  const prefix = simulateLanguagePrefix[language] || `${language}: `;
+  
+  // Deep clone the analysis to avoid modifying the original
+  const translated = JSON.parse(JSON.stringify(analysis));
+  
+  // Apply "translation" to all text fields
+  function translateObject(obj) {
+    for (const key in obj) {
+      if (typeof obj[key] === 'string') {
+        // Add language prefix to simulate translation
+        obj[key] = prefix + obj[key];
+      } else if (Array.isArray(obj[key])) {
+        obj[key] = obj[key].map(item => {
+          if (typeof item === 'string') {
+            return prefix + item;
+          }
+          return item;
+        });
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        translateObject(obj[key]);
+      }
+    }
+  }
+  
+  translateObject(translated);
+  return translated;
+}
 
 // This function generates more detailed palm reading data with enhanced predictions
 function generateDetailedPalmAnalysis(language = 'english') {

@@ -9,7 +9,7 @@ import PaymentButton from "../components/PaymentButton";
 import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
-import { getLanguageInfo } from "../components/LanguageSelector";
+import { getLanguageInfo, IndianLanguage } from "../components/LanguageSelector";
 
 const ReadingResults = () => {
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ const ReadingResults = () => {
     if (!languageInfo) return reading.language;
     
     return languageInfo.nativeName 
-      ? `${languageInfo.nativeName} (${languageInfo.name})` 
+      ? `${languageInfo.nativeName} (${languageInfo.name.split(' ')[0]})` 
       : languageInfo.name;
   };
 
@@ -280,9 +280,12 @@ const ReadingResults = () => {
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
                     <div>
                       <h1 className="text-3xl font-bold mb-2">Your Palm Reading</h1>
-                      {reading.language && reading.language !== "english" && (
-                        <div className="text-palm-purple font-medium">
-                          {getLanguageDisplay()}
+                      {reading.language && (
+                        <div className="text-palm-purple font-medium flex items-center">
+                          <span className="mr-2">Language:</span>
+                          <span className="bg-palm-light px-2 py-1 rounded">
+                            {getLanguageDisplay()}
+                          </span>
                         </div>
                       )}
                     </div>

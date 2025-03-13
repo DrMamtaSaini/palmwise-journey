@@ -55,6 +55,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   onLanguageChange,
   className,
 }) => {
+  const selectedLanguageInfo = getLanguageInfo(selectedLanguage);
+  
   return (
     <div className={className}>
       <Select
@@ -63,12 +65,18 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         defaultValue="english"
       >
         <SelectTrigger className="w-full bg-white">
-          <SelectValue placeholder="Select Language" />
+          <SelectValue placeholder="Select Language">
+            {selectedLanguageInfo && selectedLanguageInfo.nativeName 
+              ? `${selectedLanguageInfo.nativeName} (${selectedLanguageInfo.name.split(' ')[0]})`
+              : selectedLanguageInfo?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {indianLanguages.map((language) => (
             <SelectItem key={language.code} value={language.code}>
-              {language.name}
+              {language.nativeName 
+                ? `${language.nativeName} (${language.name.split(' ')[0]})`
+                : language.name}
             </SelectItem>
           ))}
         </SelectContent>
