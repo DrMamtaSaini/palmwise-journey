@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,8 +13,37 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [googleAuthError, setGoogleAuthError] = useState(false);
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle, isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { signUp, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
+
+  useEffect(() => {
+    // Check for auth errors in URL
+    const searchParams = new URLSearchParams(location.search);
+    const errorCode = searchParams.get('error_code');
+    const errorDescription = searchParams.get('error_description');
+    
+    if (errorCode && errorDescription) {
+      console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
+      
+      if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
+        setGoogleAuthError(true);
+        toast.error("Google authentication failed", {
+          description: "Email/password signup is available. Google auth may not be configured in Supabase.",
+          duration: 8000,
+        });
+      } else {
+        handleEmailVerificationError(errorCode, errorDescription);
+      }
+      
+      // Clean the URL
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('error_code');
+      cleanUrl.searchParams.delete('error_description');
+      window.history.replaceState({}, document.title, cleanUrl.toString());
+    }
+  }, [location.search, handleEmailVerificationError]);
 
   useEffect(() => {
     // If user is already authenticated, redirect to dashboard
@@ -40,18 +69,40 @@ const Signup = () => {
       return;
     }
     
-    const success = await signUp(name, email, password);
-    if (success) {
-      toast.success("Email verification sent", {
-        description: "Please check your email to verify your account before logging in."
+    try {
+      const success = await signUp(name, email, password);
+      if (success) {
+        toast.success("Email verification sent", {
+          description: "Please check your email to verify your account before logging in."
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Sign up error:", error);
+      toast.error("Signup failed", {
+        description: "Please try again with different credentials.",
       });
-      navigate("/login");
     }
   };
 
   const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
-    // No need to navigate as the redirect will happen automatically
+    if (googleAuthError) {
+      toast.error("Google authentication is not available", {
+        description: "Please use email/password signup instead.",
+        duration: 5000,
+      });
+      return;
+    }
+    
+    try {
+      await signInWithGoogle();
+      // No need to navigate as the redirect will happen automatically
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Google signup failed", {
+        description: "Please try using email/password signup instead.",
+      });
+    }
   };
 
   return (
@@ -67,6 +118,13 @@ const Signup = () => {
                 Join PalmInsight to discover the secrets in your palm
               </p>
             </div>
+
+            {googleAuthError && (
+              <div className="mb-6 p-4 border border-orange-200 bg-orange-50 text-orange-800 rounded-lg">
+                <p className="text-sm font-medium">Google authentication is not available</p>
+                <p className="text-xs mt-1">Please use email/password signup instead.</p>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -171,8 +229,8 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                disabled={isLoading || googleAuthError}
+                className={`w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <img
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"

@@ -23,13 +23,14 @@ const Login = () => {
     const errorDescription = searchParams.get('error_description');
     
     if (errorCode && errorDescription) {
+      console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
+      
       if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
         setGoogleAuthError(true);
         toast.error("Google authentication failed", {
-          description: "Google authentication is not configured in Supabase. Please enable it in the Supabase dashboard.",
+          description: "Email/password login is available. Google auth may not be configured in Supabase.",
           duration: 8000,
         });
-        console.error("Google provider is not enabled in Supabase. Please enable it in the Supabase dashboard.");
       } else {
         handleEmailVerificationError(errorCode, errorDescription);
       }
@@ -52,23 +53,37 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const success = await signIn(email, password);
-    if (success) {
-      navigate("/dashboard");
+    try {
+      const success = await signIn(email, password);
+      if (success) {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed", {
+        description: "Please check your credentials and try again.",
+      });
     }
   };
 
   const handleGoogleSignIn = async () => {
     if (googleAuthError) {
       toast.error("Google authentication is not available", {
-        description: "Google authentication is not configured in Supabase. Please use email/password login.",
+        description: "Please use email/password login instead.",
         duration: 5000,
       });
       return;
     }
     
-    await signInWithGoogle();
-    // No need to navigate here as the redirect will happen automatically
+    try {
+      await signInWithGoogle();
+      // No need to navigate here as the redirect will happen automatically
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Google login failed", {
+        description: "Please try using email/password login instead.",
+      });
+    }
   };
 
   return (
@@ -87,8 +102,8 @@ const Login = () => {
 
             {googleAuthError && (
               <div className="mb-6 p-4 border border-orange-200 bg-orange-50 text-orange-800 rounded-lg">
-                <p className="text-sm font-medium">Google authentication is not configured</p>
-                <p className="text-xs mt-1">Please use email/password login or contact the administrator to enable Google login.</p>
+                <p className="text-sm font-medium">Google authentication is not available</p>
+                <p className="text-xs mt-1">Please use email/password login instead.</p>
               </div>
             )}
 
