@@ -49,16 +49,26 @@ const PersonalizedQuestionForm = ({ palmImageUrl, readingId }: PersonalizedQuest
         Reading ID for reference: ${readingId}
       `;
       
-      const answer = await GeminiService.generateTextWithGemini(prompt);
-      setResponse(answer);
-      form.reset();
-      
-      toast.success("Your personalized reading is ready!", {
-        description: "We've analyzed your question and provided insights based on your palm."
-      });
+      try {
+        const answer = await GeminiService.generateTextWithGemini(prompt);
+        setResponse(answer);
+        form.reset();
+        
+        toast.success("Your personalized reading is ready!", {
+          description: "We've analyzed your question and provided insights based on your palm."
+        });
+      } catch (error) {
+        console.error("Error generating personalized reading:", error);
+        // Provide a meaningful fallback response when API fails
+        setResponse("I'm sorry, but I couldn't generate a personalized reading at this time. This could be due to temporary service issues. Your palm shows unique characteristics that deserve careful analysis. Please try again in a few moments, or contact our support if the problem persists.");
+        
+        toast.error("API connection issue", {
+          description: "We've provided a basic response. Please try again later."
+        });
+      }
     } catch (error) {
-      console.error("Error generating personalized reading:", error);
-      toast.error("Failed to generate personalized reading", {
+      console.error("Form submission error:", error);
+      toast.error("Failed to process your question", {
         description: "Please try again later or contact support if the problem persists."
       });
     } finally {

@@ -50,8 +50,8 @@ class GeminiService {
     try {
       const apiKey = await this.getApiKey();
       
-      // Call the Gemini API directly from the client
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      // Call the Gemini API using the correct endpoint format
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
