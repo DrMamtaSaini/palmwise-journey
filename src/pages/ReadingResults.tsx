@@ -15,7 +15,7 @@ import ReadingLoader from "../components/ReadingLoader";
 import ReadingNotFound from "../components/ReadingNotFound";
 import PremiumFeatures from "../components/PremiumFeatures";
 import TranslationNote from "../components/TranslationNote";
-import { getReadingContent } from "../utils/readingContentUtils";
+import { getReadingContent, generateFullReadingText } from "../utils/readingContentUtils";
 import { ExtendedPalmReading } from "../types/PalmReading";
 
 const ReadingResults = () => {
@@ -27,6 +27,7 @@ const ReadingResults = () => {
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fullReadingText, setFullReadingText] = useState<string>("");
+  const [readingContent, setReadingContent] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -74,38 +75,21 @@ const ReadingResults = () => {
     fetchReading();
   }, [readingId, navigate]);
 
-  // Generate full reading text for text-to-speech
+  // Process reading content when the reading data is available
   useEffect(() => {
-    if (reading && reading.results) {
-      const readingContent = getReadingContent(reading);
-      if (!readingContent) return;
-
-      let fullText = `Your Palm Reading: ${reading.results.overallSummary}\n\n`;
-      
-      // Add each section content
-      Object.entries(readingContent).forEach(([key, section]) => {
-        if (key !== 'summary') { // Skip overall summary as we've already added it
-          const typedSection = section as { 
-            title: string; 
-            content: string[];
-            insights?: string[];
-          };
-          
-          fullText += `${typedSection.title}: ${typedSection.content.join(' ')}\n\n`;
-          
-          if (typedSection.insights && typedSection.insights.length > 0) {
-            fullText += `Key insights for ${typedSection.title}:\n`;
-            typedSection.insights.forEach((insight, index) => {
-              fullText += `${index + 1}. ${insight}\n`;
-            });
-            fullText += '\n';
-          }
-        }
-      });
-
-      setFullReadingText(fullText);
+    if (reading) {
+      const content = getReadingContent(reading);
+      setReadingContent(content);
     }
   }, [reading]);
+
+  // Generate full reading text for text-to-speech
+  useEffect(() => {
+    if (readingContent) {
+      const fullText = generateFullReadingText(readingContent, isPremium || isPremiumTest);
+      setFullReadingText(fullText);
+    }
+  }, [readingContent, isPremium, isPremiumTest]);
 
   const handlePayment = () => {
     setIsPremium(true);
@@ -126,8 +110,6 @@ const ReadingResults = () => {
     
     return `${languageInfo.name} (${languageInfo.nativeName})`;
   };
-
-  const readingContent = reading ? getReadingContent(reading) : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -159,6 +141,8 @@ const ReadingResults = () => {
                       isPremiumTest={isPremiumTest}
                       setIsPremiumTest={setIsPremiumTest}
                       setIsPremium={setIsPremium}
+                      readingContent={readingContent}
+                      isPremium={isPremium}
                     />
 
                     {reading.language !== 'english' && reading.translationNote && (

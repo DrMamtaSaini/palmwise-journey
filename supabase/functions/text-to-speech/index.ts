@@ -27,7 +27,7 @@ serve(async (req) => {
     }
 
     console.log(`Generating speech with Gemini API. Text length: ${text.length}, voice: ${voice}`)
-    console.log(`Speech text ready. Length: ${text.length}`)
+    console.log(`Speech text ready. Full content length: ${text.length}`)
     
     // We use the exact text passed to the function to ensure all palm reading sections are included
     return new Response(

@@ -134,3 +134,50 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
 
   return content;
 };
+
+export const generateFullReadingText = (readingContent: Record<string, any> | null, isPremium: boolean = false): string => {
+  if (!readingContent) return '';
+
+  let fullText = `PALM READING REPORT\n\n`;
+  
+  // First add the overall summary
+  if (readingContent.summary) {
+    fullText += `${readingContent.summary.title.toUpperCase()}\n`;
+    readingContent.summary.content.forEach((paragraph: string) => {
+      fullText += `${paragraph}\n`;
+    });
+    fullText += '\n';
+  }
+  
+  // Add each section content except summary (which we already added)
+  Object.entries(readingContent).forEach(([key, section]) => {
+    if (key !== 'summary') {
+      const typedSection = section as { 
+        title: string; 
+        content: string[];
+        insights?: string[];
+        premium: boolean;
+      };
+      
+      // Skip premium sections if user doesn't have premium
+      if (typedSection.premium && !isPremium) return;
+      
+      fullText += `${typedSection.title.toUpperCase()}\n`;
+      
+      typedSection.content.forEach((paragraph: string) => {
+        fullText += `${paragraph}\n`;
+      });
+      
+      if (typedSection.insights && typedSection.insights.length > 0) {
+        fullText += `\nKey insights for ${typedSection.title}:\n`;
+        typedSection.insights.forEach((insight, index) => {
+          fullText += `${index + 1}. ${insight}\n`;
+        });
+      }
+      
+      fullText += '\n';
+    }
+  });
+
+  return fullText;
+};
