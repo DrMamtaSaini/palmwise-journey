@@ -1,111 +1,36 @@
-
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Mail, Key, LogIn, User, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showGoogleButton, setShowGoogleButton] = useState(true);
-  const [googleAuthError, setGoogleAuthError] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
-
-  useEffect(() => {
-    // Check for auth errors in URL
-    const searchParams = new URLSearchParams(location.search);
-    const errorCode = searchParams.get('error_code');
-    const errorDescription = searchParams.get('error_description');
-    
-    if (errorCode && errorDescription) {
-      console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
-      
-      if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
-        setGoogleAuthError(true);
-        setShowGoogleButton(false);
-        toast.error("Google authentication failed", {
-          description: "Email/password login is available. Google auth is not enabled in Supabase project settings.",
-          duration: 8000,
-        });
-      } else {
-        handleEmailVerificationError(errorCode, errorDescription);
-      }
-      
-      // Clean the URL
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete('error_code');
-      cleanUrl.searchParams.delete('error_description');
-      window.history.replaceState({}, document.title, cleanUrl.toString());
-    }
-  }, [location.search, handleEmailVerificationError]);
-
-  useEffect(() => {
-    // If user is already authenticated, redirect to dashboard
-    if (isAuthenticated && !isLoading) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate, isLoading]);
+  const { signIn, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
-      toast.error("Missing information", {
-        description: "Please enter both email and password.",
+      toast.error("Missing credentials", {
+        description: "Please enter your email and password.",
       });
       return;
     }
-    
+
     try {
-      const success = await signIn(email, password);
-      if (success) {
-        toast.success("Login successful", {
-          description: "Redirecting to dashboard...",
-        });
-        navigate("/dashboard");
-      }
+      await signIn(email, password);
     } catch (error) {
-      console.error("Login error:", error);
       toast.error("Login failed", {
-        description: "Please check your credentials and try again.",
+        description: "Invalid email or password.",
       });
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    if (googleAuthError) {
-      toast.error("Google authentication is not available", {
-        description: "Please use email/password login instead. Google authentication needs to be enabled in Supabase.",
-        duration: 5000,
-      });
-      return;
-    }
-    
-    try {
-      await signInWithGoogle();
-      // No need to navigate here as the redirect will happen automatically
-    } catch (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Google login failed", {
-        description: "Please try using email/password login instead.",
-      });
-    }
-  };
-
-  // Function to handle enter key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isLoading) {
-      // Submit the form when enter key is pressed
-      const form = e.currentTarget.closest('form');
-      if (form) form.requestSubmit();
     }
   };
 
@@ -117,24 +42,15 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-soft p-8 animate-fade-in">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-              <p className="text-gray-600">
-                Login to access your palm readings and insights
-              </p>
+              <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
+              <p className="text-gray-600">Sign in to continue to your account</p>
             </div>
 
-            {googleAuthError && (
-              <div className="mb-6 p-4 border border-orange-200 bg-orange-50 text-orange-800 rounded-lg">
-                <p className="text-sm font-medium">Google authentication is not available</p>
-                <p className="text-xs mt-1">Please use email/password login instead. Google authentication needs to be enabled in Supabase.</p>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyPress}>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
-                </label>
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -147,9 +63,9 @@ const Login = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
-                </label>
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -168,60 +84,30 @@ const Login = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                <div className="flex justify-end mt-1">
-                  <Link to="/forgot-password" className="text-sm text-palm-purple hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
               </div>
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-palm-purple hover:bg-palm-purple/90 text-white flex items-center justify-center"
+                className="w-full bg-palm-purple hover:bg-palm-purple/90"
               >
                 {isLoading ? (
-                  <span className="animate-pulse">Logging in...</span>
+                  <span className="animate-pulse">Signing In...</span>
                 ) : (
                   <>
                     <LogIn size={18} className="mr-2" />
-                    <span>Login</span>
+                    <span>Sign In</span>
                   </>
                 )}
               </Button>
-
-              {showGoogleButton && (
-                <>
-                  <div className="relative flex items-center justify-center">
-                    <div className="border-t border-gray-200 flex-grow"></div>
-                    <span className="mx-4 text-sm text-gray-500">or</span>
-                    <div className="border-t border-gray-200 flex-grow"></div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading || googleAuthError}
-                    variant="outline"
-                    className={`w-full flex items-center justify-center ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <img
-                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                      alt="Google logo"
-                      className="w-5 h-5 mr-2"
-                    />
-                    <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
-                  </Button>
-                </>
-              )}
-
-              <p className="text-center text-gray-600 text-sm mt-8">
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-palm-purple hover:underline">
-                  Sign up
-                </Link>
-              </p>
             </form>
+
+            <div className="text-center mt-4">
+              <Link to="/signup" className="text-palm-purple hover:underline inline-flex items-center">
+                <User size={16} className="mr-1" />
+                Create an Account
+              </Link>
+            </div>
           </div>
         </div>
       </main>
