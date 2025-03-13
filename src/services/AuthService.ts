@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 
@@ -366,44 +365,28 @@ class AuthService {
 
   public async forgotPassword(email: string, redirectUrl?: string): Promise<boolean> {
     try {
-      console.log("Initiating password reset for email:", email);
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // Explicitly use the provided redirect URL or default to the origin
-      const siteUrl = redirectUrl || `${window.location.origin}/reset-password`;
-      console.log("Using redirect URL for password reset:", siteUrl);
+      console.log("Using redirect URL for password reset:", redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: siteUrl,
+        redirectTo: redirectUrl,
       });
-      
-      this.authState = { ...this.authState, isLoading: false };
-      this.notifyListeners();
       
       if (error) {
         console.error("Password reset error:", error);
-        toast.error('Password reset failed', {
-          description: error.message || 'Please try again later.',
-        });
         return false;
       }
       
-      toast.success('Password reset email sent', {
-        description: 'Please check your email for password reset instructions.',
-      });
+      console.log("Password reset initiated successfully");
       return true;
-    } catch (error: any) {
-      console.error('Password reset error:', error);
-      
-      toast.error('Password reset failed', {
-        description: error.message || 'Please try again later.',
-      });
-      
+    } catch (error) {
+      console.error("Exception during password reset:", error);
+      return false;
+    } finally {
       this.authState = { ...this.authState, isLoading: false };
       this.notifyListeners();
-      
-      return false;
     }
   }
 

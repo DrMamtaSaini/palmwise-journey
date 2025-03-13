@@ -27,8 +27,9 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // Use the full reset-password page URL for the redirect - this is important!
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      // Make sure this URL matches what's configured in Supabase authentication settings
+      // The deployed app URL or localhost:3000 is typically what's configured
+      const redirectUrl = "http://localhost:3000/reset-password";
       
       console.log("Using redirect URL for password reset:", redirectUrl);
       
