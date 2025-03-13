@@ -48,8 +48,10 @@ export async function handleHashRecoveryToken() {
         
         console.log("Successfully processed recovery token:", data.session ? "Session created" : "No session");
         
-        // Clean up the URL by removing the hash
-        window.history.replaceState(null, '', window.location.pathname);
+        // Clean up the URL by removing the hash and update browser history
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, document.title, window.location.pathname);
+        }
         
         return { success: !!data.session, session: data.session };
       }
@@ -81,10 +83,12 @@ export async function checkForAuthInUrl() {
         
         console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
         
-        // Clean up the URL by removing the code parameter
-        const cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('code');
-        window.history.replaceState(null, '', cleanUrl.toString());
+        // Clean up the URL by removing the code parameter and update browser history
+        if (window.history && window.history.replaceState) {
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('code');
+          window.history.replaceState(null, document.title, cleanUrl.toString());
+        }
         
         return { success: !!data.session, session: data.session };
       } catch (error) {

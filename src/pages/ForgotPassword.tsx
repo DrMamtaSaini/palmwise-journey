@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Send } from "lucide-react";
@@ -27,9 +26,8 @@ const ForgotPassword = () => {
     try {
       console.log("Initiating password reset for:", email);
       
-      // Make sure this URL matches what's configured in Supabase authentication settings
-      // The deployed app URL or localhost:3000 is typically what's configured
-      const redirectUrl = "http://localhost:3000/reset-password";
+      // Use the current origin to make sure it matches where the app is running
+      const redirectUrl = `${window.location.origin}/reset-password`;
       
       console.log("Using redirect URL for password reset:", redirectUrl);
       
