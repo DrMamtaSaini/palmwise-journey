@@ -1,7 +1,9 @@
+
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Loader2, AlertCircle } from "lucide-react";
 import TextToSpeechService from "../services/TextToSpeechService";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "./ui/alert";
 
 interface AudioPlayerProps {
   audioUrl?: string;
@@ -14,6 +16,7 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioContentRef = useRef<string | null>(null);
 
@@ -40,6 +43,13 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
       }
     };
   }, []);
+
+  // Reset error state if text changes
+  useEffect(() => {
+    if (text && audioError) {
+      setAudioError(null);
+    }
+  }, [text]);
 
   const updateProgress = () => {
     if (audioRef.current) {
@@ -93,10 +103,28 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
     }
   };
 
+  const resetAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setProgress(0);
+    }
+    
+    setAudioError(null);
+    setIsPlaying(false);
+    setIsLoading(false);
+  };
+
+  const retryGenerateSpeech = async () => {
+    resetAudio();
+    setRetryCount(prev => prev + 1);
+    await togglePlay();
+  };
+
   const togglePlay = async () => {
     // If we have an error, reset it when trying to play again
     if (audioError) {
-      setAudioError(null);
+      resetAudio();
     }
 
     if (audioRef.current) {
@@ -141,6 +169,7 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
       // Otherwise, generate new audio from text
       try {
         setIsLoading(true);
+        setAudioError(null);
         
         // Limit text length for the API call
         const limitedText = text.length > 4000 ? text.substring(0, 4000) + "..." : text;
@@ -157,6 +186,8 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
       } catch (error) {
         console.error("Error generating speech:", error);
         setIsLoading(false);
+        setAudioError(error instanceof Error ? error.message : "Unknown error");
+        
         toast.error("Failed to generate speech", {
           description: error instanceof Error ? error.message : "Please try again later"
         });
@@ -173,6 +204,21 @@ const AudioPlayer = ({ audioUrl, text }: AudioPlayerProps) => {
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-soft">
+      {audioError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="ml-2">
+            {audioError}
+            <button 
+              onClick={retryGenerateSpeech}
+              className="ml-2 text-sm underline hover:text-palm-purple"
+            >
+              Retry
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex items-center space-x-3 mb-2">
         <button
           onClick={togglePlay}

@@ -28,19 +28,39 @@ class TextToSpeechService {
       
       if (error) {
         console.error("Error generating speech:", error);
-        throw new Error(`Failed to generate speech: ${error.message}`);
+        throw new Error(`Failed to generate speech: ${error.message || 'Unknown error'}`);
       }
       
-      if (!data || !data.audioContent) {
-        console.error("No audio data returned from server");
-        throw new Error("No audio data returned from server");
+      if (!data) {
+        console.error("No data returned from server");
+        throw new Error("No data returned from speech service");
+      }
+      
+      if (data.error) {
+        console.error("Error from text-to-speech function:", data.error);
+        throw new Error(`Error from speech service: ${data.error}`);
+      }
+      
+      if (!data.audioContent) {
+        console.error("No audio content returned from server");
+        throw new Error("No audio content returned from server");
       }
       
       console.log("Speech generated successfully, audio content length:", data.audioContent.length);
       return data.audioContent; // Base64 encoded audio
     } catch (error) {
       console.error("Error in generateSpeech:", error);
-      throw error;
+      
+      // Rethrow with a more user-friendly message
+      if (error instanceof Error) {
+        // Check for specific error types
+        if (error.message.includes('Edge Function returned a non-2xx status code')) {
+          throw new Error("Speech service unavailable. Please try again later.");
+        }
+        throw error;
+      }
+      
+      throw new Error("Failed to generate speech. Please try again later.");
     }
   }
 
