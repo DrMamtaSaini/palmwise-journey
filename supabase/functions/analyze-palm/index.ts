@@ -121,36 +121,39 @@ function generateDetailedPalmAnalysis() {
       ]
     },
     relationships: {
-      prediction: "Your relationship dynamics show fascinating patterns of depth and authenticity. The heart line's quality indicates you value emotional honesty above superficial harmony. The supportive lines near your heart line suggest you attract relationships that encourage your growth rather than limit it. The connection between your heart and head lines shows integrated decision-making in relationships, balancing emotion with practicality. The spacing suggests you've learned to maintain healthy boundaries while still creating deep connections.",
+      prediction: "The Venus mount at the base of your thumb shows remarkable development, indicating exceptional capacity for deep emotional connections. I see a harmonious connection between your heart and head lines, suggesting you naturally balance emotional needs with practical considerations in relationships. The minor lines branching from your heart line reveal past relationships that have provided profound lessons, particularly visible in the distinct branch near your middle finger. The depth and clarity of your heart line as it curves toward your Jupiter mount indicates you value authentic connection over superficial harmony, and you're willing to engage in necessary conflict to achieve deeper understanding. The small island formation near the end of your heart line suggests a period of emotional recalibration that has ultimately strengthened your capacity for intimacy. The supportive lines beneath your heart line show you've developed a network of meaningful connections that form a strong foundation for your emotional well-being.",
       significance: Math.floor(Math.random() * 20) + 80,
       insights: [
-        "You naturally create space for others to be authentic around you",
-        "Your relationship patterns show evolution toward increasingly fulfilling connections",
-        "You've developed the ability to communicate effectively even during emotional intensity",
-        "Your capacity for forgiveness strengthens rather than weakens your boundaries"
+        "Your natural ability to create emotional safety allows others to be vulnerable with you",
+        "You have an unusually high capacity for maintaining connection during conflict",
+        "The subtle variations in your heart line indicate you experience love languages differently at different life stages",
+        "Your relationship patterns show evidence of intentional growth rather than repeated cycles",
+        "The connection between heart and fate lines suggests romantic relationships significantly influence your life direction"
       ]
     },
     career: {
-      prediction: "Your career trajectory shows remarkable potential for leadership and innovation. The prominence of your fate line suggests work that aligns with your personal values and strengths. The quality of connecting lines indicates effective collaboration abilities that will open doors. The depth suggests lasting impact in your field rather than superficial advancement. The direction indicates evolution toward work that increasingly integrates all aspects of your abilities rather than compartmentalizing your talents.",
+      prediction: "The prominence and clarity of your fate line reveals exceptional career potential, with particular strength in leadership and strategic thinking. The distinct beginning of your fate line from the base of your palm indicates early career clarity that has provided a strong foundation. The subtle branches emerging from your fate line around the middle of your palm suggest strategic pivots that have expanded your professional repertoire. The distinct upward trajectory of your fate line as it approaches your middle finger indicates increasing recognition and impact in your field. The unique formation where your fate line meets your head line suggests a career that increasingly integrates analytical thinking with creative innovation. The supporting lines alongside your fate line indicate collaborative relationships that amplify your effectiveness. The overall depth and continuity of your fate line suggests remarkable persistence through professional challenges, with each obstacle ultimately strengthening your trajectory. I also note the rare formation near the upper section of your fate line that indicates potential for creating intellectual or creative legacy that extends beyond your immediate work.",
       significance: Math.floor(Math.random() * 20) + 80,
       insights: [
-        "You have untapped potential in strategic thinking that will become increasingly valuable",
-        "Your career path will likely include a pivotal role connecting different specialists",
-        "You'll find increasing satisfaction as your work aligns more authentically with your values",
-        "A period of mentorship will significantly accelerate your professional development"
+        "Your natural strategic thinking abilities are particularly evident in crisis situations",
+        "You possess rare integrative thinking that allows you to connect disparate fields",
+        "Your leadership approach balances necessary structure with space for individual contribution",
+        "Your career satisfaction is closely tied to creating tangible impact rather than status",
+        "The alignment between your fate and heart lines suggests you'll find increasing integration of personal purpose and professional contribution"
       ]
     },
     health: {
-      prediction: "Your health indicators show robust fundamental vitality with specific areas for attention. The life line quality suggests excellent recuperative abilities and natural resilience. The spacing between supportive lines indicates balanced energy distribution rather than extreme fluctuations. The connection patterns suggest effective mind-body integration, with mental state positively influencing physical wellbeing. The clarity in your mercury line indicates good intuitive sense about your body's needs when you listen carefully.",
+      prediction: "Your life line shows remarkable vitality with particularly strong recuperative abilities. The clarity and depth of your life line, especially as it curves around your thumb, indicates excellent foundational health with natural resilience. The small tributary lines supporting your life line suggest effective energy management and recovery systems. The minimal breaks or islands in your life line indicate few major health disruptions, while the supporting lines from your fate line to your life line reveal a strong connection between your sense of purpose and physical vitality. I notice the subtle variations in depth along your life line that suggest natural cycles of energy that, when honored, support your overall wellbeing. The formation near the beginning of your life line indicates inherited health strengths, particularly in your metabolic and immune systems. The connection pattern between your head and life lines suggests your mental state significantly influences your physical wellbeing, with stress management being particularly important for maintaining optimal health. The spacing between your life line and thumb suggests a naturally active constitution that benefits from regular movement rather than intense but infrequent exercise.",
       significance: Math.floor(Math.random() * 20) + 80,
       insights: [
-        "Your natural health rhythms respond especially well to preventative practices",
-        "You benefit unusually strongly from mind-body integration practices",
-        "Your energy management becomes most effective when aligned with your natural cycles",
-        "Your body shows particular resilience when your work aligns with your values"
+        "Your body shows unusual capacity for adaptation when given consistent small inputs",
+        "The connection between your nervous system and immune function is particularly strong",
+        "Your natural health rhythms align closely with seasonal changes",
+        "Preventative health practices yield exceptionally strong results for your constitution",
+        "The balance between rest and activity is more critical for your wellbeing than specific diets or exercise regimens"
       ]
     },
-    overallSummary: "Your palm reveals an exceptional harmony between emotional depth and intellectual clarity, creating a foundation for both personal fulfillment and significant achievement. The distinctive balance between your head and heart lines indicates you navigate life's complexities with both wisdom and compassion. Your life line shows remarkable resilience that turns challenges into growth opportunities. The fate line suggests purpose-driven work that will likely leave a lasting impact. The supportive lines throughout indicate a natural ability to build meaningful connections that enhance all areas of your life. The coming period appears particularly significant for integrating different aspects of your abilities into a cohesive whole, suggesting a time of both consolidation and expansion.",
+    overallSummary: "Your palm reveals an exceptional integration of intellect, emotion, and purpose that creates remarkable potential for both personal fulfillment and meaningful contribution. The harmonious relationship between your head and heart lines indicates natural balance between analytical thinking and emotional intelligence. The depth and clarity of your life line shows fundamental vitality and resilience that allows you to transform challenges into growth. Your fate line suggests purpose-driven work that aligns with your authentic strengths and values. The supportive minor lines throughout your palm indicate a natural ability to build meaningful connections that enhance all areas of your life. The distinctive formation where your heart line extends toward your Jupiter mount reveals idealism tempered by practical wisdom. The connection patterns between your main lines show unusual capacity for integrating different aspects of life rather than compartmentalizing. The overall proportion and spacing of your palm's features suggest adaptability paired with persistence – you maintain core direction while adjusting tactics as needed. The coming period appears particularly significant for integration of disparate skills and experiences into a cohesive whole, suggesting a time of both consolidation and expansion.",
     personalityTraits: [
       "Empathetic yet discerning",
       "Analytically creative",
@@ -165,7 +168,7 @@ function generateDetailedPalmAnalysis() {
       water: Math.floor(Math.random() * 30) + 70,
       fire: Math.floor(Math.random() * 30) + 70,
       air: Math.floor(Math.random() * 30) + 70,
-      description: "Your palm shows a harmonious balance of elemental influences, with a slight predominance of water (emotional intelligence) and air (intellectual clarity). This combination allows you to blend intuitive understanding with logical analysis. Your earth element provides practical grounding while your fire element fuels your drive and passion. This balanced elemental profile explains your adaptability across different situations and environments."
+      description: "The elemental composition of your palm reveals a fascinating and rare balance. The substantial earth influence is evident in the firm texture and practical grounding of your palm, providing stability and persistence. This earth energy manifests in your natural ability to create tangible results from abstract ideas. The water element flows strongly through the fluidity of your heart line and the emotional sensitivity revealed in the mount of the moon, giving you intuitive depth and emotional intelligence that allows you to connect authentically with others. The fire element burns clearly in the distinct fate line and the animated quality of your hand movements, fueling your passion, creativity, and capacity to inspire others. The air element sweeps through your well-developed fingers and the clarity of your head line, enhancing your intellectual agility and communication skills. What makes your palm particularly unique is not just the strength of each element but their harmonious integration. The balanced proportion between your palm and fingers indicates you naturally draw on different elemental strengths as needed without becoming overly dominated by any single element. This elemental versatility explains your ability to adapt to different environments while maintaining your essential nature, and suggests you often serve as a bridge between different types of people and perspectives."
     }
   };
 }
