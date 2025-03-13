@@ -16,7 +16,6 @@ export interface IndianLanguage {
 
 export const indianLanguages: IndianLanguage[] = [
   { code: "english", name: "English" },
-  { code: "hindi", name: "Hindi", nativeName: "हिन्दी" },
 ];
 
 // Helper function to get language info from language code

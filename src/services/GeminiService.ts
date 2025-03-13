@@ -46,16 +46,9 @@ class GeminiService {
     }
   }
 
-  public async generateTextWithGemini(prompt: string, language: string = 'english'): Promise<string> {
+  public async generateTextWithGemini(prompt: string): Promise<string> {
     try {
       const apiKey = await this.getApiKey();
-      
-      let enhancedPrompt = prompt;
-      
-      // Add language-specific instructions for Hindi
-      if (language === 'hindi') {
-        enhancedPrompt = `${prompt}\n\nPlease respond in both Hindi and English, with Hindi first. Use proper Hindi Unicode characters.`;
-      }
       
       // Call the Gemini API directly from the client
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
@@ -68,7 +61,7 @@ class GeminiService {
             {
               parts: [
                 {
-                  text: enhancedPrompt
+                  text: prompt
                 }
               ]
             }

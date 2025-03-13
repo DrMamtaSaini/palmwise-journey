@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -14,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, language = 'english' } = await req.json();
+    const { imageUrl } = await req.json();
     
     if (!imageUrl) {
       return new Response(
@@ -24,41 +23,14 @@ serve(async (req) => {
     }
 
     console.log("Analyzing palm image:", imageUrl);
-    console.log("Requested language:", language);
     
-    // Generate enhanced palm analysis data
-    const analysis = generateDetailedPalmAnalysis('english');
+    // Generate enhanced palm analysis data in English only
+    const analysis = generateDetailedPalmAnalysis();
     
-    // If English is requested, return the original analysis
-    if (language === 'english') {
-      return new Response(
-        JSON.stringify({
-          ...analysis,
-          language,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // For Hindi language, translate the content
-    if (language === 'hindi') {
-      const translatedAnalysis = translatePalmAnalysis(analysis, language);
-      
-      return new Response(
-        JSON.stringify({
-          ...translatedAnalysis,
-          translationNote: "This is a partial translation to Hindi using a dictionary approach. Some content may still be in English."
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // For any other language, return English with a message
     return new Response(
       JSON.stringify({
         ...analysis,
         language: 'english',
-        translationNote: `Translation for ${language} is not currently supported. This content is in English.`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -69,130 +41,16 @@ serve(async (req) => {
         error: "Failed to analyze palm image", 
         details: error.message,
         // Return fallback data to prevent app from breaking
-        fallbackData: generateDetailedPalmAnalysis('english')
+        fallbackData: generateDetailedPalmAnalysis()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   }
 });
 
-// Enhanced translation function with improved dictionary approach
-function translatePalmAnalysis(analysis, targetLanguage) {
-  if (targetLanguage === 'english') {
-    return { ...analysis, language: 'english' };
-  }
-
-  // Translation dictionary for Hindi with additional terms
-  const hindiDictionary = {
-    // Life-related terms
-    'life line': 'जीवन रेखा',
-    'vitality': 'जीवन शक्ति',
-    'resilience': 'लचीलापन',
-    'energy': 'ऊर्जा',
-    'health': 'स्वास्थ्य',
-    // Heart-related terms
-    'heart line': 'हृदय रेखा',
-    'emotions': 'भावनाएँ',
-    'relationships': 'रिश्ते',
-    'love': 'प्रेम',
-    'emotional': 'भावनात्मक',
-    // Head-related terms
-    'head line': 'मस्तिष्क रेखा',
-    'intelligence': 'बुद्धि',
-    'thinking': 'सोच',
-    'mental': 'मानसिक',
-    'analytical': 'विश्लेषणात्मक',
-    // Fate-related terms
-    'fate line': 'भाग्य रेखा',
-    'destiny': 'नियति',
-    'career': 'करियर',
-    'purpose': 'उद्देश्य',
-    'professional': 'पेशेवर',
-    // Time-related terms
-    'past': 'अतीत',
-    'present': 'वर्तमान',
-    'future': 'भविष्य',
-    // Palm parts
-    'palm': 'हथेली',
-    'mount': 'पर्वत',
-    'line': 'रेखा',
-    // Elemental terms
-    'earth': 'पृथ्वी',
-    'water': 'जल',
-    'fire': 'अग्नि',
-    'air': 'वायु',
-    // Common words
-    'strength': 'शक्ति',
-    'significance': 'महत्व',
-    'prediction': 'भविष्यवाणी',
-    'insight': 'अंतर्दृष्टि',
-    'remedy': 'उपाय',
-    'practice': 'अभ्यास',
-    // Additional common terms
-    'life': 'जीवन',
-    'heart': 'हृदय',
-    'head': 'मस्तिष्क',
-    'fate': 'भाग्य',
-    'success': 'सफलता',
-    'happiness': 'खुशी',
-    'family': 'परिवार',
-    'growth': 'विकास',
-    'spiritual': 'आध्यात्मिक',
-    'balance': 'संतुलन',
-    'harmony': 'सामंजस्य',
-    'wisdom': 'ज्ञान',
-    'intuition': 'अंतर्ज्ञान',
-    'positive': 'सकारात्मक',
-    'negative': 'नकारात्मक'
-  };
-
-  // Create a deep copy of the analysis to modify
-  const translatedAnalysis = JSON.parse(JSON.stringify(analysis));
-  translatedAnalysis.language = targetLanguage;
-  
-  // Basic function to translate text using the dictionary
-  const translateText = (text) => {
-    if (!text) return text;
-    
-    let translatedText = text;
-    // Replace each term in the dictionary with its translation
-    for (const [term, translation] of Object.entries(hindiDictionary)) {
-      // Create a regex that matches the term as a whole word, case insensitive
-      const regex = new RegExp(`\\b${term}\\b`, 'gi');
-      translatedText = translatedText.replace(regex, translation);
-    }
-    return translatedText;
-  };
-
-  // Function to translate all string values in an object recursively
-  const translateObject = (obj) => {
-    for (const key in obj) {
-      if (typeof obj[key] === 'string') {
-        obj[key] = translateText(obj[key]);
-      } else if (Array.isArray(obj[key])) {
-        obj[key] = obj[key].map(item => 
-          typeof item === 'string' ? translateText(item) : 
-          typeof item === 'object' && item !== null ? translateObject({...item}) : item
-        );
-      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-        translateObject(obj[key]);
-      }
-    }
-    return obj;
-  };
-
-  // Translate the entire analysis object
-  translateObject(translatedAnalysis);
-  
-  return translatedAnalysis;
-}
-
 // This function generates more detailed palm reading data with enhanced predictions
-function generateDetailedPalmAnalysis(language = 'english') {
-  console.log(`Generating palm analysis in ${language}`);
-  
-  // In a real implementation, we could use a translation API here
-  // or have pre-translated content for common languages
+function generateDetailedPalmAnalysis() {
+  console.log("Generating palm analysis in English");
   
   return {
     lifeLine: {
