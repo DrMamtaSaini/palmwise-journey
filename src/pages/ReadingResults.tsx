@@ -9,7 +9,7 @@ import PaymentButton from "../components/PaymentButton";
 import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
-import { getLanguageInfo, IndianLanguage } from "../components/LanguageSelector";
+import { getLanguageInfo } from "../components/LanguageSelector";
 import ElevenLabsAgent from "../components/ElevenLabsAgent";
 
 interface ExtendedPalmReading extends PalmReading {
@@ -495,7 +495,7 @@ const ReadingResults = () => {
                     <div className="max-w-2xl mx-auto text-center">
                       <h3 className="text-xl font-semibold mb-3">Unlock Premium Features</h3>
                       <p className="text-gray-600 mb-6">
-                        Get access to audio readings, interactive voice assistant, detailed insights on relationships, career, health, and elemental influences, plus personalized guidance.
+                        Get access to audio readings, detailed insights on relationships, career, health, and elemental influences, plus personalized guidance.
                       </p>
                       
                       <PaymentButton
