@@ -26,11 +26,11 @@ const ForgotPassword = () => {
     
     try {
       // Make sure to use the ABSOLUTE URL with protocol (http/https)
-      // instead of just the relative path
       const baseUrl = window.location.origin;
       
-      // Always include the path in the redirectUrl - with explicit path
-      const redirectUrl = `${baseUrl}/reset-password`;
+      // For a deployed app, this is the correct URL format
+      // For local development with hash-based auth, we don't actually need a specific path
+      const redirectUrl = baseUrl;
       
       console.log("Using redirect URL for password reset:", redirectUrl);
       

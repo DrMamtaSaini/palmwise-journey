@@ -22,14 +22,52 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkResetFlow = async () => {
-      // Get code from URL parameters
+      console.log("Reset password page loaded");
+      console.log("Current URL:", window.location.href);
+      
+      // Check for hash-based recovery flow (#access_token=...)
+      const hash = window.location.hash;
+      if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
+        console.log("Hash-based recovery flow detected");
+        setValidResetFlow(true);
+        
+        try {
+          // Let Supabase client handle the token from the URL
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Error getting session from URL:", error);
+            toast.error("Invalid or expired reset link", {
+              description: "Please request a new password reset link.",
+            });
+            navigate('/forgot-password');
+            return;
+          }
+
+          if (data.session) {
+            console.log("Session established from recovery token");
+          } else {
+            console.log("No session found from recovery token");
+            toast.error("Invalid reset link", {
+              description: "Unable to validate your reset token. Please request a new one.",
+            });
+            navigate('/forgot-password');
+          }
+        } catch (error) {
+          console.error("Error processing hash-based token:", error);
+          toast.error("Error validating reset link", {
+            description: "Please try again or request a new reset link.",
+          });
+          navigate('/forgot-password');
+        }
+        return;
+      }
+      
+      // Get code from URL parameters (for code-based flow)
       const currentUrl = new URL(window.location.href);
       let code = currentUrl.searchParams.get('code');
       
-      console.log("Reset password page loaded");
-      console.log("Current path:", currentUrl.pathname);
       console.log("Code parameter:", code);
-      console.log("Full URL:", window.location.href);
       
       // If we're on root path with a code, redirect to the reset-password path with the code
       if (currentUrl.pathname === '/' && code) {
@@ -66,19 +104,13 @@ const ResetPassword = () => {
           });
           navigate('/forgot-password');
         }
-      } else {
-        // Check for hash-based recovery flow (#access_token=...)
-        const hash = window.location.hash;
-        if (hash && (hash.includes('type=recovery') || hash.includes('access_token='))) {
-          console.log("Hash-based recovery flow detected:", hash);
-          setValidResetFlow(true);
-        } else {
-          console.log("No valid reset parameters found, redirecting to login");
-          toast.error("Invalid reset link", {
-            description: "This page can only be accessed from a password reset email.",
-          });
-          navigate('/login');
-        }
+      } else if (!hash) {
+        // No valid parameters found
+        console.log("No valid reset parameters found, redirecting to login");
+        toast.error("Invalid reset link", {
+          description: "This page can only be accessed from a password reset email.",
+        });
+        navigate('/login');
       }
     };
     
