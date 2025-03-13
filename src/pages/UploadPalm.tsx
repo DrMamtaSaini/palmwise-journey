@@ -27,13 +27,14 @@ const UploadPalm = () => {
         return;
       }
       
+      console.log("Starting palm analysis with language:", selectedLanguage);
       const reading = await PalmAnalysisService.analyzePalm(imageUrl, user.id, selectedLanguage);
       console.log("Palm reading created:", reading);
       
       // Ensure we have a valid reading ID before redirecting
       if (reading && reading.id) {
         toast.success("Reading ready", {
-          description: "Redirecting you to your palm reading results...",
+          description: `Redirecting you to your palm reading results in ${selectedLanguage}...`,
           duration: 3000
         });
         
@@ -42,9 +43,7 @@ const UploadPalm = () => {
           navigate(`/reading-results/${reading.id}`);
         }, 1000);
       } else {
-        toast.error("Could not generate reading ID", {
-          description: "Please try again later."
-        });
+        throw new Error("Could not generate reading ID");
       }
     } catch (error) {
       console.error("Analysis error:", error);
@@ -58,7 +57,8 @@ const UploadPalm = () => {
 
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
-    toast.info(`Reading language set to ${language.charAt(0).toUpperCase() + language.slice(1)}`, {
+    const languageName = language.charAt(0).toUpperCase() + language.slice(1);
+    toast.info(`Reading language set to ${languageName}`, {
       description: "Your palm reading will be provided in this language."
     });
   };
@@ -89,7 +89,10 @@ const UploadPalm = () => {
             </div>
 
             <div className="animate-slide-up">
-              <UploadSection onAnalyze={handleAnalyze} />
+              <UploadSection 
+                onAnalyze={handleAnalyze} 
+                isProcessing={isProcessing}
+              />
             </div>
 
             <div className="mt-12 bg-white p-6 rounded-2xl shadow-soft animate-fade-in">

@@ -7,12 +7,13 @@ import { toast } from "sonner";
 
 interface UploadSectionProps {
   onAnalyze: (imageUrl: string) => void;
+  isProcessing?: boolean;
 }
 
-const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
+const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +37,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
     }
     
     try {
-      setIsLoading(true);
+      setIsUploading(true);
       
       // First upload the image to Supabase storage
       const imageUrl = await PalmAnalysisService.uploadPalmImage(file, user.id);
@@ -52,7 +53,8 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       toast.error("Upload failed", {
         description: "There was a problem uploading your image. Please try again."
       });
-      setIsLoading(false);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -96,7 +98,7 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
 
       <div 
         className="mb-8 border-2 border-dashed border-gray-200 rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 min-h-[300px] cursor-pointer"
-        onClick={() => document.getElementById('file-upload')?.click()}
+        onClick={() => !isProcessing && !isUploading && document.getElementById('file-upload')?.click()}
       >
         {previewUrl ? (
           <div className="mb-4 w-full max-w-sm">
@@ -122,15 +124,16 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <label className="flex-1">
+        <label className={`flex-1 ${(isProcessing || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <input
             id="file-upload"
             type="file"
             accept="image/*"
             className="hidden"
             onChange={handleFileChange}
+            disabled={isProcessing || isUploading}
           />
-          <div className="bg-white border border-gray-200 rounded-lg py-3 px-4 text-center cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center">
+          <div className={`bg-white border border-gray-200 rounded-lg py-3 px-4 text-center cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-center ${(isProcessing || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <Upload size={20} className="mr-2" />
             <span>Upload Image</span>
           </div>
@@ -138,8 +141,9 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
 
         <button 
           type="button"
-          className="flex-1 bg-white border border-gray-200 rounded-lg py-3 px-4 text-center hover:bg-gray-50 transition-colors flex items-center justify-center"
+          className={`flex-1 bg-white border border-gray-200 rounded-lg py-3 px-4 text-center hover:bg-gray-50 transition-colors flex items-center justify-center ${(isProcessing || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={takePicture}
+          disabled={isProcessing || isUploading}
         >
           <Camera size={20} className="mr-2" />
           <span>Take Photo</span>
@@ -149,13 +153,13 @@ const UploadSection = ({ onAnalyze }: UploadSectionProps) => {
       <button
         type="button"
         className={`w-full bg-palm-purple text-white py-3 px-4 rounded-lg flex items-center justify-center ${
-          !previewUrl || isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
+          !previewUrl || isProcessing || isUploading ? "opacity-50 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
         }`}
-        disabled={!previewUrl || isLoading}
+        disabled={!previewUrl || isProcessing || isUploading}
         onClick={handleAnalyze}
       >
-        {isLoading ? (
-          <span className="animate-pulse">Analyzing...</span>
+        {isProcessing || isUploading ? (
+          <span className="animate-pulse">{isProcessing ? "Analyzing..." : "Uploading..."}</span>
         ) : (
           <>
             <SparklesIcon size={20} className="mr-2" />
