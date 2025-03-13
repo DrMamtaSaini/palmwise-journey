@@ -1,0 +1,10 @@
+
+{
+  "deploymentId": "get-gemini-key",
+  "entrypoint": "index.ts",
+  "envVars": {
+    "GEMINI_API_KEY": {
+      "name": "GEMINI_API_KEY"
+    }
+  }
+}
