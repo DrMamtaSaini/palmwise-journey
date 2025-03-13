@@ -325,10 +325,13 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
+      // Get the current site URL to use for the redirect
+      const siteUrl = window.location.origin;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${siteUrl}/dashboard`
         }
       });
       

@@ -11,6 +11,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [googleAuthError, setGoogleAuthError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
@@ -22,7 +23,15 @@ const Login = () => {
     const errorDescription = searchParams.get('error_description');
     
     if (errorCode && errorDescription) {
-      handleEmailVerificationError(errorCode, errorDescription);
+      if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
+        setGoogleAuthError(true);
+        toast.error("Google authentication failed", {
+          description: "Google authentication is not properly configured. Please contact support.",
+          duration: 8000,
+        });
+      } else {
+        handleEmailVerificationError(errorCode, errorDescription);
+      }
       
       // Clean the URL
       const cleanUrl = new URL(window.location.href);
@@ -49,6 +58,14 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    if (googleAuthError) {
+      toast.error("Google authentication is not available", {
+        description: "Please use email/password login or contact support.",
+        duration: 5000,
+      });
+      return;
+    }
+    
     await signInWithGoogle();
     // No need to navigate here as the redirect will happen automatically
   };
@@ -136,8 +153,8 @@ const Login = () => {
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors"
+                disabled={isLoading || googleAuthError}
+                className={`w-full bg-white border border-gray-300 py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <img
                   src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
