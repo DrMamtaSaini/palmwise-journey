@@ -12,7 +12,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Strength: ${reading.results.lifeLine.strength}%`
       ],
       insights: reading.results.lifeLine.insights,
-      remedies: reading.results.lifeLine.remedies,
       premium: false
     },
     heartLine: {
@@ -22,7 +21,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Strength: ${reading.results.heartLine.strength}%`
       ],
       insights: reading.results.heartLine.insights,
-      remedies: reading.results.heartLine.remedies,
       premium: false
     },
     headLine: {
@@ -32,7 +30,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Strength: ${reading.results.headLine.strength}%`
       ],
       insights: reading.results.headLine.insights,
-      remedies: reading.results.headLine.remedies,
       premium: false
     },
     past: {
@@ -42,7 +39,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         reading.results.past ? `Significance: ${reading.results.past.significance}%` : ""
       ].filter(Boolean),
       insights: reading.results.past?.insights,
-      remedies: reading.results.past?.remedies,
       premium: false
     },
     present: {
@@ -52,7 +48,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         reading.results.present ? `Significance: ${reading.results.present.significance}%` : ""
       ].filter(Boolean),
       insights: reading.results.present?.insights,
-      remedies: reading.results.present?.remedies,
       premium: false
     },
     future: {
@@ -62,7 +57,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         reading.results.future ? `Significance: ${reading.results.future.significance}%` : ""
       ].filter(Boolean),
       insights: reading.results.future?.insights,
-      remedies: reading.results.future?.remedies,
       premium: false
     }
   };
@@ -75,7 +69,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Strength: ${reading.results.fate.strength}%`
       ],
       insights: reading.results.fate.insights,
-      remedies: reading.results.fate.remedies,
       premium: false
     };
   }
@@ -88,7 +81,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Significance: ${reading.results.relationships.significance}%`
       ],
       insights: reading.results.relationships.insights,
-      remedies: reading.results.relationships.remedies,
       premium: true
     };
   }
@@ -101,7 +93,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Significance: ${reading.results.career.significance}%`
       ],
       insights: reading.results.career.insights,
-      remedies: reading.results.career.remedies,
       premium: true
     };
   }
@@ -114,7 +105,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Significance: ${reading.results.health.significance}%`
       ],
       insights: reading.results.health.insights,
-      remedies: reading.results.health.remedies,
       premium: true
     };
   }
@@ -128,18 +118,6 @@ export const getReadingContent = (reading: ExtendedPalmReading | null) => {
         `Water: ${reading.results.elementalInfluences.water}%`,
         `Fire: ${reading.results.elementalInfluences.fire}%`,
         `Air: ${reading.results.elementalInfluences.air}%`
-      ],
-      remedies: reading.results.elementalInfluences.remedies,
-      premium: true
-    };
-  }
-
-  if (reading.results.remedialActions) {
-    content["remedies"] = {
-      title: "Remedial Actions",
-      content: [
-        reading.results.remedialActions.description,
-        ...reading.results.remedialActions.generalRemedies
       ],
       premium: true
     };

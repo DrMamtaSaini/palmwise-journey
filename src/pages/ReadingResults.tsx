@@ -89,7 +89,6 @@ const ReadingResults = () => {
             title: string; 
             content: string[];
             insights?: string[];
-            remedies?: string[];
           };
           
           fullText += `${typedSection.title}: ${typedSection.content.join(' ')}\n\n`;
@@ -98,14 +97,6 @@ const ReadingResults = () => {
             fullText += `Key insights for ${typedSection.title}:\n`;
             typedSection.insights.forEach((insight, index) => {
               fullText += `${index + 1}. ${insight}\n`;
-            });
-            fullText += '\n';
-          }
-          
-          if (typedSection.remedies && typedSection.remedies.length > 0) {
-            fullText += `Remedial actions for ${typedSection.title}:\n`;
-            typedSection.remedies.forEach((remedy, index) => {
-              fullText += `${index + 1}. ${remedy}\n`;
             });
             fullText += '\n';
           }
