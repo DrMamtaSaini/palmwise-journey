@@ -26,6 +26,7 @@ const ReadingResults = () => {
   const [isPremiumTest, setIsPremiumTest] = useState(false); // For testing premium features
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fullReadingText, setFullReadingText] = useState<string>("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -72,6 +73,33 @@ const ReadingResults = () => {
 
     fetchReading();
   }, [readingId, navigate]);
+
+  // Generate full reading text for text-to-speech
+  useEffect(() => {
+    if (reading && reading.results) {
+      const readingContent = getReadingContent(reading);
+      if (!readingContent) return;
+
+      let fullText = `Your Palm Reading: ${reading.results.overallSummary}\n\n`;
+      
+      // Add each section content
+      Object.entries(readingContent).forEach(([key, section]) => {
+        if (key !== 'summary') { // Skip overall summary as we've already added it
+          fullText += `${section.title}: ${section.content.join(' ')}\n\n`;
+          
+          if (section.insights && section.insights.length > 0) {
+            fullText += `Key insights for ${section.title}:\n`;
+            section.insights.forEach((insight, index) => {
+              fullText += `${index + 1}. ${insight}\n`;
+            });
+            fullText += '\n';
+          }
+        }
+      });
+
+      setFullReadingText(fullText);
+    }
+  }, [reading]);
 
   const handlePayment = () => {
     setIsPremium(true);
@@ -133,7 +161,7 @@ const ReadingResults = () => {
 
                     {(isPremium || isPremiumTest) && reading.results && (
                       <div className="mb-8">
-                        <AudioPlayer text={reading.results.overallSummary} />
+                        <AudioPlayer text={fullReadingText} />
                       </div>
                     )}
 
