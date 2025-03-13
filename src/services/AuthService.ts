@@ -368,21 +368,29 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
+      console.log("Requesting password reset for email:", email);
       console.log("Using redirect URL for password reset:", redirectUrl);
+      console.log("Current Supabase URL:", import.meta.env.VITE_SUPABASE_URL || "Using default");
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
       
       if (error) {
-        console.error("Password reset error:", error);
+        console.error("Password reset error from Supabase:", error);
+        toast.error("Password reset failed", {
+          description: error.message || "Please try again later.",
+        });
         return false;
       }
       
-      console.log("Password reset initiated successfully");
+      console.log("Password reset initiated successfully by Supabase");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Exception during password reset:", error);
+      toast.error("Password reset failed", {
+        description: error.message || "Please try again later.",
+      });
       return false;
     } finally {
       this.authState = { ...this.authState, isLoading: false };
