@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useConversation } from '@11labs/react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Sparkles, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 
@@ -185,29 +185,38 @@ This is a palm reading for a user. Main findings:
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-soft p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="rounded-xl border border-palm-light bg-gradient-to-b from-white to-palm-light/30 shadow-md overflow-hidden">
+      <div className="bg-gradient-to-r from-palm-purple/10 to-palm-purple/5 p-4 flex justify-between items-center border-b border-palm-light">
         <h3 className="text-lg font-medium flex items-center">
-          <span className={`mr-2 w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-          Palm Reading Voice Assistant
+          <span className={`mr-2 w-3 h-3 rounded-full ${status === 'connected' ? 'bg-green-500' : 'bg-gray-300'} flex-shrink-0`}></span>
+          <span className="font-serif">Palm Reading Voice Assistant</span>
+          {status === 'connected' && isSpeaking && (
+            <span className="ml-2 flex items-center">
+              <span className="inline-block h-1 w-1 bg-palm-purple rounded-full animate-pulse mr-0.5"></span>
+              <span className="inline-block h-2 w-1 bg-palm-purple rounded-full animate-pulse mr-0.5"></span>
+              <span className="inline-block h-3 w-1 bg-palm-purple rounded-full animate-pulse mr-0.5"></span>
+              <span className="inline-block h-2 w-1 bg-palm-purple rounded-full animate-pulse mr-0.5"></span>
+              <span className="inline-block h-1 w-1 bg-palm-purple rounded-full animate-pulse"></span>
+            </span>
+          )}
         </h3>
         
         {status === 'connected' && (
           <div className="flex space-x-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={toggleMute}
-              className="flex items-center"
+              className={`flex items-center ${isMuted ? 'text-red-500' : 'text-gray-600'}`}
             >
               {isMuted ? <VolumeX size={16} className="mr-1" /> : <Volume2 size={16} className="mr-1" />}
               {isMuted ? "Unmute" : "Mute"}
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleEndConversation}
-              className="flex items-center text-red-500 hover:text-red-700"
+              className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50"
             >
               Disconnect
             </Button>
@@ -215,56 +224,84 @@ This is a palm reading for a user. Main findings:
         )}
       </div>
 
-      {status === 'connected' ? (
-        <div className="space-y-4">
-          <div className={`p-4 rounded-lg ${isSpeaking ? 'bg-palm-light border border-palm-purple animate-pulse' : 'bg-gray-50'}`}>
-            <p className="text-sm">
-              {isSpeaking 
-                ? "AI is speaking... Ask questions about your palm reading." 
-                : "Ask questions about your palm reading. The AI assistant can help you understand the results."}
+      <div className="p-5">
+        {status === 'connected' ? (
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg ${isSpeaking ? 'bg-gradient-to-r from-palm-light to-palm-light/50 border border-palm-light animate-pulse' : 'bg-gray-50 border border-gray-100'} transition-all duration-300`}>
+              <div className="flex items-start">
+                <div className="bg-palm-purple/10 rounded-full p-2 mr-3 flex-shrink-0">
+                  <MessageCircle size={20} className="text-palm-purple" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium mb-1">{isSpeaking ? "AI is speaking..." : "Ask about your palm reading"}</p>
+                  <p className="text-xs text-gray-600">
+                    {isSpeaking 
+                      ? "Listen as the AI explains aspects of your palm reading." 
+                      : "Ask questions about your palm reading results and get personalized insights."}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-palm-light/30 rounded-lg p-4 border border-palm-light/50">
+              <h4 className="text-sm font-medium mb-2 flex items-center">
+                <Sparkles size={16} className="text-palm-purple mr-2" />
+                Suggested Questions
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                <div className="text-xs bg-white px-3 py-2 rounded-lg border border-gray-100 hover:border-palm-purple/30 hover:bg-palm-light/20 transition-colors cursor-pointer">
+                  "What does my life line suggest about my health?"
+                </div>
+                <div className="text-xs bg-white px-3 py-2 rounded-lg border border-gray-100 hover:border-palm-purple/30 hover:bg-palm-light/20 transition-colors cursor-pointer">
+                  "Can you explain more about my career prospects?"
+                </div>
+                <div className="text-xs bg-white px-3 py-2 rounded-lg border border-gray-100 hover:border-palm-purple/30 hover:bg-palm-light/20 transition-colors cursor-pointer">
+                  "What are my key personality traits?"
+                </div>
+                <div className="text-xs bg-white px-3 py-2 rounded-lg border border-gray-100 hover:border-palm-purple/30 hover:bg-palm-light/20 transition-colors cursor-pointer">
+                  "What do the elemental influences mean?"
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center mb-2">
+              <div className="h-6 w-6 rounded-full bg-palm-purple/20 flex items-center justify-center mr-2">
+                <Mic size={14} className="text-palm-purple" />
+              </div>
+              <h4 className="text-sm font-medium">Interactive Voice Assistant</h4>
+            </div>
+            
+            <Textarea 
+              placeholder="Context for the AI assistant (optional)" 
+              value={conversationContext}
+              onChange={(e) => setConversationContext(e.target.value)}
+              className="h-24 text-sm border-palm-light/50 focus:border-palm-purple/50 bg-white"
+            />
+            
+            <Button
+              onClick={handleStartConversation}
+              disabled={isConnecting}
+              className="w-full bg-gradient-to-r from-palm-purple to-palm-purple/90 hover:from-palm-purple/90 hover:to-palm-purple"
+            >
+              {isConnecting ? (
+                <span className="flex items-center">
+                  <span className="animate-spin mr-2">⌛</span> Connecting...
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <Mic size={16} className="mr-2" /> Start Voice Assistant
+                </span>
+              )}
+            </Button>
+            
+            <p className="text-xs text-gray-500 text-center">
+              Start a conversation with the AI to ask questions about your palm reading results.
             </p>
           </div>
-          
-          <div className="text-xs text-gray-500">
-            <p>Try asking:</p>
-            <ul className="list-disc list-inside space-y-1 mt-1">
-              <li>"What does my life line suggest about my health?"</li>
-              <li>"Can you explain more about my career prospects?"</li>
-              <li>"What are my key personality traits?"</li>
-              <li>"What do the elemental influences mean?"</li>
-            </ul>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <Textarea 
-            placeholder="Context for the AI assistant (optional)" 
-            value={conversationContext}
-            onChange={(e) => setConversationContext(e.target.value)}
-            className="h-24 text-sm"
-          />
-          
-          <Button
-            onClick={handleStartConversation}
-            disabled={isConnecting}
-            className="w-full"
-          >
-            {isConnecting ? (
-              <span className="flex items-center">
-                <span className="animate-spin mr-2">⌛</span> Connecting...
-              </span>
-            ) : (
-              <span className="flex items-center">
-                <Mic size={16} className="mr-2" /> Start Voice Assistant
-              </span>
-            )}
-          </Button>
-          
-          <p className="text-xs text-gray-500">
-            Start a conversation with the AI to ask questions about your palm reading results.
-          </p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
