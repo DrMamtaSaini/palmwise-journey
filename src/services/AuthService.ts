@@ -363,16 +363,17 @@ class AuthService {
     }
   }
 
-  public async forgotPassword(email: string): Promise<boolean> {
+  public async forgotPassword(email: string, redirectUrl?: string): Promise<boolean> {
     try {
       console.log("Initiating password reset for email:", email);
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      const siteUrl = window.location.origin;
+      const siteUrl = redirectUrl || `${window.location.origin}/reset-password`;
+      console.log("Using redirect URL for password reset:", siteUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/reset-password`,
+        redirectTo: siteUrl,
       });
       
       this.authState = { ...this.authState, isLoading: false };

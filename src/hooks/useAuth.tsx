@@ -17,7 +17,7 @@ interface UseAuthResult {
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<boolean>;
-  forgotPassword: (email: string) => Promise<boolean>;
+  forgotPassword: (email: string, redirectUrl?: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;
   handleEmailVerificationError: (errorCode: string, errorDescription: string) => void;
 }
@@ -25,11 +25,10 @@ interface UseAuthResult {
 export const useAuth = (): UseAuthResult => {
   const [authState, setAuthState] = useState({
     user: AuthService.getAuthState().user,
-    isLoading: true, // Start with loading true
+    isLoading: true,
     isAuthenticated: AuthService.getAuthState().isAuthenticated,
   });
 
-  // Handle email verification errors from URL
   const handleEmailVerificationError = useCallback((errorCode: string, errorDescription: string) => {
     if (errorCode === 'access_denied' || errorCode === 'otp_expired') {
       toast.error("Email verification failed", {
@@ -47,7 +46,6 @@ export const useAuth = (): UseAuthResult => {
   useEffect(() => {
     console.log("Setting up auth subscription");
     
-    // Parse URL for auth errors on component mount
     const handleAuthErrors = () => {
       const url = new URL(window.location.href);
       const errorCode = url.searchParams.get('error_code');
@@ -57,7 +55,6 @@ export const useAuth = (): UseAuthResult => {
         console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
         handleEmailVerificationError(errorCode, errorDescription);
         
-        // Remove error params from URL to prevent showing the error again on refresh
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete('error_code');
         cleanUrl.searchParams.delete('error_description');
@@ -67,7 +64,6 @@ export const useAuth = (): UseAuthResult => {
     
     handleAuthErrors();
     
-    // Initial auth check
     const initialCheck = async () => {
       try {
         await AuthService.checkSession();
@@ -84,7 +80,6 @@ export const useAuth = (): UseAuthResult => {
     
     initialCheck();
     
-    // Subscribe to auth state changes
     const unsubscribe = AuthService.subscribe((state) => {
       console.log("Auth state changed:", state);
       setAuthState({
@@ -94,7 +89,6 @@ export const useAuth = (): UseAuthResult => {
       });
     });
 
-    // Cleanup subscription on unmount
     return unsubscribe;
   }, [handleEmailVerificationError]);
 
@@ -165,10 +159,10 @@ export const useAuth = (): UseAuthResult => {
     }
   }, []);
 
-  const forgotPassword = useCallback(async (email: string) => {
+  const forgotPassword = useCallback(async (email: string, redirectUrl?: string) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      const success = await AuthService.forgotPassword(email);
+      const success = await AuthService.forgotPassword(email, redirectUrl);
       return success;
     } catch (error) {
       console.error("Forgot password error:", error);

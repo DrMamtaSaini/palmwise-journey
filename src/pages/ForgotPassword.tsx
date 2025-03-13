@@ -25,7 +25,11 @@ const ForgotPassword = () => {
     }
     
     try {
-      const success = await forgotPassword(email);
+      // Make sure we're using the correct origin URL
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      console.log("Using redirect URL:", redirectUrl);
+      
+      const success = await forgotPassword(email, redirectUrl);
       if (success) {
         setSubmitted(true);
       }
