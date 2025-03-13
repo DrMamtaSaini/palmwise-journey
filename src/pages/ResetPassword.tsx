@@ -22,11 +22,25 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkResetFlow = async () => {
-      // Get the code from the URL
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
+      // Handle code from different possible locations
+      const currentUrl = new URL(window.location.href);
+      let code = currentUrl.searchParams.get('code');
       
-      console.log("Reset password page loaded, checking URL for code parameter:", code);
+      console.log("Reset password page loaded, checking for code parameter");
+      console.log("Current path:", currentUrl.pathname);
+      console.log("Code parameter:", code);
+      console.log("Hash:", window.location.hash);
+      
+      // If we're on root path instead of /reset-password with a code, 
+      // detect this incorrect redirect case and handle it
+      if (currentUrl.pathname === '/' && code) {
+        console.log("Detected code on root path instead of reset-password path");
+        // We need to redirect to the correct path with the code
+        const newUrl = `${window.location.origin}/reset-password?code=${code}`;
+        console.log("Redirecting to the correct path:", newUrl);
+        window.location.href = newUrl;
+        return;
+      }
 
       if (code) {
         console.log("Code parameter found in URL, validating with Supabase");

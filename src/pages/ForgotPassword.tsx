@@ -25,8 +25,8 @@ const ForgotPassword = () => {
     }
     
     try {
-      // Make sure to specify the proper route format
-      // Include the route in the redirect path, not just domain
+      // The exact URL structure is critical - must include the exact path
+      // that matches the route in App.tsx
       const baseUrl = window.location.origin;
       const redirectUrl = `${baseUrl}/reset-password`;
       
