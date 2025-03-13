@@ -56,6 +56,7 @@ const UploadPalm = () => {
   };
 
   const handleLanguageChange = (language: string) => {
+    console.log("Language changed to:", language);
     setSelectedLanguage(language);
     const languageName = language.charAt(0).toUpperCase() + language.slice(1);
     toast.info(`Reading language set to ${languageName}`, {

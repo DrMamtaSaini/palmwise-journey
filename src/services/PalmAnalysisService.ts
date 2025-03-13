@@ -128,8 +128,10 @@ class PalmAnalysisService {
     }
   }
 
-  public async analyzePalm(imageUrl: string, userId: string, language?: string): Promise<PalmReading> {
+  public async analyzePalm(imageUrl: string, userId: string, language: string = 'english'): Promise<PalmReading> {
     try {
+      console.log(`Analyzing palm with language: ${language}`);
+      
       toast.info('Analyzing your palm...', {
         description: 'This may take a moment as our AI works its magic.',
         duration: 5000
@@ -141,6 +143,8 @@ class PalmAnalysisService {
         .invoke('analyze-palm', {
           body: { imageUrl, language }
         });
+
+      console.log("Response from analyze-palm function:", data, error);
 
       if (error && data?.fallbackData) {
         console.log('Using fallback data due to error:', error);
@@ -167,6 +171,8 @@ class PalmAnalysisService {
         language: language || 'english',
         results
       };
+      
+      console.log("Saving reading to database:", reading);
       
       const { error: dbError } = await supabase
         .from('palm_readings')
@@ -200,7 +206,7 @@ class PalmAnalysisService {
         duration: 5000
       });
       
-      const fallbackReading = this.createFallbackReading(imageUrl, userId);
+      const fallbackReading = this.createFallbackReading(imageUrl, userId, language);
       return fallbackReading;
     }
   }
@@ -508,5 +514,3 @@ function generateFallbackResults() {
 }
 
 export default PalmAnalysisService.getInstance();
-
-

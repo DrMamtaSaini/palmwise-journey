@@ -15,7 +15,7 @@ export interface IndianLanguage {
 
 export const indianLanguages: IndianLanguage[] = [
   { code: "english", name: "English" },
-  { code: "hindi", name: "Hindi" },
+  { code: "hindi", name: "हिन्दी (Hindi)" }, // Displaying Hindi with both scripts
   { code: "bengali", name: "Bengali" },
   { code: "marathi", name: "Marathi" },
   { code: "telugu", name: "Telugu" },
@@ -54,6 +54,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       <Select
         value={selectedLanguage}
         onValueChange={onLanguageChange}
+        defaultValue="english"
       >
         <SelectTrigger className="w-full bg-white">
           <SelectValue placeholder="Select Language" />
