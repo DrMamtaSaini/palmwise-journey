@@ -25,12 +25,13 @@ const ForgotPassword = () => {
     }
     
     try {
-      // The exact URL structure is critical - must include the exact path
-      // that matches the route in App.tsx
+      // Make sure to use the ABSOLUTE URL with protocol (http/https)
+      // instead of just the relative path
       const baseUrl = window.location.origin;
+      // Include the path in the redirectUrl
       const redirectUrl = `${baseUrl}/reset-password`;
       
-      console.log("Using redirect URL:", redirectUrl);
+      console.log("Using redirect URL for password reset:", redirectUrl);
       
       const success = await forgotPassword(email, redirectUrl);
       if (success) {

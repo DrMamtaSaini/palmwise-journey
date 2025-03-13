@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +22,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkResetFlow = async () => {
-      // Handle code from different possible locations
+      // Get code from URL parameters or from the hash
       const currentUrl = new URL(window.location.href);
       let code = currentUrl.searchParams.get('code');
       
@@ -31,11 +31,10 @@ const ResetPassword = () => {
       console.log("Code parameter:", code);
       console.log("Hash:", window.location.hash);
       
-      // If we're on root path instead of /reset-password with a code, 
-      // detect this incorrect redirect case and handle it
+      // If we're on root path with a code, redirect to the reset-password path
       if (currentUrl.pathname === '/' && code) {
         console.log("Detected code on root path instead of reset-password path");
-        // We need to redirect to the correct path with the code
+        // Redirect to the correct path with the code
         const newUrl = `${window.location.origin}/reset-password?code=${code}`;
         console.log("Redirecting to the correct path:", newUrl);
         window.location.href = newUrl;

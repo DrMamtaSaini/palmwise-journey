@@ -13,6 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showGoogleButton, setShowGoogleButton] = useState(true);
   const [googleAuthError, setGoogleAuthError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,8 +30,9 @@ const Login = () => {
       
       if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
         setGoogleAuthError(true);
+        setShowGoogleButton(false);
         toast.error("Google authentication failed", {
-          description: "Email/password login is available. Google auth may not be configured in Supabase.",
+          description: "Email/password login is available. Google auth is not enabled in Supabase project settings.",
           duration: 8000,
         });
       } else {
@@ -81,7 +83,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     if (googleAuthError) {
       toast.error("Google authentication is not available", {
-        description: "Please use email/password login instead.",
+        description: "Please use email/password login instead. Google authentication needs to be enabled in Supabase.",
         duration: 5000,
       });
       return;
@@ -124,7 +126,7 @@ const Login = () => {
             {googleAuthError && (
               <div className="mb-6 p-4 border border-orange-200 bg-orange-50 text-orange-800 rounded-lg">
                 <p className="text-sm font-medium">Google authentication is not available</p>
-                <p className="text-xs mt-1">Please use email/password login instead.</p>
+                <p className="text-xs mt-1">Please use email/password login instead. Google authentication needs to be enabled in Supabase.</p>
               </div>
             )}
 
@@ -188,26 +190,30 @@ const Login = () => {
                 )}
               </Button>
 
-              <div className="relative flex items-center justify-center">
-                <div className="border-t border-gray-200 flex-grow"></div>
-                <span className="mx-4 text-sm text-gray-500">or</span>
-                <div className="border-t border-gray-200 flex-grow"></div>
-              </div>
+              {showGoogleButton && (
+                <>
+                  <div className="relative flex items-center justify-center">
+                    <div className="border-t border-gray-200 flex-grow"></div>
+                    <span className="mx-4 text-sm text-gray-500">or</span>
+                    <div className="border-t border-gray-200 flex-grow"></div>
+                  </div>
 
-              <Button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || googleAuthError}
-                variant="outline"
-                className={`w-full flex items-center justify-center ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <img
-                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                  alt="Google logo"
-                  className="w-5 h-5 mr-2"
-                />
-                <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
-              </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading || googleAuthError}
+                    variant="outline"
+                    className={`w-full flex items-center justify-center ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt="Google logo"
+                      className="w-5 h-5 mr-2"
+                    />
+                    <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
+                  </Button>
+                </>
+              )}
 
               <p className="text-center text-gray-600 text-sm mt-8">
                 Don't have an account?{" "}
