@@ -1,0 +1,5 @@
+
+{
+  "handler": "index.ts",
+  "maxDuration": 300
+}

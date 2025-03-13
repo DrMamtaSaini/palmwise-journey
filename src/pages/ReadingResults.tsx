@@ -9,8 +9,8 @@ import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisServic
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { getLanguageInfo, IndianLanguage } from "../components/LanguageSelector";
+import ElevenLabsAgent from "../components/ElevenLabsAgent";
 
-// Extend the PalmReading type to include the translationNote property
 interface ExtendedPalmReading extends PalmReading {
   translationNote?: string;
   language?: string;
@@ -22,7 +22,7 @@ const ReadingResults = () => {
   const readingId = params.id;
   const [activeTab, setActiveTab] = useState("lifeLine");
   const [isPremium, setIsPremium] = useState(false);
-  const [isPremiumTest, setIsPremiumTest] = useState(false); // For testing premium features
+  const [isPremiumTest, setIsPremiumTest] = useState(false);
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -337,8 +337,12 @@ const ReadingResults = () => {
                   )}
 
                   {(isPremium || isPremiumTest) && (
-                    <div className="mb-8">
+                    <div className="mb-8 space-y-8">
                       <AudioPlayer text={reading.results.overallSummary} />
+                      
+                      <div className="border-t border-gray-100 pt-8">
+                        <ElevenLabsAgent palmReading={reading} />
+                      </div>
                     </div>
                   )}
 
@@ -395,7 +399,7 @@ const ReadingResults = () => {
                     ))}
                   </Tabs>
 
-                  {!isPremium && !isPremiumTest && reading.results.elementalInfluences && (
+                  {!isPremium && !isPremiumTest && (
                     <div className="mt-8 p-6 border border-dashed border-gray-200 rounded-lg bg-gray-50">
                       <div className="flex items-start">
                         <div className="flex-shrink-0 bg-gray-200 w-16 h-16 rounded-full flex items-center justify-center mr-4">
@@ -423,7 +427,7 @@ const ReadingResults = () => {
                     <div className="max-w-2xl mx-auto text-center">
                       <h3 className="text-xl font-semibold mb-3">Unlock Premium Features</h3>
                       <p className="text-gray-600 mb-6">
-                        Get access to audio readings, detailed insights on relationships, career, health, and elemental influences, plus personalized guidance.
+                        Get access to audio readings, interactive voice assistant, detailed insights on relationships, career, health, and elemental influences, plus personalized guidance.
                       </p>
                       
                       <PaymentButton
