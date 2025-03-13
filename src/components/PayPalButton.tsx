@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { PayPal } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PayPalButtonProps {
@@ -9,6 +9,13 @@ interface PayPalButtonProps {
   description: string;
   onSuccess: () => void;
   onError?: (error: Error) => void;
+}
+
+// Add TypeScript type definition for PayPal SDK
+declare global {
+  interface Window {
+    paypal?: any;
+  }
 }
 
 const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonProps) => {
@@ -65,7 +72,6 @@ const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonP
       // Clear any existing buttons
       paypalButtonsContainer.innerHTML = "";
 
-      // @ts-ignore - PayPal SDK is loaded dynamically
       window.paypal.Buttons({
         createOrder: (_data: any, actions: any) => {
           return actions.order.create({
@@ -118,7 +124,7 @@ const PayPalButton = ({ amount, description, onSuccess, onError }: PayPalButtonP
       disabled={true} 
       className="w-full bg-blue-500 hover:bg-blue-600 text-white"
     >
-      <PayPal className="mr-2" size={20} />
+      <DollarSign className="mr-2" size={20} />
       {isLoading ? "Processing..." : "Loading PayPal..."}
     </Button>
   );
