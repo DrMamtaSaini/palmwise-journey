@@ -13,9 +13,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ConnectionHelper = () => {
   const [port, setPort] = useState<string | null>(null);
+  const [hostname, setHostname] = useState<string | null>(null);
+  const [protocol, setProtocol] = useState<string | null>(null);
   
   useEffect(() => {
     setPort(window.location.port || (window.location.protocol === 'https:' ? '443' : '80'));
+    setHostname(window.location.hostname);
+    setProtocol(window.location.protocol);
+    
+    // Log connection info to console for debugging
+    console.log("Connection Info:", {
+      fullUrl: window.location.href,
+      hostname: window.location.hostname,
+      port: window.location.port || (window.location.protocol === 'https:' ? '443' : '80'),
+      protocol: window.location.protocol
+    });
   }, []);
   
   return (
@@ -24,9 +36,19 @@ const ConnectionHelper = () => {
       <AlertDescription className="text-amber-800">
         <p className="font-medium">Connection troubleshooting:</p>
         <ul className="list-disc pl-5 mt-1 text-sm space-y-1">
-          <li>Your app is currently configured to run on port 8080</li>
-          <li>Your current browser port is: {port || 'unknown'}</li>
-          <li>Try accessing the app directly at: <a href="http://localhost:8080" className="underline">http://localhost:8080</a></li>
+          <li>Your app is configured to run on port 8080</li>
+          <li>Current browser connection: {protocol || 'unknown'}//{hostname || 'unknown'}:{port || 'unknown'}</li>
+          <li>Try these direct access links:</li>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
+            <li><a href="http://localhost:8080/forgot-password" className="underline font-medium">http://localhost:8080/forgot-password</a></li>
+            <li><a href="http://127.0.0.1:8080/forgot-password" className="underline font-medium">http://127.0.0.1:8080/forgot-password</a></li>
+          </ul>
+          <li className="mt-2 text-amber-900">If links above don't work, please ensure:</li>
+          <ul className="list-disc pl-5">
+            <li>Your app is running (npm run dev or yarn dev)</li>
+            <li>No firewall is blocking port 8080</li>
+            <li>No other app is using port 8080</li>
+          </ul>
         </ul>
       </AlertDescription>
     </Alert>
