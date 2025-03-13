@@ -15,11 +15,11 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showGoogleButton, setShowGoogleButton] = useState(true);
-  const [googleAuthError, setGoogleAuthError] = useState(false);
+  // Temporarily disable Google authentication
+  const [showGoogleButton, setShowGoogleButton] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signUp, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
+  const { signUp, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -28,16 +28,7 @@ const Signup = () => {
     
     if (errorCode && errorDescription) {
       console.log(`Auth error detected: ${errorCode} - ${errorDescription}`);
-      
-      if (errorCode === 'validation_failed' && errorDescription.includes('provider is not enabled')) {
-        setGoogleAuthError(true);
-        toast.error("Google authentication failed", {
-          description: "Email/password signup is available. Google auth is not enabled in Supabase project settings.",
-          duration: 8000,
-        });
-      } else {
-        handleEmailVerificationError(errorCode, errorDescription);
-      }
+      handleEmailVerificationError(errorCode, errorDescription);
       
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('error_code');
@@ -87,42 +78,6 @@ const Signup = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    if (googleAuthError) {
-      toast.error("Google authentication is not available", {
-        description: "Please use email/password signup instead. Google authentication needs to be enabled in Supabase.",
-        duration: 5000,
-      });
-      return;
-    }
-    
-    try {
-      console.log("Initiating Google sign in from Signup page");
-      
-      // Show loading state and notification
-      toast.info("Redirecting to Google", {
-        description: "You will be redirected to Google for authentication...",
-      });
-      
-      // This is a direct, simpler approach to sign in with Google
-      // Sometimes the browser blocks redirects that happen too quickly after a user action
-      // Adding this short timeout can help avoid that issue
-      setTimeout(async () => {
-        const result = await signInWithGoogle();
-        if (!result) {
-          toast.error("Google sign-in could not be initiated", {
-            description: "Please try again or use email/password signup instead.",
-          });
-        }
-      }, 800);
-    } catch (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Google signup failed", {
-        description: "Please check your Google OAuth configuration or try using email/password signup instead.",
-      });
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
       const form = e.currentTarget.closest('form');
@@ -144,24 +99,19 @@ const Signup = () => {
               </p>
             </div>
 
-            {googleAuthError && (
-              <div className="mb-6 p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
-                <div className="flex items-start">
-                  <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium">Google authentication is not enabled</p>
-                    <p className="text-xs mt-1">
-                      Please use email/password signup. To enable Google authentication, you need to:
-                      <ol className="list-decimal ml-4 mt-1">
-                        <li>Configure OAuth client in Google Cloud Console</li>
-                        <li>Add the Supabase callback URL: https://vvaextxqyrvcpjwndgby.supabase.co/auth/v1/callback</li>
-                        <li>Enable the Google provider in Supabase authentication settings</li>
-                      </ol>
-                    </p>
-                  </div>
+            <div className="mb-6 p-4 border border-amber-200 bg-amber-50 text-amber-800 rounded-lg">
+              <div className="flex items-start">
+                <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Google authentication temporarily disabled</p>
+                  <p className="text-xs mt-1">
+                    We're currently experiencing issues with Google authentication. 
+                    Please use email/password signup for now. We'll restore Google login 
+                    once the issue is resolved.
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6" onKeyDown={handleKeyPress}>
               <div>
@@ -256,31 +206,6 @@ const Signup = () => {
                   </>
                 )}
               </Button>
-
-              {showGoogleButton && (
-                <>
-                  <div className="relative flex items-center justify-center">
-                    <div className="border-t border-gray-200 flex-grow"></div>
-                    <span className="mx-4 text-sm text-gray-500">or</span>
-                    <div className="border-t border-gray-200 flex-grow"></div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading || googleAuthError}
-                    variant="outline"
-                    className={`w-full flex items-center justify-center ${googleAuthError ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <img
-                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                      alt="Google logo"
-                      className="w-5 h-5 mr-2"
-                    />
-                    <span>{isLoading ? "Processing..." : "Continue with Google"}</span>
-                  </Button>
-                </>
-              )}
 
               <p className="text-center text-gray-600 text-sm mt-8">
                 Already have an account?{" "}

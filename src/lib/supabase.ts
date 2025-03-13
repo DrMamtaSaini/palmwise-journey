@@ -9,13 +9,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Using fallback Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables for production.');
 }
 
-// Create and export the Supabase client with improved configuration
+// Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'implicit' // Changed from 'pkce' to 'implicit' for better compatibility
+    detectSessionInUrl: true
   }
 });
 
