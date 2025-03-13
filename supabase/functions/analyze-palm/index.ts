@@ -27,16 +27,9 @@ serve(async (req) => {
     console.log("Requested language:", language);
     
     // Generate enhanced palm analysis data
-    const analysis = generateDetailedPalmAnalysis(language);
+    const analysis = generateDetailedPalmAnalysis('english');
     
-    // In a real implementation, this is where you would use a translation API
-    // to translate the content based on the requested language
-    console.log(`Generated palm analysis for language: ${language}`);
-    
-    // For demo purposes, we'll return the English version for all non-English languages
-    // with a note that real translation would be implemented in production
-    
-    // Don't modify the analysis for English
+    // If English is requested, return the original analysis
     if (language === 'english') {
       return new Response(
         JSON.stringify({
@@ -47,17 +40,11 @@ serve(async (req) => {
       );
     }
     
-    // For non-English languages, add a note explaining this is a demo
-    const translationNote = `Note: In a production environment, this content would be properly translated to ${language}. For this demo, we're showing English content.`;
-    
-    const analysisWithNote = {
-      ...analysis,
-      language,
-      translationNote
-    };
+    // For non-English languages, translate the content
+    const translatedAnalysis = translatePalmAnalysis(analysis, language);
     
     return new Response(
-      JSON.stringify(analysisWithNote),
+      JSON.stringify(translatedAnalysis),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -74,54 +61,195 @@ serve(async (req) => {
   }
 });
 
-// This function simulates translation for demo purposes
-// In production, you would use a proper translation API
-function simulateTranslation(analysis, language) {
-  if (language === 'english') {
-    return analysis;
+// New enhanced translation function that uses a basic dictionary approach
+function translatePalmAnalysis(analysis, targetLanguage) {
+  if (targetLanguage === 'english') {
+    return { ...analysis, language: 'english' };
   }
-  
-  // For demo purpose, we'll modify the text to simulate translation
-  // In a real implementation, you would use a translation API or pre-translated content
-  const simulateLanguagePrefix = {
-    'hindi': 'हिन्दी: ',
-    'sanskrit': 'संस्कृतम्: ',
-    'tamil': 'தமிழ்: ',
-    'telugu': 'తెలుగు: ',
-    'bengali': 'বাংলা: ',
-    'marathi': 'मराठी: ',
-    'gujarati': 'ગુજરાતી: ',
-    'urdu': 'اردو: ',
-    'punjabi': 'ਪੰਜਾਬੀ: ',
-    'kannada': 'ಕನ್ನಡ: ',
+
+  // Basic translation dictionaries for common phrases in different languages
+  const translationDictionaries = {
+    hindi: {
+      // Life-related terms
+      'life line': 'जीवन रेखा',
+      'vitality': 'जीवन शक्ति',
+      'resilience': 'लचीलापन',
+      'energy': 'ऊर्जा',
+      'health': 'स्वास्थ्य',
+      // Heart-related terms
+      'heart line': 'हृदय रेखा',
+      'emotions': 'भावनाएँ',
+      'relationships': 'रिश्ते',
+      'love': 'प्रेम',
+      'emotional': 'भावनात्मक',
+      // Head-related terms
+      'head line': 'मस्तिष्क रेखा',
+      'intelligence': 'बुद्धि',
+      'thinking': 'सोच',
+      'mental': 'मानसिक',
+      'analytical': 'विश्लेषणात्मक',
+      // Fate-related terms
+      'fate line': 'भाग्य रेखा',
+      'destiny': 'नियति',
+      'career': 'करियर',
+      'purpose': 'उद्देश्य',
+      'professional': 'पेशेवर',
+      // Time-related terms
+      'past': 'अतीत',
+      'present': 'वर्तमान',
+      'future': 'भविष्य',
+      // Palm parts
+      'palm': 'हथेली',
+      'mount': 'पर्वत',
+      'line': 'रेखा',
+      // Elemental terms
+      'earth': 'पृथ्वी',
+      'water': 'जल',
+      'fire': 'अग्नि',
+      'air': 'वायु',
+      // Common words
+      'strength': 'शक्ति',
+      'significance': 'महत्व',
+      'prediction': 'भविष्यवाणी',
+      'insight': 'अंतर्दृष्टि',
+      'remedy': 'उपाय',
+      'practice': 'अभ्यास'
+    },
+    gujarati: {
+      'life line': 'જીવન રેખા',
+      'vitality': 'જીવન શક્તિ',
+      'resilience': 'સ્થિતિસ્થાપકતા',
+      'energy': 'ઊર્જા',
+      'health': 'સ્વાસ્થ્ય',
+      'heart line': 'હૃદય રેખા',
+      'emotions': 'લાગણીઓ',
+      'relationships': 'સંબંધો',
+      'love': 'પ્રેમ',
+      'emotional': 'ભાવનાત્મક',
+      'head line': 'મસ્તક રેખા',
+      'intelligence': 'બુદ્ધિ',
+      'thinking': 'વિચારધારા',
+      'mental': 'માનસિક',
+      'analytical': 'વિશ્લેષણાત્મક',
+      'fate line': 'ભાગ્ય રેખા',
+      'destiny': 'નિયતિ',
+      'career': 'કારકિર્દી',
+      'purpose': 'હેતુ',
+      'professional': 'વ્યાવસાયિક',
+      'past': 'ભૂતકાળ',
+      'present': 'વર્તમાન',
+      'future': 'ભવિષ્ય',
+      'palm': 'હથેળી',
+      'mount': 'પર્વત',
+      'line': 'રેખા',
+      'earth': 'પૃથ્વી',
+      'water': 'પાણી',
+      'fire': 'અગ્નિ',
+      'air': 'હવા',
+      'strength': 'શક્તિ',
+      'significance': 'મહત્વ',
+      'prediction': 'આગાહી',
+      'insight': 'અંતર્દૃષ્ટિ',
+      'remedy': 'ઉપાય',
+      'practice': 'અભ્યાસ'
+    },
+    tamil: {
+      'life line': 'வாழ்க்கை ரேகை',
+      'vitality': 'உயிர்த்திறன்',
+      'resilience': 'மீள்திறன்',
+      'energy': 'ஆற்றல்',
+      'health': 'ஆரோக்கியம்',
+      'heart line': 'இதய ரேகை',
+      'emotions': 'உணர்வுகள்',
+      'relationships': 'உறவுகள்',
+      'love': 'அன்பு',
+      'emotional': 'உணர்ச்சி',
+      'head line': 'தலை ரேகை',
+      'intelligence': 'நுண்ணறிவு',
+      'thinking': 'சிந்தனை',
+      'mental': 'மன',
+      'analytical': 'பகுப்பாய்வு',
+      'fate line': 'விதி ரேகை',
+      'destiny': 'தலைவிதி',
+      'career': 'தொழில்',
+      'purpose': 'நோக்கம்',
+      'professional': 'தொழில்முறை',
+      'past': 'கடந்த காலம்',
+      'present': 'நிகழ்காலம்',
+      'future': 'எதிர்காலம்',
+      'palm': 'உள்ளங்கை',
+      'mount': 'மேடு',
+      'line': 'ரேகை',
+      'earth': 'மண்',
+      'water': 'நீர்',
+      'fire': 'நெருப்பு',
+      'air': 'காற்று',
+      'strength': 'வலிமை',
+      'significance': 'முக்கியத்துவம்',
+      'prediction': 'கணிப்பு',
+      'insight': 'உள்ளுணர்வு',
+      'remedy': 'தீர்வு',
+      'practice': 'பயிற்சி'
+    },
+    // Add more languages as needed
+    // This is just a basic dictionary - in a production environment,
+    // you would use a more comprehensive dictionary or a translation API
   };
+
+  // Get the translation dictionary for the target language
+  const dictionary = translationDictionaries[targetLanguage];
   
-  const prefix = simulateLanguagePrefix[language] || `${language}: `;
+  // If we don't have a dictionary for this language, return original with a note
+  if (!dictionary) {
+    return {
+      ...analysis,
+      language: targetLanguage,
+      translationNote: `Translation for ${targetLanguage} is not fully supported yet. This content is in English.`
+    };
+  }
+
+  // Create a deep copy of the analysis to modify
+  const translatedAnalysis = JSON.parse(JSON.stringify(analysis));
   
-  // Deep clone the analysis to avoid modifying the original
-  const translated = JSON.parse(JSON.stringify(analysis));
-  
-  // Apply "translation" to all text fields
-  function translateObject(obj) {
+  // Basic function to translate text using the dictionary
+  const translateText = (text) => {
+    if (!text) return text;
+    
+    let translatedText = text;
+    // Replace each term in the dictionary with its translation
+    for (const [term, translation] of Object.entries(dictionary)) {
+      // Create a regex that matches the term as a whole word, case insensitive
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      translatedText = translatedText.replace(regex, translation);
+    }
+    return translatedText;
+  };
+
+  // Function to translate all string values in an object recursively
+  const translateObject = (obj) => {
     for (const key in obj) {
       if (typeof obj[key] === 'string') {
-        // Add language prefix to simulate translation
-        obj[key] = prefix + obj[key];
+        obj[key] = translateText(obj[key]);
       } else if (Array.isArray(obj[key])) {
-        obj[key] = obj[key].map(item => {
-          if (typeof item === 'string') {
-            return prefix + item;
-          }
-          return item;
-        });
+        obj[key] = obj[key].map(item => 
+          typeof item === 'string' ? translateText(item) : 
+          typeof item === 'object' ? translateObject({...item}) : item
+        );
       } else if (typeof obj[key] === 'object' && obj[key] !== null) {
         translateObject(obj[key]);
       }
     }
-  }
+    return obj;
+  };
+
+  // Translate the entire analysis object
+  translateObject(translatedAnalysis);
   
-  translateObject(translated);
-  return translated;
+  // Add language and translation metadata
+  translatedAnalysis.language = targetLanguage;
+  translatedAnalysis.translationNote = `This is a partial translation to ${targetLanguage} using a basic dictionary approach. Some content may still be in English.`;
+  
+  return translatedAnalysis;
 }
 
 // This function generates more detailed palm reading data with enhanced predictions

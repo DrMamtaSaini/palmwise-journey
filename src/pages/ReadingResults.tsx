@@ -20,7 +20,6 @@ const ReadingResults = () => {
   const [reading, setReading] = useState<PalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check URL for premium test mode
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const testMode = urlParams.get('premiumTest');
@@ -68,14 +67,12 @@ const ReadingResults = () => {
   }, [readingId, navigate]);
 
   const handlePayment = () => {
-    // In a real app, this would integrate with PayPal
     setIsPremium(true);
     toast.success("Premium features unlocked!", {
       description: "You now have access to all premium content"
     });
   };
 
-  // Get language info from the reading
   const getLanguageDisplay = () => {
     if (!reading || !reading.language) return "";
     
@@ -89,7 +86,6 @@ const ReadingResults = () => {
     return `${languageInfo.name} (${languageInfo.nativeName})`;
   };
 
-  // Map reading data to tabs content
   const getReadingContent = () => {
     if (!reading || !reading.results) return null;
 
@@ -150,7 +146,6 @@ const ReadingResults = () => {
       }
     };
 
-    // Add fate line if present
     if (reading.results.fateLinePresent && reading.results.fate) {
       content["fateLine"] = {
         title: "Fate Line",
@@ -163,7 +158,6 @@ const ReadingResults = () => {
       };
     }
 
-    // Add premium content sections
     if (reading.results.relationships) {
       content["relationships"] = {
         title: "Relationships",
@@ -214,7 +208,6 @@ const ReadingResults = () => {
       };
     }
 
-    // Add overall summary
     content["summary"] = {
       title: "Overall Summary",
       content: [
@@ -229,7 +222,6 @@ const ReadingResults = () => {
 
   const readingContent = getReadingContent();
 
-  // Filter tabs based on premium status
   const getFilteredTabs = () => {
     if (!readingContent) return [];
     
@@ -331,6 +323,10 @@ const ReadingResults = () => {
                   {reading.language !== 'english' && reading.translationNote && (
                     <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-yellow-800 text-sm">{reading.translationNote}</p>
+                      <p className="text-yellow-800 text-sm mt-2">
+                        We're using a dictionary-based translation method for common terms. This provides useful translations 
+                        while keeping the app lightweight without external API dependencies.
+                      </p>
                     </div>
                   )}
 
