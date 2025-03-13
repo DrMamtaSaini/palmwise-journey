@@ -35,7 +35,12 @@ const ResetPassword = () => {
           setIsVerifying(false);
           return;
         } else {
-          console.log("No valid token found:", tokenResult.message || "Unknown reason");
+          // Get the error message or a default one
+          const errorMessage = tokenResult.error 
+            ? `Error: ${tokenResult.error.message || "Unknown error"}` 
+            : (tokenResult.message || "No valid token found");
+          
+          console.log("Token verification failed:", errorMessage);
         }
         
         // If we couldn't handle the token automatically, check if there's already a valid session

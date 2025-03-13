@@ -20,8 +20,14 @@ supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
 });
 
+// Define response type for better type safety
+export type AuthTokenHandlerResult = 
+  | { success: boolean; session: any; error?: undefined } 
+  | { success: boolean; error: any; session?: undefined }
+  | { success: boolean; message: string; session?: undefined; error?: undefined };
+
 // Handle URL with tokens on page load
-export async function handleAuthTokensOnLoad() {
+export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> {
   try {
     // First check for a hash in the URL (most likely when coming from an email link)
     if (window.location.hash && window.location.hash.length > 1) {
@@ -55,7 +61,7 @@ export async function handleAuthTokensOnLoad() {
 }
 
 // Handle tokens in URL hash (like #access_token=...)
-async function handleHashTokens() {
+async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
   try {
     if (!window.location.hash) {
       return { success: false, message: "No hash in URL" };
@@ -102,7 +108,7 @@ async function handleHashTokens() {
 }
 
 // Handle code parameter in URL (Supabase new style)
-async function handleCodeBasedToken(code: string) {
+async function handleCodeBasedToken(code: string): Promise<AuthTokenHandlerResult> {
   try {
     console.log("Exchanging code for session");
     
