@@ -45,6 +45,12 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
       if (imageUrl) {
         // Then pass the uploaded image URL to the parent component for analysis
         onAnalyze(imageUrl);
+        
+        // Reset the upload form after successful analysis
+        setTimeout(() => {
+          setFile(null);
+          setPreviewUrl(null);
+        }, 1500);
       } else {
         throw new Error("Failed to upload image");
       }

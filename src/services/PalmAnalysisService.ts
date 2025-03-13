@@ -146,18 +146,15 @@ class PalmAnalysisService {
 
       console.log("Response from analyze-palm function:", data, error);
 
-      if (error && data?.fallbackData) {
-        console.log('Using fallback data due to error:', error);
-        data.results = data.fallbackData;
-      } else if (error) {
+      if (error) {
         console.error('Edge function error:', error);
         throw new Error('AI analysis failed: ' + error.message);
       }
       
-      const results = data || generateFallbackResults();
+      const results = data && data.results ? data : { results: generateFallbackResults() };
       
-      if (results.fateLinePresent && !results.fate) {
-        results.fate = {
+      if (results.results.fateLinePresent && !results.results.fate) {
+        results.results.fate = {
           strength: Math.random() * 100,
           prediction: "Your fate line suggests a strong career trajectory with potential for leadership."
         };
@@ -169,7 +166,7 @@ class PalmAnalysisService {
         imageUrl,
         createdAt: new Date().toISOString(),
         language: language || 'english',
-        results
+        results: results.results
       };
       
       console.log("Saving reading to database:", reading);
