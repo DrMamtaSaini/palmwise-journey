@@ -67,6 +67,18 @@ function generateMockPalmAnalysis() {
       strength: Math.floor(Math.random() * 30) + 70,
       prediction: "Your fate line suggests a strong sense of purpose and direction. Career opportunities align well with your natural talents, and you're likely to find fulfillment in your professional life."
     },
+    past: {
+      prediction: "Your past shows significant growth through challenges that have shaped who you are today. The unique patterns in your palm indicate experiences that have built your resilience and determination. These formative events have prepared you for your current path.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
+    present: {
+      prediction: "In your present circumstances, you're navigating a period of transformation and opportunity. Your palm reveals you have the inner resources to handle current challenges with grace. Trust your intuition during this time as it's particularly strong.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
+    future: {
+      prediction: "Your future path indicates promising opportunities, particularly in creative or intellectual pursuits. The distinctive markings suggest upcoming positive changes in both personal and professional realms. Remain open to unexpected possibilities as they may lead to your greatest successes.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
     overallSummary: "Your palm reveals a harmonious balance between heart and mind, with a strong life force supporting your journey. Your natural resilience helps you navigate life's challenges with grace, while your emotional depth brings richness to your relationships. The coming years hold promise for both personal growth and professional achievement.",
     personalityTraits: [
       "Empathetic",

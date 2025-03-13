@@ -8,6 +8,7 @@ import AudioPlayer from "../components/AudioPlayer";
 import PaymentButton from "../components/PaymentButton";
 import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 
 const ReadingResults = () => {
   const navigate = useNavigate();
@@ -82,6 +83,27 @@ const ReadingResults = () => {
           reading.results.headLine.prediction,
           `Strength: ${reading.results.headLine.strength}%`
         ]
+      },
+      past: {
+        title: "Past",
+        content: [
+          reading.results.past?.prediction || "No past reading available.",
+          reading.results.past ? `Significance: ${reading.results.past.significance}%` : ""
+        ].filter(Boolean)
+      },
+      present: {
+        title: "Present",
+        content: [
+          reading.results.present?.prediction || "No present reading available.",
+          reading.results.present ? `Significance: ${reading.results.present.significance}%` : ""
+        ].filter(Boolean)
+      },
+      future: {
+        title: "Future",
+        content: [
+          reading.results.future?.prediction || "No future reading available.",
+          reading.results.future ? `Significance: ${reading.results.future.significance}%` : ""
+        ].filter(Boolean)
       }
     };
 
@@ -167,39 +189,39 @@ const ReadingResults = () => {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap mb-8 border-b border-gray-100">
-                    {readingContent && Object.keys(readingContent).map((key) => (
-                      <button
-                        key={key}
-                        onClick={() => setActiveTab(key)}
-                        className={`px-4 py-3 font-medium transition-colors ${
-                          activeTab === key
-                            ? "text-palm-purple border-b-2 border-palm-purple"
-                            : "text-gray-500 hover:text-palm-purple"
-                        }`}
-                      >
-                        {readingContent[key].title}
-                      </button>
-                    ))}
-                  </div>
+                  <Tabs defaultValue="lifeLine" className="w-full" onValueChange={setActiveTab}>
+                    <TabsList className="flex flex-wrap mb-8 border-b border-gray-100 bg-transparent p-0 w-full justify-start">
+                      {readingContent && Object.keys(readingContent).map((key) => (
+                        <TabsTrigger
+                          key={key}
+                          value={key}
+                          className={`px-4 py-3 font-medium transition-colors rounded-none ${
+                            activeTab === key
+                              ? "text-palm-purple border-b-2 border-palm-purple"
+                              : "text-gray-500 hover:text-palm-purple"
+                          }`}
+                        >
+                          {readingContent[key].title}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
 
-                  <div className="animate-fade-in">
-                    {readingContent && (
-                      <>
+                    {readingContent && Object.keys(readingContent).map((key) => (
+                      <TabsContent key={key} value={key} className="animate-fade-in mt-4">
                         <h2 className="text-2xl font-semibold mb-4">
-                          {readingContent[activeTab]?.title}
+                          {readingContent[key].title}
                         </h2>
                         
                         <div className="space-y-6">
-                          {readingContent[activeTab]?.content.map((paragraph, index) => (
+                          {readingContent[key].content.map((paragraph, index) => (
                             <p key={index} className="text-gray-700 leading-relaxed">
                               {paragraph}
                             </p>
                           ))}
                         </div>
-                      </>
-                    )}
-                  </div>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
                 </div>
 
                 {!isPremium && (

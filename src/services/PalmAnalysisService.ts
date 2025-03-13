@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +25,18 @@ export interface PalmReading {
     fate?: {
       strength: number;
       prediction: string;
+    };
+    past?: {
+      prediction: string;
+      significance: number;
+    };
+    present?: {
+      prediction: string;
+      significance: number;
+    };
+    future?: {
+      prediction: string;
+      significance: number;
     };
     overallSummary: string;
     personalityTraits: string[];
@@ -240,6 +253,18 @@ function generateFallbackResults() {
       prediction: "Your head line reveals strong analytical thinking and creative problem-solving abilities."
     },
     fateLinePresent: Math.random() > 0.3,
+    past: {
+      prediction: "Your past shows a journey of growth through challenges. The experiences you've had have shaped your resilience and determination.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
+    present: {
+      prediction: "In the present, you're navigating a period of transformation. Your adaptability is your greatest strength during this time.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
+    future: {
+      prediction: "Your future path indicates opportunities for success in creative endeavors. Trust your intuition to guide your decisions.",
+      significance: Math.floor(Math.random() * 30) + 70
+    },
     overallSummary: "Your palm reveals balance between emotion and intellect, with potential for growth in creative endeavors.",
     personalityTraits: [
       "Empathetic",
