@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,17 +16,27 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check if we're in a password reset flow
-    const hash = window.location.hash;
-    if (!hash.includes('type=recovery')) {
-      toast.error("Invalid reset link", {
-        description: "This page can only be accessed from a password reset email.",
-      });
-      navigate('/login');
+    // Check for authentication parameters in the URL
+    const searchParams = new URLSearchParams(location.search);
+    const code = searchParams.get('code');
+    
+    console.log("Reset password page loaded with URL params:", location.search);
+    console.log("Authentication code found:", code);
+    
+    if (!code) {
+      console.log("No reset code found in URL");
+      // If we don't have a code parameter and we're not in a hash recovery flow
+      if (!window.location.hash.includes('type=recovery')) {
+        toast.error("Invalid reset link", {
+          description: "This page can only be accessed from a password reset email.",
+        });
+        navigate('/login');
+      }
     }
-  }, [navigate]);
+  }, [navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +56,7 @@ const ResetPassword = () => {
     }
     
     try {
+      console.log("Attempting to update password");
       const success = await updatePassword(password);
       if (success) {
         toast.success("Password updated", {
