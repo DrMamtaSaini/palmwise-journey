@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase, handleHashRecoveryToken, checkForAuthInUrl } from "@/lib/supabase";
+import { supabase, handleAuthTokensOnLoad } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -26,27 +26,20 @@ const ResetPassword = () => {
         console.log("Verifying password reset token...");
         setIsVerifying(true);
         
-        // First, check for a hash-based recovery token (Supabase old style)
-        const hashResult = await handleHashRecoveryToken();
+        // Try to handle any auth tokens in the URL
+        const tokenResult = await handleAuthTokensOnLoad();
         
-        if (hashResult.success) {
-          console.log("Valid hash-based recovery token confirmed");
+        if (tokenResult.success) {
+          console.log("Valid auth token confirmed");
           setValidToken(true);
           setIsVerifying(false);
           return;
+        } else {
+          console.log("No valid token found:", tokenResult.message || "Unknown reason");
         }
         
-        // If no hash token, try the code parameter (Supabase new style)
-        const codeResult = await checkForAuthInUrl();
-        
-        if (codeResult.success) {
-          console.log("Valid code-based recovery token confirmed");
-          setValidToken(true);
-          setIsVerifying(false);
-          return;
-        }
-        
-        // Last resort: check if there's already a valid session
+        // If we couldn't handle the token automatically, check if there's already a valid session
+        // This is useful when the user has already processed the token but is still on the reset page
         const { data } = await supabase.auth.getSession();
         
         if (data?.session) {

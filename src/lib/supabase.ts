@@ -20,87 +20,115 @@ supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
 });
 
-// Check for hash-based recovery token in URL (Supabase old style)
-export async function handleHashRecoveryToken() {
+// Handle URL with tokens on page load
+export async function handleAuthTokensOnLoad() {
   try {
-    // Only check if there's a hash with recovery data
-    if (window.location.hash && window.location.hash.includes('access_token') && window.location.hash.includes('type=recovery')) {
-      console.log("Found recovery token in URL hash, attempting to set session");
+    // First check for a hash in the URL (most likely when coming from an email link)
+    if (window.location.hash && window.location.hash.length > 1) {
+      console.log("Found hash in URL, attempting to process");
       
-      // We need to manually extract the tokens from the hash
-      const hash = window.location.hash.substring(1); // Remove the # character
-      const params = new URLSearchParams(hash);
-      
-      // Check if this is a recovery flow
-      if (params.get('type') === 'recovery') {
-        console.log("Processing recovery token");
-        
-        // Set the recovery token
-        const { data, error } = await supabase.auth.setSession({
-          access_token: params.get('access_token') || '',
-          refresh_token: params.get('refresh_token') || ''
-        });
-        
-        if (error) {
-          console.error("Error processing recovery token:", error);
-          return { success: false, error };
-        }
-        
-        console.log("Successfully processed recovery token:", data.session ? "Session created" : "No session");
-        
-        // Clean up the URL by removing the hash and update browser history
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState(null, document.title, window.location.pathname);
-        }
-        
-        return { success: !!data.session, session: data.session };
+      // Process the hash - works for both recovery and verification
+      // This handles the case where tokens are passed in the URL hash
+      const result = await handleHashTokens();
+      if (result.success) {
+        return result;
       }
     }
     
-    return { success: false, message: "No recovery token found in URL hash" };
-  } catch (error) {
-    console.error("Exception handling recovery token:", error);
-    return { success: false, error };
-  }
-}
-
-// Check for code parameter in URL (Supabase new style)
-export async function checkForAuthInUrl() {
-  try {
-    // Check if we have a code parameter (most common for password reset)
+    // Then check for a code parameter in the URL (newer Supabase style)
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     
     if (code) {
       console.log("Code parameter found, attempting to exchange for session");
-      try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        
-        if (error) {
-          console.error("Error exchanging code for session:", error);
-          return { success: false, error };
-        }
-        
-        console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
-        
-        // Clean up the URL by removing the code parameter and update browser history
-        if (window.history && window.history.replaceState) {
-          const cleanUrl = new URL(window.location.href);
-          cleanUrl.searchParams.delete('code');
-          window.history.replaceState(null, document.title, cleanUrl.toString());
-        }
-        
-        return { success: !!data.session, session: data.session };
-      } catch (error) {
-        console.error("Exception during code exchange:", error);
-        return { success: false, error };
+      const result = await handleCodeBasedToken(code);
+      if (result.success) {
+        return result;
       }
     }
     
-    console.log("No auth code found in URL");
-    return { success: false, message: "No auth parameters found" };
+    return { success: false, message: "No auth tokens found in URL" };
   } catch (error) {
-    console.error("Exception checking for auth in URL:", error);
+    console.error("Exception handling auth tokens:", error);
     return { success: false, error };
   }
 }
+
+// Handle tokens in URL hash (like #access_token=...)
+async function handleHashTokens() {
+  try {
+    if (!window.location.hash) {
+      return { success: false, message: "No hash in URL" };
+    }
+    
+    // Remove the # character and parse the parameters
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    
+    // Check for access_token which appears in recovery and magic link flows
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type = params.get('type');
+    
+    if (accessToken) {
+      console.log("Processing hash with access token, type:", type);
+      
+      // Set the session using the tokens
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+      });
+      
+      if (error) {
+        console.error("Error processing token from hash:", error);
+        return { success: false, error };
+      }
+      
+      console.log("Successfully processed token from hash:", data.session ? "Session created" : "No session");
+      
+      // Clean up the URL by removing the hash and update browser history
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, document.title, window.location.pathname);
+      }
+      
+      return { success: !!data.session, session: data.session };
+    }
+    
+    return { success: false, message: "No access token found in hash" };
+  } catch (error) {
+    console.error("Exception handling hash tokens:", error);
+    return { success: false, error };
+  }
+}
+
+// Handle code parameter in URL (Supabase new style)
+async function handleCodeBasedToken(code: string) {
+  try {
+    console.log("Exchanging code for session");
+    
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (error) {
+      console.error("Error exchanging code for session:", error);
+      return { success: false, error };
+    }
+    
+    console.log("Successfully exchanged code for session:", data.session ? "Session created" : "No session");
+    
+    // Clean up the URL by removing the code parameter and update browser history
+    if (window.history && window.history.replaceState) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('code');
+      window.history.replaceState(null, document.title, cleanUrl.toString());
+    }
+    
+    return { success: !!data.session, session: data.session };
+  } catch (error) {
+    console.error("Exception during code exchange:", error);
+    return { success: false, error };
+  }
+}
+
+// For backward compatibility - will be deprecated
+export const handleHashRecoveryToken = handleHashTokens;
+export const checkForAuthInUrl = handleAuthTokensOnLoad;
