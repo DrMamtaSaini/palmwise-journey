@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -28,8 +29,15 @@ serve(async (req) => {
     // Generate enhanced palm analysis data
     const analysis = generateDetailedPalmAnalysis(language);
     
+    // In a real implementation, this is where you would use a translation API
+    // to translate the content based on the requested language
+    console.log(`Generated palm analysis for language: ${language}`);
+    
     return new Response(
-      JSON.stringify(analysis),
+      JSON.stringify({
+        ...analysis,
+        translationNote: `This reading was requested in ${language} language. In a production environment, the content would be translated accordingly.`
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

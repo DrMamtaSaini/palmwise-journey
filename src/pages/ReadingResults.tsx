@@ -9,6 +9,7 @@ import PaymentButton from "../components/PaymentButton";
 import PalmAnalysisService, { PalmReading } from "../services/PalmAnalysisService";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
+import { getLanguageInfo } from "../components/LanguageSelector";
 
 const ReadingResults = () => {
   const navigate = useNavigate();
@@ -73,6 +74,18 @@ const ReadingResults = () => {
     toast.success("Premium features unlocked!", {
       description: "You now have access to all premium content"
     });
+  };
+
+  // Get language info from the reading
+  const getLanguageDisplay = () => {
+    if (!reading || !reading.language) return "";
+    
+    const languageInfo = getLanguageInfo(reading.language);
+    if (!languageInfo) return reading.language;
+    
+    return languageInfo.nativeName 
+      ? `${languageInfo.nativeName} (${languageInfo.name})` 
+      : languageInfo.name;
   };
 
   // Map reading data to tabs content
@@ -265,9 +278,16 @@ const ReadingResults = () => {
               <div className="bg-white rounded-2xl shadow-soft overflow-hidden">
                 <div className="p-8">
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold mb-4 md:mb-0">Your Palm Reading</h1>
+                    <div>
+                      <h1 className="text-3xl font-bold mb-2">Your Palm Reading</h1>
+                      {reading.language && reading.language !== "english" && (
+                        <div className="text-palm-purple font-medium">
+                          {getLanguageDisplay()}
+                        </div>
+                      )}
+                    </div>
                     
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 mt-4 md:mt-0">
                       <button 
                         className="text-gray-500 hover:text-palm-purple transition-colors flex items-center"
                         onClick={() => {
