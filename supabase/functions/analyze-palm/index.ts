@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -44,7 +45,10 @@ serve(async (req) => {
       const translatedAnalysis = translatePalmAnalysis(analysis, language);
       
       return new Response(
-        JSON.stringify(translatedAnalysis),
+        JSON.stringify({
+          ...translatedAnalysis,
+          translationNote: "This is a partial translation to Hindi using a dictionary approach. Some content may still be in English."
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -72,13 +76,13 @@ serve(async (req) => {
   }
 });
 
-// New enhanced translation function that uses a basic dictionary approach
+// Enhanced translation function with improved dictionary approach
 function translatePalmAnalysis(analysis, targetLanguage) {
   if (targetLanguage === 'english') {
     return { ...analysis, language: 'english' };
   }
 
-  // Translation dictionary for Hindi
+  // Translation dictionary for Hindi with additional terms
   const hindiDictionary = {
     // Life-related terms
     'life line': 'जीवन रेखा',
@@ -93,7 +97,7 @@ function translatePalmAnalysis(analysis, targetLanguage) {
     'love': 'प्रेम',
     'emotional': 'भावनात्मक',
     // Head-related terms
-    'head line': 'मस्तिष्क ��ेखा',
+    'head line': 'मस्तिष्क रेखा',
     'intelligence': 'बुद्धि',
     'thinking': 'सोच',
     'mental': 'मानसिक',
@@ -123,11 +127,28 @@ function translatePalmAnalysis(analysis, targetLanguage) {
     'prediction': 'भविष्यवाणी',
     'insight': 'अंतर्दृष्टि',
     'remedy': 'उपाय',
-    'practice': 'अभ्यास'
+    'practice': 'अभ्यास',
+    // Additional common terms
+    'life': 'जीवन',
+    'heart': 'हृदय',
+    'head': 'मस्तिष्क',
+    'fate': 'भाग्य',
+    'success': 'सफलता',
+    'happiness': 'खुशी',
+    'family': 'परिवार',
+    'growth': 'विकास',
+    'spiritual': 'आध्यात्मिक',
+    'balance': 'संतुलन',
+    'harmony': 'सामंजस्य',
+    'wisdom': 'ज्ञान',
+    'intuition': 'अंतर्ज्ञान',
+    'positive': 'सकारात्मक',
+    'negative': 'नकारात्मक'
   };
 
   // Create a deep copy of the analysis to modify
   const translatedAnalysis = JSON.parse(JSON.stringify(analysis));
+  translatedAnalysis.language = targetLanguage;
   
   // Basic function to translate text using the dictionary
   const translateText = (text) => {
@@ -151,7 +172,7 @@ function translatePalmAnalysis(analysis, targetLanguage) {
       } else if (Array.isArray(obj[key])) {
         obj[key] = obj[key].map(item => 
           typeof item === 'string' ? translateText(item) : 
-          typeof item === 'object' ? translateObject({...item}) : item
+          typeof item === 'object' && item !== null ? translateObject({...item}) : item
         );
       } else if (typeof obj[key] === 'object' && obj[key] !== null) {
         translateObject(obj[key]);
@@ -162,10 +183,6 @@ function translatePalmAnalysis(analysis, targetLanguage) {
 
   // Translate the entire analysis object
   translateObject(translatedAnalysis);
-  
-  // Add language and translation metadata
-  translatedAnalysis.language = targetLanguage;
-  translatedAnalysis.translationNote = `This is a partial translation to Hindi using a basic dictionary approach. Some content may still be in English.`;
   
   return translatedAnalysis;
 }
