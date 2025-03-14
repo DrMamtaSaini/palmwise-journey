@@ -23,11 +23,11 @@ const ForgotPassword = () => {
 
   // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
-    console.log("Generating new code verifier in ForgotPassword");
+    console.log("Initializing ForgotPassword component");
     
     // Store a new code verifier for this page
     const codeVerifier = storeNewCodeVerifier();
-    console.log("New code verifier generated:", codeVerifier ? "success" : "failed");
+    console.log("Initial code verifier generated:", codeVerifier ? "success" : "failed");
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
@@ -52,33 +52,40 @@ const ForgotPassword = () => {
     }
 
     try {
-      // Always generate a fresh code verifier before requesting a password reset
-      console.log("Regenerating code verifier before password reset request");
+      // Generate a fresh code verifier before sending the reset link
       const codeVerifier = storeNewCodeVerifier();
-      console.log("Fresh code verifier generated:", codeVerifier ? "success" : "failed");
+      console.log("Fresh code verifier for password reset:", codeVerifier ? "success" : "failed");
       
       // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
       const redirectUrl = `${origin}/reset-password`;
       
-      console.log('Using redirect URL:', redirectUrl);
+      console.log('Using redirect URL for password reset:', redirectUrl);
       
-      // Set a flag to help identify password reset requests
-      localStorage.setItem('passwordResetRequested', 'true');
+      // Store email in local storage - this will be used to verify the reset request
       localStorage.setItem('passwordResetEmail', email);
       
-      const success = await forgotPassword(email, redirectUrl);
+      // Attempt direct Supabase call for password reset
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
       
-      if (success) {
-        setIsSubmitted(true);
-        toast.success("Reset link sent", {
-          description: "Please check your email for the password reset link.",
+      if (error) {
+        console.error("Supabase password reset error:", error);
+        toast.error("Password reset failed", {
+          description: error.message || "Please try again later.",
         });
-      } else {
-        toast.error("Request failed", {
-          description: "We couldn't send a reset link. Please try again.",
-        });
+        setLoading(false);
+        return;
       }
+      
+      // Mark password reset as requested for later verification
+      localStorage.setItem('passwordResetRequested', 'true');
+      
+      setIsSubmitted(true);
+      toast.success("Reset link sent", {
+        description: "Please check your email for the password reset link.",
+      });
     } catch (error) {
       console.error("Password reset error:", error);
       toast.error("Request failed", {
@@ -90,8 +97,8 @@ const ForgotPassword = () => {
   };
 
   const handleRetry = () => {
-    // Clear existing state and generate a new code verifier
-    console.log("Retrying with same email");
+    // Generate a new code verifier and try again with the same email
+    console.log("Retrying with same email:", email);
     storeNewCodeVerifier();
     setIsSubmitted(false);
   };
