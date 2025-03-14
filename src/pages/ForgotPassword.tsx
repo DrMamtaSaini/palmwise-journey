@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
@@ -16,13 +16,17 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLocalhost, setIsLocalhost] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { forgotPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
+    console.log("Generating new code verifier in ForgotPassword");
+    
     // Store a new code verifier for this page
-    storeNewCodeVerifier();
+    const codeVerifier = storeNewCodeVerifier();
+    console.log("New code verifier generated:", codeVerifier ? "success" : "failed");
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
@@ -31,15 +35,22 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!email) {
       toast.error("Email required", {
         description: "Please enter your email address.",
       });
+      setLoading(false);
       return;
     }
 
     try {
+      // Always generate a fresh code verifier before requesting a password reset
+      console.log("Regenerating code verifier before password reset request");
+      const codeVerifier = storeNewCodeVerifier();
+      console.log("Fresh code verifier generated:", codeVerifier ? "success" : "failed");
+      
       // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
       const redirectUrl = `${origin}/reset-password`;
@@ -48,6 +59,7 @@ const ForgotPassword = () => {
       
       // Set a flag to help identify password reset requests
       localStorage.setItem('passwordResetRequested', 'true');
+      localStorage.setItem('passwordResetEmail', email);
       
       const success = await forgotPassword(email, redirectUrl);
       
@@ -56,13 +68,25 @@ const ForgotPassword = () => {
         toast.success("Reset link sent", {
           description: "Please check your email for the password reset link.",
         });
+      } else {
+        toast.error("Request failed", {
+          description: "We couldn't send a reset link. Please try again.",
+        });
       }
     } catch (error) {
       console.error("Password reset error:", error);
       toast.error("Request failed", {
         description: "We couldn't send a reset link. Please try again later.",
       });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    // Clear existing state and generate a new code verifier
+    storeNewCodeVerifier();
+    setIsSubmitted(false);
   };
 
   return (
@@ -110,6 +134,16 @@ const ForgotPassword = () => {
                 <div className="flex flex-col space-y-3">
                   <Button
                     type="button"
+                    onClick={handleRetry}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RefreshCw size={18} className="mr-2" />
+                    Try again with same email
+                  </Button>
+
+                  <Button
+                    type="button"
                     onClick={() => setIsSubmitted(false)}
                     variant="outline"
                     className="w-full"
@@ -145,11 +179,14 @@ const ForgotPassword = () => {
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || loading}
                   className="w-full bg-palm-purple hover:bg-palm-purple/90"
                 >
-                  {isLoading ? (
-                    <span className="animate-pulse">Sending...</span>
+                  {isLoading || loading ? (
+                    <span className="flex items-center">
+                      <RefreshCw size={18} className="mr-2 animate-spin" />
+                      Sending...
+                    </span>
                   ) : (
                     <>
                       <Send size={18} className="mr-2" />
