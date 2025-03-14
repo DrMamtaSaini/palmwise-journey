@@ -25,9 +25,15 @@ const ResetPassword = () => {
     console.log("ResetPassword component mounted");
     console.log("Current URL params:", Object.fromEntries(searchParams.entries()));
     console.log("Password reset requested flag:", localStorage.getItem('passwordResetRequested'));
+    console.log("Password reset timestamp:", localStorage.getItem('passwordResetTimestamp'));
     
-    // Display full URL for debugging
-    console.log("Full URL:", window.location.href);
+    // Display full URL for debugging (but mask sensitive parts)
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get('code');
+    if (code) {
+      url.searchParams.set('code', code.substring(0, 5) + '...');
+    }
+    console.log("Full URL (sanitized):", url.toString());
 
     // If this was loaded directly (not from a link), re-generate verifier
     if (!searchParams.has('code')) {
@@ -50,7 +56,7 @@ const ResetPassword = () => {
   useEffect(() => {
     async function verifyResetToken() {
       try {
-        console.log("Verifying password reset token...");
+        console.log("=========== VERIFYING PASSWORD RESET TOKEN ===========");
         console.log("Current URL:", window.location.href);
         setIsVerifying(true);
         
@@ -59,7 +65,7 @@ const ResetPassword = () => {
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
         
-        console.log("Code from URL:", code ? "present" : "missing");
+        console.log("Code from URL:", code ? "present (starts with " + code.substring(0, 5) + "...)" : "missing");
         console.log("Error from URL:", error || "none");
         console.log("Error description:", errorDescription || "none");
         
@@ -68,6 +74,8 @@ const ResetPassword = () => {
         console.log("Code verifier from localStorage:", codeVerifier ? "exists" : "missing");
         if (codeVerifier) {
           console.log("Verifier length:", codeVerifier.length);
+        } else {
+          console.log("No code verifier found, this will likely cause an error when exchanging the code");
         }
         
         // If there's an error in the URL, show it
@@ -77,6 +85,21 @@ const ResetPassword = () => {
           setValidToken(false);
           setIsVerifying(false);
           return;
+        }
+        
+        // Check if the password reset was requested recently (within last 15 minutes)
+        const resetTimestamp = localStorage.getItem('passwordResetTimestamp');
+        let validResetRequest = false;
+        
+        if (resetTimestamp) {
+          const requestTime = new Date(resetTimestamp).getTime();
+          const now = new Date().getTime();
+          const fifteenMinutes = 15 * 60 * 1000;
+          validResetRequest = (now - requestTime) < fifteenMinutes;
+          console.log("Password reset was requested:", resetTimestamp);
+          console.log("Is recent request (< 15min):", validResetRequest);
+        } else {
+          console.log("No password reset timestamp found");
         }
         
         if (code) {
@@ -93,11 +116,12 @@ const ResetPassword = () => {
               setValidToken(false);
               setIsVerifying(false);
               
-              // Store more diagnostic info
+              // Store diagnostic info for debugging
               localStorage.setItem('resetPasswordError', JSON.stringify({
                 error: error.message,
-                code: code.substring(0, 10) + "...",
+                code: code.substring(0, 5) + "...",
                 hasVerifier: !!codeVerifier,
+                verifierLength: codeVerifier ? codeVerifier.length : 0,
                 timestamp: new Date().toISOString()
               }));
               return;
@@ -125,25 +149,24 @@ const ResetPassword = () => {
             setTokenError("Error processing reset code. The code may be invalid or expired.");
             setValidToken(false);
           }
-        } else {
-          console.log("No reset code found, checking session");
+        } else if (validResetRequest) {
+          console.log("No reset code found, but a recent reset was requested");
           
           // Check if there's already a valid session
           const { data: sessionData } = await supabase.auth.getSession();
           
           if (sessionData?.session) {
-            console.log("User already has a valid session");
+            console.log("User has a valid session, allowing password reset");
             setValidToken(true);
           } else {
-            console.log("No valid token or session found");
-            const resetRequested = localStorage.getItem('passwordResetRequested');
-            if (resetRequested === 'true') {
-              setTokenError("No reset code found in URL. The link may be invalid or you may need to request a new reset link.");
-            } else {
-              setTokenError("No password reset has been requested or the link is invalid.");
-            }
+            console.log("No valid session found");
+            setTokenError("No reset code found in URL. Please check your email and click the reset link.");
             setValidToken(false);
           }
+        } else {
+          console.log("No valid token or recent reset request found");
+          setTokenError("No password reset has been requested recently or the link is invalid.");
+          setValidToken(false);
         }
       } catch (error) {
         console.error("Error in token verification:", error);
@@ -181,7 +204,7 @@ const ResetPassword = () => {
       console.log("Attempting to update password");
       
       // Direct update through supabase
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: password
       });
       
@@ -194,6 +217,8 @@ const ResetPassword = () => {
         return;
       }
       
+      console.log("Password updated successfully:", data ? "User data updated" : "No data returned");
+      
       // Success!
       toast.success("Password updated successfully", {
         description: "You can now log in with your new password."
@@ -202,6 +227,8 @@ const ResetPassword = () => {
       // Clean up
       localStorage.removeItem('passwordResetRequested');
       localStorage.removeItem('passwordResetEmail');
+      localStorage.removeItem('passwordResetTimestamp');
+      localStorage.removeItem('resetPasswordError');
       
       // Redirect to login after success
       setTimeout(() => {

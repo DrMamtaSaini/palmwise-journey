@@ -19,6 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    storage: window.localStorage,
     debug: isDevelopment
   }
 });
@@ -40,6 +41,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
     localStorage.setItem('passwordResetRequested', 'true');
+    localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
     
     // Redirect to reset password page if we're not already there
     if (!window.location.pathname.includes('reset-password')) {
@@ -50,6 +52,8 @@ supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN') {
     console.log("User signed in successfully!");
     localStorage.removeItem('passwordResetRequested');
+    localStorage.removeItem('passwordResetTimestamp');
+    localStorage.removeItem('passwordResetEmail');
   }
 });
 
@@ -72,7 +76,12 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     const error = params.get('error');
     const errorDescription = params.get('error_description');
     
-    console.log("URL parameters:", { code: code ? "exists" : "missing", type, error, errorDescription });
+    console.log("URL parameters:", { 
+      code: code ? code.substring(0, 5) + "..." : "missing", 
+      type, 
+      error, 
+      errorDescription 
+    });
     
     // If error params exist, return early with error
     if (error && errorDescription) {
@@ -87,22 +96,26 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     if (type === 'recovery') {
       console.log("This appears to be a password reset link");
       localStorage.setItem('passwordResetRequested', 'true');
+      localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
     }
     
     if (code) {
-      console.log("Code parameter found:", code.substring(0, 10) + "...");
+      console.log("Code parameter found:", code.substring(0, 5) + "...");
       
       // Store code verifier from localStorage if available
       const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
-      console.log("Code verifier found in localStorage:", !!codeVerifier);
+      console.log("Code verifier found in localStorage:", codeVerifier ? "Yes" : "No");
       
-      if (!codeVerifier) {
+      if (codeVerifier) {
+        console.log("Verifier length:", codeVerifier.length);
+      } else {
         console.warn("No code verifier found in localStorage, creating a new one");
         storeNewCodeVerifier();
       }
       
       try {
         // Try to exchange the code for a session
+        console.log("Attempting to exchange code for session...");
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         
         if (error) {
@@ -182,12 +195,21 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
   }
 }
 
+// Helper function to generate a secure random string for PKCE
+function generateSecureString(length: number): string {
+  const array = new Uint8Array(length);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => 
+    ('0' + (byte & 0xFF).toString(16)).slice(-2)
+  ).join('');
+}
+
 // Helper function to generate a code verifier for PKCE flow
 export function generateCodeVerifier(): string {
-  const array = new Uint8Array(64); // Use 64 bytes for better security
-  window.crypto.getRandomValues(array);
-  const verifier = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-  return verifier;
+  // Generate a string that is 43-128 characters long
+  // Using 64 bytes (128 hex chars) for better security
+  const secureString = generateSecureString(64);
+  return secureString;
 }
 
 // Store a new code verifier in local storage

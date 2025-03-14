@@ -26,12 +26,34 @@ const AuthRedirectHandler = () => {
   const location = useLocation();
   
   useEffect(() => {
+    console.log("============ AUTH REDIRECT HANDLER ===========");
+    console.log("Current path:", location.pathname);
+    console.log("Current search:", location.search);
+    
     const handleAuthRedirect = async () => {
-      // Always generate a fresh code verifier if we're on the reset password page
-      // This ensures we have a valid verifier available when handling tokens
-      if (location.pathname === '/reset-password') {
-        console.log('On reset password page, ensuring we have a fresh code verifier');
-        storeNewCodeVerifier();
+      // Check if we're at the reset password page or have a code parameter
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const type = params.get('type');
+      
+      // Always ensure we have a code verifier available if there's a code in the URL
+      if (code) {
+        const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+        if (!codeVerifier) {
+          console.log("Code detected in URL but no verifier found - generating new one");
+          storeNewCodeVerifier();
+        } else {
+          console.log("Code and verifier both present, good!");
+        }
+      }
+      
+      // Always generate a fresh code verifier if we're on the reset or forgot password pages
+      // This ensures we have a valid verifier available for the next request
+      if (location.pathname === '/reset-password' || location.pathname === '/forgot-password') {
+        if (!code) {
+          console.log(`On ${location.pathname} page, ensuring we have a fresh code verifier`);
+          storeNewCodeVerifier();
+        }
       }
       
       // Check for auth tokens in the URL and handle them
@@ -40,10 +62,6 @@ const AuthRedirectHandler = () => {
       
       // If URL contains a code parameter and we're not on the reset password page
       // redirect to reset-password page with the code
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const type = params.get('type');
-      
       if (code && type === 'recovery' && !location.pathname.includes('reset-password')) {
         console.log('Detected password reset code, redirecting to reset page');
         navigate(`/reset-password?code=${code}`, { replace: true });

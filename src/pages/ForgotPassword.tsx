@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
@@ -17,17 +16,16 @@ const ForgotPassword = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLocalhost, setIsLocalhost] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { forgotPassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
     console.log("Initializing ForgotPassword component");
     
-    // Store a new code verifier for this page
+    // Always generate a fresh code verifier when this page loads
     const codeVerifier = storeNewCodeVerifier();
     console.log("Initial code verifier generated:", codeVerifier ? "success" : "failed");
+    console.log("Verifier length:", codeVerifier.length);
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
@@ -54,7 +52,8 @@ const ForgotPassword = () => {
     try {
       // Generate a fresh code verifier before sending the reset link
       const codeVerifier = storeNewCodeVerifier();
-      console.log("Fresh code verifier for password reset:", codeVerifier ? "success" : "failed");
+      console.log("Fresh code verifier for password reset:", codeVerifier);
+      console.log("Verifier length:", codeVerifier.length);
       
       // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
@@ -65,10 +64,18 @@ const ForgotPassword = () => {
       // Store email in local storage - this will be used to verify the reset request
       localStorage.setItem('passwordResetEmail', email);
       
-      // Attempt direct Supabase call for password reset
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Use Supabase auth for password reset
+      console.log("Calling Supabase resetPasswordForEmail with:", {
+        email,
+        redirectUrl,
+        codeVerifierExists: !!codeVerifier
+      });
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
+      
+      console.log("Reset password response:", data ? "Success" : "No data", error ? `Error: ${error.message}` : "No error");
       
       if (error) {
         console.error("Supabase password reset error:", error);
@@ -81,6 +88,7 @@ const ForgotPassword = () => {
       
       // Mark password reset as requested for later verification
       localStorage.setItem('passwordResetRequested', 'true');
+      localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
       
       setIsSubmitted(true);
       toast.success("Reset link sent", {
@@ -193,10 +201,10 @@ const ForgotPassword = () => {
 
                 <Button
                   type="submit"
-                  disabled={isLoading || loading}
+                  disabled={loading}
                   className="w-full bg-palm-purple hover:bg-palm-purple/90"
                 >
-                  {isLoading || loading ? (
+                  {loading ? (
                     <span className="flex items-center">
                       <RefreshCw size={18} className="mr-2 animate-spin" />
                       Sending...
