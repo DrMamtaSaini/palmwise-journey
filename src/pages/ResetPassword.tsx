@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
+import { supabase, storeNewCodeVerifier } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -23,17 +23,19 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Generate code verifier and challenge for PKCE flow
-    const generateCodeVerifier = () => {
-      const array = new Uint8Array(32);
-      window.crypto.getRandomValues(array);
-      return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-    };
+    // Store a new code verifier for potential future auth exchanges
+    storeNewCodeVerifier();
     
-    const codeVerifier = generateCodeVerifier();
-    localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
-    
-    console.log("Generated new code verifier for reset password page");
+    // Clear up the URL by removing the error parameter if any
+    if (window.history && window.history.replaceState) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('error') || params.has('error_description')) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('error');
+        cleanUrl.searchParams.delete('error_description');
+        window.history.replaceState(null, document.title, cleanUrl.toString());
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -61,12 +63,36 @@ const ResetPassword = () => {
           console.log("Found code parameter in URL:", code.substring(0, 10) + "...");
           
           try {
-            // Try to verify the token without exchanging it yet
-            // We'll just mark it as valid and let the updatePassword handle the exchange
+            // Try to exchange the code for a session
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            
+            if (error) {
+              console.error("Error exchanging code for session:", error);
+              setTokenError(error.message || "Invalid reset code");
+              setValidToken(false);
+              setIsVerifying(false);
+              return;
+            }
+            
+            if (!data.session) {
+              console.warn("Code exchange succeeded but no session was returned");
+              setTokenError("Authentication succeeded but no session was created");
+              setValidToken(false);
+              setIsVerifying(false);
+              return;
+            }
+            
+            console.log("Successfully exchanged code for session");
             setValidToken(true);
-            localStorage.setItem('passwordResetCode', code);
+            
+            // Clean up the URL by removing the code parameter
+            if (window.history && window.history.replaceState) {
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete('code');
+              window.history.replaceState(null, document.title, cleanUrl.toString());
+            }
           } catch (exchangeError) {
-            console.error("Exception during code verification:", exchangeError);
+            console.error("Exception during code exchange:", exchangeError);
             setTokenError("Error processing reset code");
             setValidToken(false);
           }
@@ -116,26 +142,33 @@ const ResetPassword = () => {
     
     try {
       console.log("Attempting to update password");
-      const success = await updatePassword(password);
       
-      if (success) {
-        toast.success("Password updated successfully", {
-          description: "You can now log in with your new password."
-        });
-        
-        // Clean up
-        localStorage.removeItem('passwordResetRequested');
-        localStorage.removeItem('passwordResetCode');
-        
-        // Redirect to login after success
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      } else {
+      // Direct update through supabase instead of using the hook
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      
+      if (error) {
+        console.error("Password update error from Supabase:", error);
         toast.error("Failed to update password", {
-          description: "Please try again or request a new reset link."
+          description: error.message || "Please try again or request a new reset link."
         });
+        return;
       }
+      
+      // Success!
+      toast.success("Password updated successfully", {
+        description: "You can now log in with your new password."
+      });
+      
+      // Clean up
+      localStorage.removeItem('passwordResetRequested');
+      localStorage.removeItem('passwordResetCode');
+      
+      // Redirect to login after success
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (error) {
       console.error("Password update error:", error);
       toast.error("Password update failed", {

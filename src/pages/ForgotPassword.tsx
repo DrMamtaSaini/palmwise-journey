@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { storeNewCodeVerifier } from "@/lib/supabase";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -20,16 +21,8 @@ const ForgotPassword = () => {
 
   // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
-    const generateCodeVerifier = () => {
-      const array = new Uint8Array(32);
-      window.crypto.getRandomValues(array);
-      return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-    };
-    
-    const codeVerifier = generateCodeVerifier();
-    localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
-    
-    console.log("Generated new code verifier for forgot password page");
+    // Store a new code verifier for this page
+    storeNewCodeVerifier();
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;

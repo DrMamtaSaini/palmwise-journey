@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // This needs to be true for code exchanges to work properly
+    detectSessionInUrl: true,
     debug: isDevelopment
   }
 });
@@ -117,6 +117,22 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
           window.history.replaceState(null, document.title, cleanUrl.toString());
         }
         
+        // Check if this was a password reset request
+        if (localStorage.getItem('passwordResetRequested') === 'true') {
+          console.log("This appears to be a password reset request");
+          
+          // Redirect to reset password page if not already there
+          if (!window.location.pathname.includes('reset-password')) {
+            window.location.href = `${window.location.origin}/reset-password`;
+          }
+          
+          return { 
+            success: true, 
+            session: data.session,
+            message: "Session created successfully for password reset" 
+          };
+        }
+        
         return { 
           success: true, 
           session: data.session,
@@ -132,9 +148,36 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
       }
     }
     
+    // If we have a passwordResetRequested flag but no code, we might need to inform the user
+    if (localStorage.getItem('passwordResetRequested') === 'true' && !code) {
+      // Check if we're on the reset-password page
+      if (window.location.pathname.includes('reset-password')) {
+        console.log("On reset password page but no code parameter found.");
+        return { 
+          success: false,
+          message: "No reset code found in URL. Please request a new password reset link."
+        };
+      }
+    }
+    
     return { success: false, message: "No auth tokens found in URL" };
   } catch (error) {
     console.error("Exception handling auth tokens:", error);
     return { success: false, error, message: "Error processing authentication tokens" };
   }
+}
+
+// Helper function to generate a code verifier for PKCE flow
+export function generateCodeVerifier(): string {
+  const array = new Uint8Array(32);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// Store a new code verifier in local storage
+export function storeNewCodeVerifier(): string {
+  const codeVerifier = generateCodeVerifier();
+  localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+  console.log("Generated and stored new code verifier");
+  return codeVerifier;
 }

@@ -15,6 +15,7 @@ import UploadPalm from "./pages/UploadPalm";
 import ReadingResults from "./pages/ReadingResults";
 import NotFound from "./pages/NotFound";
 import DebugSetup from "./pages/DebugSetup";
+import { handleAuthTokensOnLoad } from "./lib/supabase";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -26,14 +27,26 @@ const AuthRedirectHandler = () => {
   
   useEffect(() => {
     const handleAuthRedirect = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
+      // Check for auth tokens in the URL and handle them
+      const result = await handleAuthTokensOnLoad();
+      console.log("Auth token handler result:", result);
       
-      if (code) {
-        // Check if this might be a password reset link
-        const isPasswordReset = localStorage.getItem('passwordResetRequested') === 'true';
+      if (result.success) {
+        console.log("Successfully processed auth tokens");
         
-        if (isPasswordReset && !location.pathname.includes('reset-password')) {
+        // If this is a password reset and we're not on the reset page, redirect
+        if (localStorage.getItem('passwordResetRequested') === 'true' && 
+            !location.pathname.includes('reset-password')) {
+          console.log('Detected password reset scenario, redirecting to reset page');
+          navigate('/reset-password', { replace: true });
+        }
+      } else {
+        // Check if this is a potential password reset attempt from the URL
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        
+        if (code && localStorage.getItem('passwordResetRequested') === 'true' &&
+            !location.pathname.includes('reset-password')) {
           console.log('Detected password reset code, redirecting to reset page');
           navigate(`/reset-password?code=${code}`, { replace: true });
         }
