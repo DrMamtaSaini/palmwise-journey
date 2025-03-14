@@ -28,8 +28,6 @@ console.log("Current origin:", window.location.origin);
 
 // Get the origin that should be used for auth redirects
 export const getRedirectOrigin = () => {
-  // Just use the current origin, regardless of port
-  // This simplifies configuration and avoids port mismatch issues
   return window.location.origin;
 };
 
@@ -37,19 +35,12 @@ export const getRedirectOrigin = () => {
 supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
   
-  // Additional logging for specific events
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
-    console.log("Session details:", session);
   }
   
   if (event === 'SIGNED_IN') {
     console.log("User signed in successfully!");
-    console.log("User details:", session?.user);
-  }
-  
-  if (event === 'TOKEN_REFRESHED') {
-    console.log("Token refreshed event detected!");
   }
 });
 
@@ -68,19 +59,22 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     // First check for a code parameter in the URL (preferred method)
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    // If error params exist, return early with error
+    if (error && errorDescription) {
+      console.error(`Error in URL: ${error} - ${errorDescription}`);
+      return { 
+        success: false, 
+        message: errorDescription
+      };
+    }
     
     if (code) {
       console.log("Code parameter found:", code.substring(0, 10) + "...");
       try {
-        // For localhost, provide special handling
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        if (isLocalhost) {
-          console.log("⚠️ Localhost detected - this environment often has issues with password reset");
-          console.log("Attempting to exchange code for session anyway...");
-        }
-        
-        // Try the standard flow first
+        // Try the standard flow
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         
         if (error) {
@@ -116,17 +110,6 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
         };
       } catch (error) {
         console.error("Exception during code exchange:", error);
-        
-        // For localhost, add special instructions
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isLocalhost) {
-          return {
-            success: false,
-            error,
-            message: "Error on localhost - open the reset link in production or configure Supabase Site URL for localhost"
-          };
-        }
-        
         return { 
           success: false, 
           error, 
@@ -135,14 +118,63 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
       }
     }
     
-    // Then check for a hash in the URL (older style, backup method)
+    // Check for a hash in the URL (older style, backup method)
     if (window.location.hash && window.location.hash.length > 1) {
       console.log("Found hash in URL:", window.location.hash);
       
-      // Process the hash - works for both recovery and verification
-      // This handles the case where tokens are passed in the URL hash
-      const result = await handleHashTokens();
-      return result;
+      // Extract tokens from the hash
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const type = params.get('type');
+      
+      if (accessToken) {
+        console.log("Found access token in hash, setting session");
+        
+        try {
+          // Set the session using the tokens
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+          
+          if (error) {
+            console.error("Error setting session from hash:", error);
+            return { 
+              success: false, 
+              error, 
+              message: `Error setting session: ${error.message}` 
+            };
+          }
+          
+          // Clean up the URL by removing the hash
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, window.location.pathname);
+          }
+          
+          return { 
+            success: !!data.session, 
+            session: data.session,
+            message: data.session ? "Session created successfully" : "No session created" 
+          };
+        } catch (error) {
+          console.error("Exception handling hash tokens:", error);
+          return { 
+            success: false, 
+            error, 
+            message: "Error processing hash tokens" 
+          };
+        }
+      } else if (type === 'recovery') {
+        // This might be a recovery flow without tokens directly in the URL
+        console.log("Recovery flow detected in hash, but no tokens found");
+        return { 
+          success: true, 
+          message: "Recovery flow detected" 
+        };
+      }
     }
     
     return { success: false, message: "No auth tokens found in URL" };
@@ -151,80 +183,3 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     return { success: false, error, message: "Error processing authentication tokens" };
   }
 }
-
-// Handle tokens in URL hash (like #access_token=...)
-async function handleHashTokens(): Promise<AuthTokenHandlerResult> {
-  try {
-    if (!window.location.hash) {
-      return { success: false, message: "No hash in URL" };
-    }
-    
-    // Remove the # character and parse the parameters
-    const hash = window.location.hash.substring(1);
-    
-    // Log the raw hash for debugging
-    console.log("Processing hash:", hash);
-    
-    // Handle multiple formats - some implementations use URLSearchParams format, others use direct hash
-    let accessToken = '';
-    let refreshToken = '';
-    let type = '';
-    
-    if (hash.includes('=')) {
-      // Standard format with key=value pairs
-      const params = new URLSearchParams(hash);
-      accessToken = params.get('access_token') || '';
-      refreshToken = params.get('refresh_token') || '';
-      
-      // Also check for type=recovery which indicates a password reset flow
-      type = params.get('type') || '';
-      if (type === 'recovery') {
-        console.log("Recovery flow detected in hash");
-      }
-    } else if (hash.startsWith('eyJ')) {
-      // Raw JWT token
-      accessToken = hash;
-    }
-    
-    if (accessToken) {
-      console.log("Found access token in hash, setting session");
-      
-      // Set the session using the tokens
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      
-      if (error) {
-        console.error("Error processing token from hash:", error);
-        return { 
-          success: false, 
-          error, 
-          message: `Error setting session: ${error.message}` 
-        };
-      }
-      
-      console.log("Successfully processed token from hash:", data.session ? "Session created" : "No session");
-      
-      // Clean up the URL by removing the hash and update browser history
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, document.title, window.location.pathname);
-      }
-      
-      return { 
-        success: !!data.session, 
-        session: data.session,
-        message: data.session ? "Session created successfully" : "No session created" 
-      };
-    }
-    
-    return { success: false, message: "No access token found in hash" };
-  } catch (error) {
-    console.error("Exception handling hash tokens:", error);
-    return { success: false, error, message: "Error processing hash tokens" };
-  }
-}
-
-// For backward compatibility - will be deprecated
-export const handleHashRecoveryToken = handleHashTokens;
-export const checkForAuthInUrl = handleAuthTokensOnLoad;

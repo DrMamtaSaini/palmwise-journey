@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, Save } from "lucide-react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
@@ -20,6 +20,7 @@ const ResetPassword = () => {
   const [tokenError, setTokenError] = useState<string | null>(null);
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     async function verifyResetToken() {
@@ -29,8 +30,18 @@ const ResetPassword = () => {
         setIsVerifying(true);
         
         // Check for code parameter in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+        const code = searchParams.get('code');
+        const error = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
+        
+        // If there's an error in the URL, show it
+        if (error && errorDescription) {
+          console.error(`Error in URL: ${error} - ${errorDescription}`);
+          setTokenError(errorDescription);
+          setValidToken(false);
+          setIsVerifying(false);
+          return;
+        }
         
         if (code) {
           console.log("Found code parameter in URL:", code.substring(0, 10) + "...");
@@ -57,24 +68,27 @@ const ResetPassword = () => {
             setValidToken(false);
           }
         } else {
-          // Try to handle any auth tokens in the URL if no code parameter
+          // Try to handle any auth tokens in the URL hash
           console.log("No code parameter, checking for hash tokens");
-          const tokenResult = await handleAuthTokensOnLoad();
-          console.log("Token handling result:", tokenResult);
           
-          if (tokenResult.success) {
-            console.log("Valid auth token confirmed");
+          // Check if there's already a valid session
+          const { data: sessionData } = await supabase.auth.getSession();
+          
+          if (sessionData?.session) {
+            console.log("User already has a valid session");
             setValidToken(true);
           } else {
-            // Check if there's already a valid session
-            const { data } = await supabase.auth.getSession();
+            // Process any hash tokens (#access_token=...)
+            const tokenResult = await handleAuthTokensOnLoad();
+            console.log("Token handling result:", tokenResult);
             
-            if (data?.session) {
-              console.log("User already has a valid session");
+            if (tokenResult.success) {
+              console.log("Valid auth token confirmed");
               setValidToken(true);
             } else {
               console.log("No valid token or session found");
-              setTokenError("Invalid or expired reset link");
+              const errorMsg = tokenResult.message || "Invalid or expired reset link";
+              setTokenError(errorMsg);
               setValidToken(false);
             }
           }
@@ -89,7 +103,7 @@ const ResetPassword = () => {
     }
     
     verifyResetToken();
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,7 +249,10 @@ const ResetPassword = () => {
             ) : (
               <div className="space-y-6">
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-                  <p className="font-medium">Invalid or expired reset link</p>
+                  <p className="font-medium flex items-center">
+                    <AlertCircle size={18} className="mr-2" />
+                    Invalid or expired reset link
+                  </p>
                   <p className="text-sm mt-1">
                     {tokenError || "Please request a new password reset link from the login page."}
                   </p>
