@@ -9,15 +9,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Using fallback Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables for production.');
 }
 
-// Create and export the Supabase client
+// Determine if we're in a development environment
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// Create and export the Supabase client with appropriate configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     flowType: 'pkce',
     autoRefreshToken: true,
-    detectSessionInUrl: false, // Changed to false to handle redirects manually
     persistSession: true,
-    // Add debug mode for development environments
-    debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    detectSessionInUrl: true, // This needs to be true for code exchanges to work properly
+    debug: isDevelopment
   }
 });
 
@@ -37,6 +39,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
+    localStorage.setItem('passwordResetRequested', 'true');
     
     // Redirect to reset password page if we're not already there
     if (!window.location.pathname.includes('reset-password')) {
@@ -46,6 +49,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   
   if (event === 'SIGNED_IN') {
     console.log("User signed in successfully!");
+    localStorage.removeItem('passwordResetRequested');
   }
 });
 
@@ -79,22 +83,12 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     if (code) {
       console.log("Code parameter found:", code.substring(0, 10) + "...");
       
-      // Check if this is a password reset link
-      const isPasswordReset = document.referrer.includes('mail') || 
-                             localStorage.getItem('passwordResetRequested') === 'true';
-      
-      // If it looks like a password reset and we're not on the reset page, redirect
-      if (isPasswordReset && !window.location.pathname.includes('reset-password')) {
-        console.log("Password reset code detected, redirecting to reset page");
-        window.location.href = `${window.location.origin}/reset-password?code=${code}`;
-        return { 
-          success: true, 
-          message: "Redirecting to password reset page" 
-        };
-      }
+      // Store code verifier from localStorage if available
+      const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+      console.log("Code verifier found in localStorage:", !!codeVerifier);
       
       try {
-        // Try the standard flow
+        // Try to exchange the code for a session
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         
         if (error) {
@@ -134,65 +128,6 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
           success: false, 
           error, 
           message: "Error exchanging code for session" 
-        };
-      }
-    }
-    
-    // Check for a hash in the URL (older style, backup method)
-    if (window.location.hash && window.location.hash.length > 1) {
-      console.log("Found hash in URL:", window.location.hash);
-      
-      // Extract tokens from the hash
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-      const type = params.get('type');
-      
-      if (accessToken) {
-        console.log("Found access token in hash, setting session");
-        
-        try {
-          // Set the session using the tokens
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || '',
-          });
-          
-          if (error) {
-            console.error("Error setting session from hash:", error);
-            return { 
-              success: false, 
-              error, 
-              message: `Error setting session: ${error.message}` 
-            };
-          }
-          
-          // Clean up the URL by removing the hash
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, document.title, window.location.pathname);
-          }
-          
-          return { 
-            success: !!data.session, 
-            session: data.session,
-            message: data.session ? "Session created successfully" : "No session created" 
-          };
-        } catch (error) {
-          console.error("Exception handling hash tokens:", error);
-          return { 
-            success: false, 
-            error, 
-            message: "Error processing hash tokens" 
-          };
-        }
-      } else if (type === 'recovery') {
-        // This might be a recovery flow without tokens directly in the URL
-        console.log("Recovery flow detected in hash, but no tokens found");
-        return { 
-          success: true, 
-          message: "Recovery flow detected" 
         };
       }
     }

@@ -18,7 +18,19 @@ const ForgotPassword = () => {
   const { forgotPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
+    const generateCodeVerifier = () => {
+      const array = new Uint8Array(32);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    };
+    
+    const codeVerifier = generateCodeVerifier();
+    localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+    
+    console.log("Generated new code verifier for forgot password page");
+    
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
     setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');

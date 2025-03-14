@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, Save, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Save, AlertCircle, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase, handleAuthTokensOnLoad } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -21,6 +21,20 @@ const ResetPassword = () => {
   const { updatePassword, isLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Generate code verifier and challenge for PKCE flow
+    const generateCodeVerifier = () => {
+      const array = new Uint8Array(32);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    };
+    
+    const codeVerifier = generateCodeVerifier();
+    localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+    
+    console.log("Generated new code verifier for reset password page");
+  }, []);
 
   useEffect(() => {
     async function verifyResetToken() {
@@ -47,29 +61,17 @@ const ResetPassword = () => {
           console.log("Found code parameter in URL:", code.substring(0, 10) + "...");
           
           try {
-            // Try to exchange the code for a session
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (error) {
-              console.error("Error exchanging code:", error);
-              setTokenError(`Error: ${error.message}`);
-              setValidToken(false);
-            } else if (data?.session) {
-              console.log("Successfully exchanged code for session");
-              setValidToken(true);
-            } else {
-              console.log("No session returned after code exchange");
-              setTokenError("No valid session created from reset link");
-              setValidToken(false);
-            }
+            // Try to verify the token without exchanging it yet
+            // We'll just mark it as valid and let the updatePassword handle the exchange
+            setValidToken(true);
+            localStorage.setItem('passwordResetCode', code);
           } catch (exchangeError) {
-            console.error("Exception during code exchange:", exchangeError);
+            console.error("Exception during code verification:", exchangeError);
             setTokenError("Error processing reset code");
             setValidToken(false);
           }
         } else {
-          // Try to handle any auth tokens in the URL hash
-          console.log("No code parameter, checking for hash tokens");
+          console.log("No reset code found, checking session");
           
           // Check if there's already a valid session
           const { data: sessionData } = await supabase.auth.getSession();
@@ -78,19 +80,9 @@ const ResetPassword = () => {
             console.log("User already has a valid session");
             setValidToken(true);
           } else {
-            // Process any hash tokens (#access_token=...)
-            const tokenResult = await handleAuthTokensOnLoad();
-            console.log("Token handling result:", tokenResult);
-            
-            if (tokenResult.success) {
-              console.log("Valid auth token confirmed");
-              setValidToken(true);
-            } else {
-              console.log("No valid token or session found");
-              const errorMsg = tokenResult.message || "Invalid or expired reset link";
-              setTokenError(errorMsg);
-              setValidToken(false);
-            }
+            console.log("No valid token or session found");
+            setTokenError("No reset code found. Please request a new password reset link.");
+            setValidToken(false);
           }
         }
       } catch (error) {
@@ -131,6 +123,10 @@ const ResetPassword = () => {
           description: "You can now log in with your new password."
         });
         
+        // Clean up
+        localStorage.removeItem('passwordResetRequested');
+        localStorage.removeItem('passwordResetCode');
+        
         // Redirect to login after success
         setTimeout(() => {
           navigate('/login');
@@ -146,6 +142,10 @@ const ResetPassword = () => {
         description: "Please try again later."
       });
     }
+  };
+
+  const handleRequestNewLink = () => {
+    navigate('/forgot-password');
   };
 
   if (isVerifying) {
@@ -263,16 +263,13 @@ const ResetPassword = () => {
                   )}
                 </div>
                 
-                <div className="text-center">
-                  <Link to="/forgot-password">
-                    <Button 
-                      variant="outline" 
-                      className="mt-4 w-full"
-                    >
-                      Request New Reset Link
-                    </Button>
-                  </Link>
-                </div>
+                <Button 
+                  onClick={handleRequestNewLink}
+                  className="w-full"
+                >
+                  <RefreshCcw size={18} className="mr-2" />
+                  Request New Reset Link
+                </Button>
               </div>
             )}
           </div>
