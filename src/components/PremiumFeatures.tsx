@@ -17,16 +17,20 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [paypalClientId, setPaypalClientId] = useState<string>("sb");
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
     async function fetchPayPalClientId() {
       try {
+        console.log("Component: Fetching PayPal client ID...");
         const clientId = await getPayPalClientId();
+        console.log("Component: Received PayPal client ID:", clientId);
         setPaypalClientId(clientId);
       } catch (error) {
-        console.error("Failed to fetch PayPal client ID:", error);
+        console.error("Component: Failed to fetch PayPal client ID:", error);
         setPaypalClientId("sb");
+        setPaymentError(`Error fetching PayPal client ID: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     
@@ -35,11 +39,26 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
   
   const handlePaymentSuccess = async () => {
     setIsLoading(true);
+    setPaymentError(null);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Getting current user...");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error("Error getting user:", userError);
+        setPaymentError(`Authentication error: ${userError.message}`);
+        toast({
+          title: "Authentication Error",
+          description: userError.message,
+          variant: "destructive",
+        });
+        return;
+      }
       
       if (!user) {
+        console.error("No user found");
+        setPaymentError("No authenticated user found");
         toast({
           title: "Authentication Required",
           description: "Please sign in to complete this purchase.",
@@ -48,6 +67,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
         return;
       }
       
+      console.log("Recording payment for user:", user.id);
       await recordPayment({
         user_id: user.id,
         amount: billingPeriod === "monthly" ? 10 : 100,
@@ -56,6 +76,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
         billing_period: billingPeriod,
       });
       
+      console.log("Payment recorded successfully");
       toast({
         title: "Premium Access Granted",
         description: "You now have access to all premium features!",
@@ -64,6 +85,8 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
       onSuccess();
     } catch (error) {
       console.error("Payment processing error:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setPaymentError(`Payment error: ${errorMessage}`);
       toast({
         title: "Payment Processing Error",
         description: "There was an issue recording your payment. Please contact support.",
@@ -76,6 +99,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
   
   const handlePaymentError = (error: Error) => {
     console.error("Payment error:", error);
+    setPaymentError(`Payment processing error: ${error.message}`);
     toast({
       title: "Payment Failed",
       description: "There was an issue processing your payment. Please try again.",
@@ -113,6 +137,13 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
       </CardHeader>
       
       <CardContent>
+        {paymentError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+            <p className="font-semibold">Error Details (for debugging):</p>
+            <p className="font-mono text-xs break-all whitespace-pre-wrap">{paymentError}</p>
+          </div>
+        )}
+        
         <Tabs defaultValue="basic" className="w-full mb-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic">Basic</TabsTrigger>

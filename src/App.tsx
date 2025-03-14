@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import UploadPalm from "./pages/UploadPalm";
 import ReadingResults from "./pages/ReadingResults";
 import NotFound from "./pages/NotFound";
+import DebugSetup from "./pages/DebugSetup";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function App() {
             <Route path="/upload-palm" element={<UploadPalm />} />
             <Route path="/reading-results" element={<ReadingResults />} />
             <Route path="/reading-results/:id" element={<ReadingResults />} />
+            <Route path="/debug-setup" element={<DebugSetup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

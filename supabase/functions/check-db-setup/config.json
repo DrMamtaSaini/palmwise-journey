@@ -1,0 +1,13 @@
+
+{
+  "deploymentId": "check-db-setup",
+  "entrypoint": "index.ts",
+  "envVars": {
+    "SUPABASE_URL": {
+      "name": "SUPABASE_URL"
+    },
+    "SUPABASE_ANON_KEY": {
+      "name": "SUPABASE_ANON_KEY"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+
+{
+  "deploymentId": "check-secrets",
+  "entrypoint": "index.ts",
+  "envVars": {
+    "PAYPAL_CLIENT_ID": {
+      "name": "PAYPAL_CLIENT_ID"
+    },
+    "GEMINI_API_KEY": {
+      "name": "GEMINI_API_KEY"
+    },
+    "SUPABASE_URL": {
+      "name": "SUPABASE_URL"
+    },
+    "SUPABASE_ANON_KEY": {
+      "name": "SUPABASE_ANON_KEY"
+    }
+  }
+}

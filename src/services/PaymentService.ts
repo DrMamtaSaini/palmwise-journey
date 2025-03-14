@@ -12,6 +12,7 @@ interface PaymentRecord {
 
 export async function getPayPalClientId(): Promise<string> {
   try {
+    console.log("Fetching PayPal client ID from Supabase function...");
     const { data, error } = await supabase.functions.invoke("get-paypal-key");
     
     if (error) {
@@ -19,7 +20,10 @@ export async function getPayPalClientId(): Promise<string> {
       throw error;
     }
     
+    console.log("PayPal client ID response:", data);
+    
     if (!data || !data.key) {
+      console.error("PayPal client ID not found in response:", data);
       throw new Error("PayPal client ID not found");
     }
     
@@ -33,8 +37,16 @@ export async function getPayPalClientId(): Promise<string> {
 
 export async function recordPayment(paymentDetails: PaymentRecord): Promise<void> {
   try {
+    console.log("Recording payment with details:", {
+      user_id: paymentDetails.user_id,
+      amount: paymentDetails.amount,
+      description: paymentDetails.description,
+      payment_method: paymentDetails.payment_method,
+      billing_period: paymentDetails.billing_period
+    });
+    
     // Use a manual query since we don't have the payments table in the TypeScript types yet
-    const { error } = await supabase.rpc('insert_payment', {
+    const { data, error } = await supabase.rpc('insert_payment', {
       p_user_id: paymentDetails.user_id,
       p_amount: paymentDetails.amount,
       p_description: paymentDetails.description,
@@ -45,10 +57,19 @@ export async function recordPayment(paymentDetails: PaymentRecord): Promise<void
     
     if (error) {
       console.error("Error recording payment:", error);
+      console.error("Error details:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
+    
+    console.log("Payment recorded successfully:", data);
   } catch (error) {
-    console.error("Error in recordPayment:", error);
+    console.error("Exception in recordPayment:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
     throw error;
   }
 }
