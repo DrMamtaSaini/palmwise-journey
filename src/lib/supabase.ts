@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     flowType: 'pkce',
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // Changed to false to handle redirects manually
     persistSession: true,
     // Add debug mode for development environments
     debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -37,6 +37,11 @@ supabase.auth.onAuthStateChange((event, session) => {
   
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
+    
+    // Redirect to reset password page if we're not already there
+    if (!window.location.pathname.includes('reset-password')) {
+      window.location.href = `${window.location.origin}/reset-password`;
+    }
   }
   
   if (event === 'SIGNED_IN') {
@@ -73,6 +78,21 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     
     if (code) {
       console.log("Code parameter found:", code.substring(0, 10) + "...");
+      
+      // Check if this is a password reset link
+      const isPasswordReset = document.referrer.includes('mail') || 
+                             localStorage.getItem('passwordResetRequested') === 'true';
+      
+      // If it looks like a password reset and we're not on the reset page, redirect
+      if (isPasswordReset && !window.location.pathname.includes('reset-password')) {
+        console.log("Password reset code detected, redirecting to reset page");
+        window.location.href = `${window.location.origin}/reset-password?code=${code}`;
+        return { 
+          success: true, 
+          message: "Redirecting to password reset page" 
+        };
+      }
+      
       try {
         // Try the standard flow
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);

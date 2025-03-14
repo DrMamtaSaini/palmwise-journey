@@ -21,6 +21,29 @@ const queryClient = new QueryClient();
 // Define the App component
 function App() {
   console.log("App rendering");
+  
+  // Check for auth code in URL during app initialization
+  useEffect(() => {
+    const checkForAuthRedirect = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      
+      if (code && !window.location.pathname.includes('reset-password')) {
+        // Check if this might be a password reset link
+        const referrer = document.referrer || '';
+        const isFromEmail = referrer.includes('mail') || 
+                            localStorage.getItem('passwordResetRequested') === 'true';
+        
+        if (isFromEmail) {
+          console.log('Detected password reset code, redirecting to reset page');
+          window.location.href = `/reset-password?code=${code}`;
+        }
+      }
+    };
+    
+    checkForAuthRedirect();
+  }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

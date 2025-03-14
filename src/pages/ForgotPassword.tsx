@@ -41,6 +41,9 @@ const ForgotPassword = () => {
       
       console.log('Using redirect URL:', redirectUrl);
       
+      // Set a flag to help identify password reset requests
+      localStorage.setItem('passwordResetRequested', 'true');
+      
       const success = await forgotPassword(email, redirectUrl);
       
       if (success) {
