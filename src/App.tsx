@@ -15,7 +15,7 @@ import UploadPalm from "./pages/UploadPalm";
 import ReadingResults from "./pages/ReadingResults";
 import NotFound from "./pages/NotFound";
 import DebugSetup from "./pages/DebugSetup";
-import { handleAuthTokensOnLoad } from "./lib/supabase";
+import { handleAuthTokensOnLoad, storeNewCodeVerifier } from "./lib/supabase";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -27,9 +27,28 @@ const AuthRedirectHandler = () => {
   
   useEffect(() => {
     const handleAuthRedirect = async () => {
+      // Always generate a fresh code verifier if we're on the reset password page
+      // This ensures we have a valid verifier available when handling tokens
+      if (location.pathname === '/reset-password') {
+        console.log('On reset password page, ensuring we have a fresh code verifier');
+        storeNewCodeVerifier();
+      }
+      
       // Check for auth tokens in the URL and handle them
       const result = await handleAuthTokensOnLoad();
       console.log("Auth token handler result:", result);
+      
+      // If URL contains a code parameter and we're not on the reset password page
+      // redirect to reset-password page with the code
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const type = params.get('type');
+      
+      if (code && type === 'recovery' && !location.pathname.includes('reset-password')) {
+        console.log('Detected password reset code, redirecting to reset page');
+        navigate(`/reset-password?code=${code}`, { replace: true });
+        return;
+      }
       
       if (result.success) {
         console.log("Successfully processed auth tokens");
@@ -39,16 +58,6 @@ const AuthRedirectHandler = () => {
             !location.pathname.includes('reset-password')) {
           console.log('Detected password reset scenario, redirecting to reset page');
           navigate('/reset-password', { replace: true });
-        }
-      } else {
-        // Check if this is a potential password reset attempt from the URL
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        
-        if (code && localStorage.getItem('passwordResetRequested') === 'true' &&
-            !location.pathname.includes('reset-password')) {
-          console.log('Detected password reset code, redirecting to reset page');
-          navigate(`/reset-password?code=${code}`, { replace: true });
         }
       }
     };

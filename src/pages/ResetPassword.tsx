@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Save, AlertCircle, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,19 +17,17 @@ const ResetPassword = () => {
   const [validToken, setValidToken] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
-  const { updatePassword, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Get the email from localStorage if it was stored during the reset request
-    const email = localStorage.getItem('passwordResetEmail');
-    
-    // Log debugging information
     console.log("ResetPassword component mounted");
-    console.log("Email from localStorage:", email);
     console.log("Current URL params:", Object.fromEntries(searchParams.entries()));
     console.log("Password reset requested flag:", localStorage.getItem('passwordResetRequested'));
+    
+    // Display full URL for debugging
+    console.log("Full URL:", window.location.href);
 
     // If this was loaded directly (not from a link), re-generate verifier
     if (!searchParams.has('code')) {
@@ -38,7 +35,7 @@ const ResetPassword = () => {
       storeNewCodeVerifier();
     }
     
-    // Clear up the URL by removing the error parameter if any
+    // Clean up the URL by removing the error parameter if any
     if (window.history && window.history.replaceState) {
       const params = new URLSearchParams(window.location.search);
       if (params.has('error') || params.has('error_description')) {
@@ -62,9 +59,16 @@ const ResetPassword = () => {
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
         
+        console.log("Code from URL:", code ? "present" : "missing");
+        console.log("Error from URL:", error || "none");
+        console.log("Error description:", errorDescription || "none");
+        
         // Get the code verifier from localStorage
         const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
         console.log("Code verifier from localStorage:", codeVerifier ? "exists" : "missing");
+        if (codeVerifier) {
+          console.log("Verifier length:", codeVerifier.length);
+        }
         
         // If there's an error in the URL, show it
         if (error && errorDescription) {
@@ -76,10 +80,11 @@ const ResetPassword = () => {
         }
         
         if (code) {
-          console.log("Found code parameter in URL:", code.substring(0, 10) + "...");
+          console.log("Processing code from URL");
           
           try {
             // Try to exchange the code for a session
+            console.log("Attempting to exchange code for session...");
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             
             if (error) {
@@ -87,6 +92,14 @@ const ResetPassword = () => {
               setTokenError(`Error: ${error.message || "Invalid reset code"}`);
               setValidToken(false);
               setIsVerifying(false);
+              
+              // Store more diagnostic info
+              localStorage.setItem('resetPasswordError', JSON.stringify({
+                error: error.message,
+                code: code.substring(0, 10) + "...",
+                hasVerifier: !!codeVerifier,
+                timestamp: new Date().toISOString()
+              }));
               return;
             }
             
@@ -123,7 +136,12 @@ const ResetPassword = () => {
             setValidToken(true);
           } else {
             console.log("No valid token or session found");
-            setTokenError("No reset code found. Please request a new password reset link.");
+            const resetRequested = localStorage.getItem('passwordResetRequested');
+            if (resetRequested === 'true') {
+              setTokenError("No reset code found in URL. The link may be invalid or you may need to request a new reset link.");
+            } else {
+              setTokenError("No password reset has been requested or the link is invalid.");
+            }
             setValidToken(false);
           }
         }
@@ -141,25 +159,28 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (password.length < 8) {
-      toast.error("Password too short", {
-        description: "Your password must be at least 8 characters long."
-      });
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast.error("Passwords don't match", {
-        description: "Please make sure both passwords match."
-      });
-      return;
-    }
+    setIsLoading(true);
     
     try {
+      if (password.length < 8) {
+        toast.error("Password too short", {
+          description: "Your password must be at least 8 characters long."
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        toast.error("Passwords don't match", {
+          description: "Please make sure both passwords match."
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       console.log("Attempting to update password");
       
-      // Direct update through supabase instead of using the hook
+      // Direct update through supabase
       const { error } = await supabase.auth.updateUser({
         password: password
       });
@@ -169,6 +190,7 @@ const ResetPassword = () => {
         toast.error("Failed to update password", {
           description: error.message || "Please try again or request a new reset link."
         });
+        setIsLoading(false);
         return;
       }
       
@@ -180,7 +202,6 @@ const ResetPassword = () => {
       // Clean up
       localStorage.removeItem('passwordResetRequested');
       localStorage.removeItem('passwordResetEmail');
-      localStorage.removeItem('passwordResetCode');
       
       // Redirect to login after success
       setTimeout(() => {
@@ -191,6 +212,8 @@ const ResetPassword = () => {
       toast.error("Password update failed", {
         description: "Please try again later."
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

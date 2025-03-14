@@ -68,8 +68,11 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     // First check for a code parameter in the URL (preferred method)
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+    const type = params.get('type');
     const error = params.get('error');
     const errorDescription = params.get('error_description');
+    
+    console.log("URL parameters:", { code: code ? "exists" : "missing", type, error, errorDescription });
     
     // If error params exist, return early with error
     if (error && errorDescription) {
@@ -80,12 +83,23 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
       };
     }
     
+    // If this is a recovery type, store that information
+    if (type === 'recovery') {
+      console.log("This appears to be a password reset link");
+      localStorage.setItem('passwordResetRequested', 'true');
+    }
+    
     if (code) {
       console.log("Code parameter found:", code.substring(0, 10) + "...");
       
       // Store code verifier from localStorage if available
       const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
       console.log("Code verifier found in localStorage:", !!codeVerifier);
+      
+      if (!codeVerifier) {
+        console.warn("No code verifier found in localStorage, creating a new one");
+        storeNewCodeVerifier();
+      }
       
       try {
         // Try to exchange the code for a session
@@ -114,11 +128,12 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
         if (window.history && window.history.replaceState) {
           const cleanUrl = new URL(window.location.href);
           cleanUrl.searchParams.delete('code');
+          cleanUrl.searchParams.delete('type');
           window.history.replaceState(null, document.title, cleanUrl.toString());
         }
         
         // Check if this was a password reset request
-        if (localStorage.getItem('passwordResetRequested') === 'true') {
+        if (type === 'recovery' || localStorage.getItem('passwordResetRequested') === 'true') {
           console.log("This appears to be a password reset request");
           
           // Redirect to reset password page if not already there
@@ -169,9 +184,10 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
 
 // Helper function to generate a code verifier for PKCE flow
 export function generateCodeVerifier(): string {
-  const array = new Uint8Array(32);
+  const array = new Uint8Array(64); // Use 64 bytes for better security
   window.crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  const verifier = Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return verifier;
 }
 
 // Store a new code verifier in local storage
