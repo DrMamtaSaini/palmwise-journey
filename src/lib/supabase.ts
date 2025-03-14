@@ -12,6 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Determine if we're in a development environment
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+// IMPORTANT: Using separate storage keys for code verifier to avoid conflicts
+const CODE_VERIFIER_KEY = 'palm_reader.auth.code_verifier';
+
 // Create and export the Supabase client with appropriate configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -103,8 +106,8 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
       console.log("Code parameter found:", code.substring(0, 5) + "...");
       
       // Check for code verifier from localStorage
-      const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
-      console.log("Code verifier found in localStorage:", codeVerifier ? "Yes" : "No");
+      const codeVerifier = localStorage.getItem(CODE_VERIFIER_KEY) || localStorage.getItem('supabase.auth.code_verifier');
+      console.log("Code verifier found:", codeVerifier ? "Yes" : "No");
       
       if (codeVerifier) {
         console.log("Verifier length:", codeVerifier.length);
@@ -113,6 +116,7 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
         console.warn("No code verifier found in localStorage, creating a new one");
         const newVerifier = storeNewCodeVerifier();
         console.log("New verifier generated:", newVerifier.substring(0, 10) + "...");
+        console.log("WARNING: This might not work as the server expects the original verifier");
       }
       
       try {
@@ -208,16 +212,22 @@ function generateSecureString(length: number): string {
 
 // Helper function to generate a code verifier for PKCE flow
 export function generateCodeVerifier(): string {
-  // Generate a string that is 43-128 characters long
+  // Generate a string that is between 43-128 characters long
   // Using 64 bytes (128 hex chars) for better security
   const secureString = generateSecureString(64);
   return secureString;
 }
 
-// Store a new code verifier in local storage
+// Store a new code verifier in local storage - using BOTH storage keys for maximum compatibility
 export function storeNewCodeVerifier(): string {
   const codeVerifier = generateCodeVerifier();
+  
+  // Store in our custom key
+  localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
+  
+  // Also store in the default Supabase key for compatibility
   localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+  
   console.log("Generated and stored new code verifier");
   return codeVerifier;
 }

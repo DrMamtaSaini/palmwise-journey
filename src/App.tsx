@@ -42,11 +42,14 @@ const AuthRedirectHandler = () => {
       
       // IMPORTANT: Always ensure we have a code verifier available if there's a code in the URL
       if (code) {
-        const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+        const codeVerifier = localStorage.getItem('palm_reader.auth.code_verifier') || 
+                             localStorage.getItem('supabase.auth.code_verifier');
+                             
         if (!codeVerifier) {
           console.log("Code detected in URL but no verifier found - generating new one");
           const newVerifier = storeNewCodeVerifier();
           console.log("Generated new verifier:", newVerifier.substring(0, 10) + "... (length: " + newVerifier.length + ")");
+          console.log("WARNING: Authentication may fail as server expects the original verifier");
         } else {
           console.log("Code and verifier both present, good!");
           console.log("Verifier begins with:", codeVerifier.substring(0, 10) + "... (length: " + codeVerifier.length + ")");
@@ -98,7 +101,9 @@ function App() {
   
   // Ensure we always have a code verifier in localStorage
   useEffect(() => {
-    const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+    const codeVerifier = localStorage.getItem('palm_reader.auth.code_verifier') || 
+                         localStorage.getItem('supabase.auth.code_verifier');
+                         
     if (!codeVerifier) {
       console.log("No code verifier found on app startup, generating one");
       const newVerifier = storeNewCodeVerifier();
