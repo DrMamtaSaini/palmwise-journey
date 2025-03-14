@@ -35,17 +35,57 @@ const ResetPassword = () => {
     }
     console.log("Full URL (sanitized):", url.toString());
     
-    // Check the code verifier immediately
-    const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
-    console.log("Code verifier in localStorage:", codeVerifier ? 
-      `Yes (${codeVerifier.substring(0, 10)}... length: ${codeVerifier.length})` : 
-      "No - THIS WILL CAUSE AUTHENTICATION FAILURE");
+    // Check if we have a reset log stored for debugging
+    const resetLog = localStorage.getItem('passwordResetLog');
+    if (resetLog) {
+      try {
+        const parsedLog = JSON.parse(resetLog);
+        console.log("Password reset log found:", {
+          email: parsedLog.email,
+          timestamp: parsedLog.timestamp,
+          verifierStart: parsedLog.verifier,
+          verifierLength: parsedLog.verifierLength
+        });
+      } catch (e) {
+        console.log("Failed to parse reset log:", resetLog);
+      }
+    }
+    
+    // Check all possible code verifier storage locations
+    const palmVerifier = localStorage.getItem('palm_reader.auth.code_verifier');
+    const supabaseVerifier = localStorage.getItem('supabase.auth.code_verifier');
+    const lastUsedVerifier = localStorage.getItem('palm_reader.auth.last_used_verifier');
+    
+    console.log("Code verifiers in storage:");
+    console.log("- Palm verifier:", palmVerifier ? 
+      `${palmVerifier.substring(0, 10)}... (length: ${palmVerifier.length})` : "None");
+    console.log("- Supabase verifier:", supabaseVerifier ? 
+      `${supabaseVerifier.substring(0, 10)}... (length: ${supabaseVerifier.length})` : "None");
+    console.log("- Last used verifier:", lastUsedVerifier ? 
+      `${lastUsedVerifier.substring(0, 10)}... (length: ${lastUsedVerifier.length})` : "None");
 
-    // If no code verifier but we have a code in URL, this is likely to fail
-    if (!codeVerifier && code) {
+    // If we have a code in URL but no verifier, this will likely fail
+    if (code && !palmVerifier && !supabaseVerifier && !lastUsedVerifier) {
       console.warn("⚠️ WARNING: Code parameter found but no verifier - auth will likely fail");
-      // Store a code verifier anyway as a last resort attempt
-      storeNewCodeVerifier();
+      
+      // Check if we can recover the verifier from the reset log as a last resort
+      if (resetLog) {
+        try {
+          const parsedLog = JSON.parse(resetLog);
+          if (parsedLog.fullVerifier) {
+            console.log("Recovering verifier from reset log");
+            localStorage.setItem('palm_reader.auth.code_verifier', parsedLog.fullVerifier);
+            localStorage.setItem('supabase.auth.code_verifier', parsedLog.fullVerifier);
+            localStorage.setItem('palm_reader.auth.last_used_verifier', parsedLog.fullVerifier);
+            console.log("Restored verifier from log:", parsedLog.fullVerifier.substring(0, 10) + "...");
+          }
+        } catch (e) {
+          console.log("Failed to recover verifier from log:", e);
+        }
+      } else {
+        // Store a code verifier anyway as a last resort attempt
+        storeNewCodeVerifier();
+      }
     }
 
     // Clean up the URL by removing any error parameters
@@ -69,19 +109,36 @@ const ResetPassword = () => {
         
         // Check for code parameter in URL
         const code = searchParams.get('code');
+        const type = searchParams.get('type');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
         
         console.log("Code from URL:", code ? "present (starts with " + code.substring(0, 5) + "...)" : "missing");
+        console.log("Type from URL:", type || "none");
         console.log("Error from URL:", error || "none");
         console.log("Error description:", errorDescription || "none");
         
-        // Get the code verifier from localStorage
-        const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
-        console.log("Code verifier from localStorage:", codeVerifier ? "exists" : "missing");
+        // Try all possible locations for the code verifier
+        const palmVerifier = localStorage.getItem('palm_reader.auth.code_verifier');
+        const supabaseVerifier = localStorage.getItem('supabase.auth.code_verifier');
+        const lastUsedVerifier = localStorage.getItem('palm_reader.auth.last_used_verifier');
+        // Use the last used verifier as priority if available
+        const codeVerifier = lastUsedVerifier || palmVerifier || supabaseVerifier;
+        
+        console.log("Code verifiers found:");
+        console.log("- Palm verifier:", palmVerifier ? "exists" : "missing");
+        console.log("- Supabase verifier:", supabaseVerifier ? "exists" : "missing");
+        console.log("- Last used verifier:", lastUsedVerifier ? "exists" : "missing");
+        console.log("- Selected verifier:", codeVerifier ? "exists" : "missing");
+        
         if (codeVerifier) {
           console.log("Verifier length:", codeVerifier.length);
           console.log("First 10 chars:", codeVerifier.substring(0, 10) + "...");
+          
+          // Ensure the verifier is stored in all possible locations
+          localStorage.setItem('palm_reader.auth.code_verifier', codeVerifier);
+          localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+          localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
         } else {
           console.log("No code verifier found, generating one as a last resort");
           const newVerifier = storeNewCodeVerifier();
@@ -97,17 +154,17 @@ const ResetPassword = () => {
           return;
         }
         
-        // Check if the password reset was requested recently (within last 15 minutes)
+        // Check if the password reset was requested recently (within last 30 minutes)
         const resetTimestamp = localStorage.getItem('passwordResetTimestamp');
         let validResetRequest = false;
         
         if (resetTimestamp) {
           const requestTime = new Date(resetTimestamp).getTime();
           const now = new Date().getTime();
-          const fifteenMinutes = 15 * 60 * 1000;
-          validResetRequest = (now - requestTime) < fifteenMinutes;
+          const thirtyMinutes = 30 * 60 * 1000;
+          validResetRequest = (now - requestTime) < thirtyMinutes;
           console.log("Password reset was requested:", resetTimestamp);
-          console.log("Is recent request (< 15min):", validResetRequest);
+          console.log("Is recent request (< 30min):", validResetRequest);
         } else {
           console.log("No password reset timestamp found");
         }
@@ -159,6 +216,7 @@ const ResetPassword = () => {
             if (window.history && window.history.replaceState) {
               const cleanUrl = new URL(window.location.href);
               cleanUrl.searchParams.delete('code');
+              cleanUrl.searchParams.delete('type');
               window.history.replaceState(null, document.title, cleanUrl.toString());
             }
           } catch (exchangeError) {
@@ -246,6 +304,7 @@ const ResetPassword = () => {
       localStorage.removeItem('passwordResetEmail');
       localStorage.removeItem('passwordResetTimestamp');
       localStorage.removeItem('resetPasswordError');
+      localStorage.removeItem('passwordResetLog');
       
       // Redirect to login after success
       setTimeout(() => {

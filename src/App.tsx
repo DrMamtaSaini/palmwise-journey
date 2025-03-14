@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -43,7 +44,9 @@ const AuthRedirectHandler = () => {
       if (code) {
         console.log("Code detected in URL:", code.substring(0, 5) + "...");
         
-        const codeVerifier = localStorage.getItem('palm_reader.auth.code_verifier') || 
+        // Try to get the code verifier - check all possible storage locations
+        const codeVerifier = localStorage.getItem('palm_reader.auth.last_used_verifier') || 
+                             localStorage.getItem('palm_reader.auth.code_verifier') || 
                              localStorage.getItem('supabase.auth.code_verifier');
                              
         if (!codeVerifier) {
@@ -54,6 +57,11 @@ const AuthRedirectHandler = () => {
         } else {
           console.log("Code and verifier both present, good!");
           console.log("Verifier begins with:", codeVerifier.substring(0, 10) + "... (length: " + codeVerifier.length + ")");
+          
+          // Ensure the verifier is stored in all possible locations for maximum compatibility
+          localStorage.setItem('palm_reader.auth.code_verifier', codeVerifier);
+          localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+          localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
         }
         
         // If URL contains a recovery code, always redirect to reset-password page

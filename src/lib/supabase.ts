@@ -15,6 +15,7 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 // IMPORTANT: Using separate storage keys for code verifier to avoid conflicts
 const CODE_VERIFIER_KEY = 'palm_reader.auth.code_verifier';
 const SUPABASE_CODE_VERIFIER_KEY = 'supabase.auth.code_verifier';
+const LAST_USED_VERIFIER_KEY = 'palm_reader.auth.last_used_verifier';
 
 // Create and export the Supabase client with appropriate configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -106,22 +107,29 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     if (code) {
       console.log("Code parameter found:", code.substring(0, 5) + "...");
       
-      // Get code verifier from both possible storage locations
+      // Try to use the same code verifier that was used to generate this link
+      const lastUsedVerifier = localStorage.getItem(LAST_USED_VERIFIER_KEY);
+      
+      // Get code verifier from all possible storage locations
       const palmReaderVerifier = localStorage.getItem(CODE_VERIFIER_KEY);
       const supabaseVerifier = localStorage.getItem(SUPABASE_CODE_VERIFIER_KEY);
-      const codeVerifier = palmReaderVerifier || supabaseVerifier;
+      // Prioritize the last used verifier if available
+      const codeVerifier = lastUsedVerifier || palmReaderVerifier || supabaseVerifier;
       
-      console.log("Code verifier found:", codeVerifier ? "Yes" : "No");
-      console.log("PalmReader verifier:", palmReaderVerifier ? "Yes" : "No");
-      console.log("Supabase verifier:", supabaseVerifier ? "Yes" : "No");
+      console.log("Code verifier search results:");
+      console.log("- Last used verifier:", lastUsedVerifier ? "Yes" : "No");
+      console.log("- PalmReader verifier:", palmReaderVerifier ? "Yes" : "No");
+      console.log("- Supabase verifier:", supabaseVerifier ? "Yes" : "No");
+      console.log("- Selected verifier:", codeVerifier ? "Yes" : "No");
       
       if (codeVerifier) {
         console.log("Verifier length:", codeVerifier.length);
         console.log("Verifier (first 10 chars):", codeVerifier.substring(0, 10) + "...");
         
-        // Ensure the verifier is stored in both locations
+        // Ensure the verifier is stored in ALL locations to maximize success chance
         localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
         localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
+        localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
       } else {
         console.warn("No code verifier found in localStorage, creating a new one");
         const newVerifier = storeNewCodeVerifier();
@@ -223,7 +231,7 @@ export function generateCodeVerifier(): string {
   return secureString;
 }
 
-// Store a new code verifier in local storage - using BOTH storage keys for maximum compatibility
+// Store a new code verifier in local storage - using ALL storage keys for maximum compatibility
 export function storeNewCodeVerifier(): string {
   const codeVerifier = generateCodeVerifier();
   
@@ -232,6 +240,9 @@ export function storeNewCodeVerifier(): string {
   
   // Also store in the default Supabase key for compatibility
   localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
+  
+  // Store as the last used verifier for reset links
+  localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
   
   console.log("Generated and stored new code verifier");
   return codeVerifier;

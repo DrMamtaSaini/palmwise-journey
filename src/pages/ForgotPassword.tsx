@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, RefreshCw } from "lucide-react";
@@ -66,6 +67,9 @@ const ForgotPassword = () => {
       // Store email in local storage - this will be used if the user needs to request a new link
       localStorage.setItem('passwordResetEmail', email);
       
+      // Store the code verifier as the last used one - this is critical for PKCE flow
+      localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
+      
       // Use Supabase auth for password reset
       console.log("Calling Supabase resetPasswordForEmail with:", {
         email,
@@ -97,6 +101,7 @@ const ForgotPassword = () => {
       // Store the code verifier again to ensure it's still available when the user clicks the link
       localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
       localStorage.setItem('palm_reader.auth.code_verifier', codeVerifier);
+      localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
       console.log("Code verifier stored again to ensure persistence:", codeVerifier.substring(0, 10) + "...");
       
       // Create a log of the code verifier for debugging purposes
