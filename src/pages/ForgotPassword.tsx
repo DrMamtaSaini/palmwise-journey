@@ -11,50 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const ConnectionHelper = () => {
-  const [port, setPort] = useState<string | null>(null);
-  const [hostname, setHostname] = useState<string | null>(null);
-  const [protocol, setProtocol] = useState<string | null>(null);
-  
-  useEffect(() => {
-    setPort(window.location.port || (window.location.protocol === 'https:' ? '443' : '80'));
-    setHostname(window.location.hostname);
-    setProtocol(window.location.protocol);
-    
-    // Log connection info to console for debugging
-    console.log("Connection Info:", {
-      fullUrl: window.location.href,
-      hostname: window.location.hostname,
-      port: window.location.port || (window.location.protocol === 'https:' ? '443' : '80'),
-      protocol: window.location.protocol
-    });
-  }, []);
-  
-  return (
-    <Alert className="mb-6 bg-amber-50 border-amber-200">
-      <AlertCircle className="h-4 w-4 text-amber-600" />
-      <AlertDescription className="text-amber-800">
-        <p className="font-medium">Connection troubleshooting:</p>
-        <ul className="list-disc pl-5 mt-1 text-sm space-y-1">
-          <li>Your app is configured to run on port 8080</li>
-          <li>Current browser connection: {protocol || 'unknown'}//{hostname || 'unknown'}:{port || 'unknown'}</li>
-          <li>Try these direct access links:</li>
-          <ul className="list-disc pl-5 mt-1 space-y-1">
-            <li><a href="http://localhost:8080/forgot-password" className="underline font-medium">http://localhost:8080/forgot-password</a></li>
-            <li><a href="http://127.0.0.1:8080/forgot-password" className="underline font-medium">http://127.0.0.1:8080/forgot-password</a></li>
-          </ul>
-          <li className="mt-2 text-amber-900">If links above don't work, please ensure:</li>
-          <ul className="list-disc pl-5">
-            <li>Your app is running (npm run dev or yarn dev)</li>
-            <li>No firewall is blocking port 8080</li>
-            <li>No other app is using port 8080</li>
-          </ul>
-        </ul>
-      </AlertDescription>
-    </Alert>
-  );
-};
-
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -115,6 +71,14 @@ const ForgotPassword = () => {
               </p>
             </div>
 
+            <Alert className="mb-6 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <p className="font-medium">Authentication configuration tip:</p>
+                <p className="text-sm mt-1">Make sure your Supabase project's Site URL is set to "{window.location.origin}" in the Authentication settings.</p>
+              </AlertDescription>
+            </Alert>
+
             {isSubmitted ? (
               <div className="space-y-6">
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
@@ -171,17 +135,6 @@ const ForgotPassword = () => {
                   />
                 </div>
 
-                {isLocalhost && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm">
-                    <p className="font-medium">Testing on localhost:</p>
-                    <p>Password reset links may have issues in local environments. If testing, make sure Supabase URL settings include:</p>
-                    <ul className="list-disc pl-5 mt-1 space-y-1">
-                      <li>Site URL: {window.location.origin}</li>
-                      <li>Redirect URL: {window.location.origin}/reset-password</li>
-                    </ul>
-                  </div>
-                )}
-
                 <Button
                   type="submit"
                   disabled={isLoading}
@@ -208,8 +161,6 @@ const ForgotPassword = () => {
           </div>
         </div>
       </main>
-
-      <ConnectionHelper />
 
       <Footer />
     </div>

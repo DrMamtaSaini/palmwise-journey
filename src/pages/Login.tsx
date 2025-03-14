@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Key, LogIn, User, AlertCircle, Eye, EyeOff, Lock } from "lucide-react";
+import { Mail, Key, LogIn, User, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
@@ -16,19 +16,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingInWithGoogle, setIsLoggingInWithGoogle] = useState(false);
-  const [portMismatch, setPortMismatch] = useState(false);
   const { signIn, signInWithGoogle, isLoading, isAuthenticated, handleEmailVerificationError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check if we have a port mismatch with Supabase config
-  useEffect(() => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocalhost && window.location.port !== '8080') {
-      console.log("Detected port mismatch with Supabase config");
-      setPortMismatch(true);
-    }
-  }, []);
 
   // Handle authentication redirects and errors
   useEffect(() => {
@@ -99,15 +89,13 @@ const Login = () => {
               <p className="text-gray-600">Sign in to continue to your account</p>
             </div>
 
-            {portMismatch && (
-              <Alert className="mb-6 bg-amber-50 border-amber-200">
-                <AlertCircle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800">
-                  <p className="font-medium">Your app is running on port {window.location.port}, but Supabase expects port 8080.</p>
-                  <p className="text-sm mt-1">This may cause issues with authentication. Consider updating your Supabase redirect URLs or running your app on port 8080.</p>
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert className="mb-6 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <p className="font-medium">Authentication configuration tip:</p>
+                <p className="text-sm mt-1">Make sure your Supabase project's Site URL is set to "{window.location.origin}" in the Authentication settings.</p>
+              </AlertDescription>
+            </Alert>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

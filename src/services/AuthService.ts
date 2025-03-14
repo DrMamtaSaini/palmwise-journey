@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase, getRedirectOrigin } from "../lib/supabase";
 
@@ -207,6 +206,9 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
+      const redirectTo = `${window.location.origin}/login`;
+      console.log("Using redirect URL for sign up:", redirectTo);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -214,7 +216,7 @@ class AuthService {
           data: {
             name,
           },
-          emailRedirectTo: `${window.location.origin}/login`
+          emailRedirectTo: redirectTo
         }
       });
       
@@ -320,24 +322,8 @@ class AuthService {
       this.authState = { ...this.authState, isLoading: true };
       this.notifyListeners();
       
-      // Important: Get the window location at the time of the request with proper port handling
-      const origin = getRedirectOrigin();
+      const origin = window.location.origin;
       console.log("Using origin for Google sign-in:", origin);
-      
-      // Check if this is a localhost environment
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocalhost) {
-        console.log("⚠️ Localhost environment detected for Google sign-in");
-        
-        // Alert about the port mismatch if different from 8080 (Supabase config)
-        if (window.location.port !== '8080') {
-          console.warn(
-            "⚠️ Your app is running on port " + window.location.port +
-            " but Supabase is configured for port 8080. " +
-            "OAuth redirects may not work correctly."
-          );
-        }
-      }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -368,7 +354,6 @@ class AuthService {
       if (data.url) {
         console.log("Google sign in initiated successfully with URL:", data.url);
         
-        // The URL will be used for redirection by the browser
         window.location.href = data.url;
         return true;
       }
@@ -408,18 +393,9 @@ class AuthService {
       
       console.log("=========== PASSWORD RESET SERVICE ===========");
       console.log("Email:", email);
-      console.log("Redirect URL:", redirectUrl);
       
-      // Ensure we have a valid redirect URL
       const finalRedirectUrl = redirectUrl || `${window.location.origin}/reset-password`;
       console.log("Final redirect URL:", finalRedirectUrl);
-      
-      // Check if we're on localhost
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      if (isLocalhost) {
-        console.log("⚠️ Localhost environment detected for password reset");
-        console.log("⚠️ Password reset links may not work correctly in local development");
-      }
       
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: finalRedirectUrl
@@ -429,11 +405,6 @@ class AuthService {
       
       if (error) {
         console.error("Password reset error from Supabase:", error);
-        console.error("Error details:", {
-          message: error.message,
-          status: error.status,
-          name: error.name
-        });
         
         toast.error("Password reset failed", {
           description: error.message || "Please try again later.",
@@ -445,7 +416,6 @@ class AuthService {
       return true;
     } catch (error: any) {
       console.error("Exception during password reset:", error);
-      console.error("Error stack:", error.stack);
       
       toast.error("Password reset failed", {
         description: error.message || "Please try again later.",
