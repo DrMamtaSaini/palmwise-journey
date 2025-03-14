@@ -34,14 +34,21 @@ const ResetPassword = () => {
       url.searchParams.set('code', code.substring(0, 5) + '...');
     }
     console.log("Full URL (sanitized):", url.toString());
+    
+    // Check the code verifier immediately
+    const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+    console.log("Code verifier in localStorage:", codeVerifier ? 
+      `Yes (${codeVerifier.substring(0, 10)}... length: ${codeVerifier.length})` : 
+      "No - THIS WILL CAUSE AUTHENTICATION FAILURE");
 
-    // If this was loaded directly (not from a link), re-generate verifier
-    if (!searchParams.has('code')) {
-      console.log("No code in URL, generating new code verifier");
+    // If no code verifier but we have a code in URL, this is likely to fail
+    if (!codeVerifier && code) {
+      console.warn("⚠️ WARNING: Code parameter found but no verifier - auth will likely fail");
+      // Store a code verifier anyway as a last resort attempt
       storeNewCodeVerifier();
     }
-    
-    // Clean up the URL by removing the error parameter if any
+
+    // Clean up the URL by removing any error parameters
     if (window.history && window.history.replaceState) {
       const params = new URLSearchParams(window.location.search);
       if (params.has('error') || params.has('error_description')) {
@@ -74,8 +81,11 @@ const ResetPassword = () => {
         console.log("Code verifier from localStorage:", codeVerifier ? "exists" : "missing");
         if (codeVerifier) {
           console.log("Verifier length:", codeVerifier.length);
+          console.log("First 10 chars:", codeVerifier.substring(0, 10) + "...");
         } else {
-          console.log("No code verifier found, this will likely cause an error when exchanging the code");
+          console.log("No code verifier found, generating one as a last resort");
+          const newVerifier = storeNewCodeVerifier();
+          console.log("New verifier (may not work with existing code):", newVerifier.substring(0, 10) + "...");
         }
         
         // If there's an error in the URL, show it
@@ -112,7 +122,14 @@ const ResetPassword = () => {
             
             if (error) {
               console.error("Error exchanging code for session:", error);
-              setTokenError(`Error: ${error.message || "Invalid reset code"}`);
+              
+              // Special handling for common errors
+              if (error.message.includes("auth code and code verifier")) {
+                setTokenError("Authentication error: The code verifier doesn't match the code. Please request a new reset link.");
+              } else {
+                setTokenError(`Error: ${error.message || "Invalid reset code"}`);
+              }
+              
               setValidToken(false);
               setIsVerifying(false);
               

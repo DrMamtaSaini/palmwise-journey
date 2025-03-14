@@ -36,23 +36,30 @@ const AuthRedirectHandler = () => {
       const code = params.get('code');
       const type = params.get('type');
       
-      // Always ensure we have a code verifier available if there's a code in the URL
+      // Check if the current page is a password reset page
+      const isResetPasswordPage = location.pathname === '/reset-password';
+      const isForgotPasswordPage = location.pathname === '/forgot-password';
+      
+      // IMPORTANT: Always ensure we have a code verifier available if there's a code in the URL
       if (code) {
         const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
         if (!codeVerifier) {
           console.log("Code detected in URL but no verifier found - generating new one");
-          storeNewCodeVerifier();
+          const newVerifier = storeNewCodeVerifier();
+          console.log("Generated new verifier:", newVerifier.substring(0, 10) + "... (length: " + newVerifier.length + ")");
         } else {
           console.log("Code and verifier both present, good!");
+          console.log("Verifier begins with:", codeVerifier.substring(0, 10) + "... (length: " + codeVerifier.length + ")");
         }
       }
       
       // Always generate a fresh code verifier if we're on the reset or forgot password pages
       // This ensures we have a valid verifier available for the next request
-      if (location.pathname === '/reset-password' || location.pathname === '/forgot-password') {
+      if (isResetPasswordPage || isForgotPasswordPage) {
         if (!code) {
           console.log(`On ${location.pathname} page, ensuring we have a fresh code verifier`);
-          storeNewCodeVerifier();
+          const newVerifier = storeNewCodeVerifier();
+          console.log("Fresh verifier generated:", newVerifier.substring(0, 10) + "... (length: " + newVerifier.length + ")");
         }
       }
       
@@ -60,9 +67,9 @@ const AuthRedirectHandler = () => {
       const result = await handleAuthTokensOnLoad();
       console.log("Auth token handler result:", result);
       
-      // If URL contains a code parameter and we're not on the reset password page
+      // If URL contains a recovery code and we're not on the reset password page
       // redirect to reset-password page with the code
-      if (code && type === 'recovery' && !location.pathname.includes('reset-password')) {
+      if (code && type === 'recovery' && !isResetPasswordPage) {
         console.log('Detected password reset code, redirecting to reset page');
         navigate(`/reset-password?code=${code}`, { replace: true });
         return;
@@ -72,8 +79,7 @@ const AuthRedirectHandler = () => {
         console.log("Successfully processed auth tokens");
         
         // If this is a password reset and we're not on the reset page, redirect
-        if (localStorage.getItem('passwordResetRequested') === 'true' && 
-            !location.pathname.includes('reset-password')) {
+        if (localStorage.getItem('passwordResetRequested') === 'true' && !isResetPasswordPage) {
           console.log('Detected password reset scenario, redirecting to reset page');
           navigate('/reset-password', { replace: true });
         }
@@ -89,6 +95,18 @@ const AuthRedirectHandler = () => {
 // Define the App component
 function App() {
   console.log("App rendering");
+  
+  // Ensure we always have a code verifier in localStorage
+  useEffect(() => {
+    const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+    if (!codeVerifier) {
+      console.log("No code verifier found on app startup, generating one");
+      const newVerifier = storeNewCodeVerifier();
+      console.log("Generated initial code verifier:", newVerifier.substring(0, 10) + "...");
+    } else {
+      console.log("Existing code verifier found on app startup:", codeVerifier.substring(0, 10) + "...");
+    }
+  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

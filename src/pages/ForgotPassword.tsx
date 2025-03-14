@@ -23,9 +23,11 @@ const ForgotPassword = () => {
     console.log("Initializing ForgotPassword component");
     
     // Always generate a fresh code verifier when this page loads
+    // This will be used when the user clicks on the reset link
     const codeVerifier = storeNewCodeVerifier();
     console.log("Initial code verifier generated:", codeVerifier ? "success" : "failed");
     console.log("Verifier length:", codeVerifier.length);
+    console.log("Verifier value (first 10 chars):", codeVerifier.substring(0, 10) + "...");
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
@@ -51,8 +53,9 @@ const ForgotPassword = () => {
 
     try {
       // Generate a fresh code verifier before sending the reset link
+      // This is crucial for the PKCE flow
       const codeVerifier = storeNewCodeVerifier();
-      console.log("Fresh code verifier for password reset:", codeVerifier);
+      console.log("Fresh code verifier for password reset:", codeVerifier.substring(0, 10) + "...");
       console.log("Verifier length:", codeVerifier.length);
       
       // Get the absolute URL for the reset-password page
@@ -61,14 +64,16 @@ const ForgotPassword = () => {
       
       console.log('Using redirect URL for password reset:', redirectUrl);
       
-      // Store email in local storage - this will be used to verify the reset request
+      // Store email in local storage - this will be used if the user needs to request a new link
       localStorage.setItem('passwordResetEmail', email);
       
       // Use Supabase auth for password reset
       console.log("Calling Supabase resetPasswordForEmail with:", {
         email,
         redirectUrl,
-        codeVerifierExists: !!codeVerifier
+        codeVerifierExists: !!codeVerifier,
+        codeVerifierLength: codeVerifier.length,
+        codeVerifierStart: codeVerifier.substring(0, 10) + "..."
       });
       
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -89,6 +94,10 @@ const ForgotPassword = () => {
       // Mark password reset as requested for later verification
       localStorage.setItem('passwordResetRequested', 'true');
       localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
+      
+      // Store the code verifier again to ensure it's still available when the user clicks the link
+      localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+      console.log("Code verifier stored again to ensure persistence:", codeVerifier.substring(0, 10) + "...");
       
       setIsSubmitted(true);
       toast.success("Reset link sent", {

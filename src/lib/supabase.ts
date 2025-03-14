@@ -102,15 +102,17 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     if (code) {
       console.log("Code parameter found:", code.substring(0, 5) + "...");
       
-      // Store code verifier from localStorage if available
+      // Check for code verifier from localStorage
       const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
       console.log("Code verifier found in localStorage:", codeVerifier ? "Yes" : "No");
       
       if (codeVerifier) {
         console.log("Verifier length:", codeVerifier.length);
+        console.log("Verifier (first 10 chars):", codeVerifier.substring(0, 10) + "...");
       } else {
         console.warn("No code verifier found in localStorage, creating a new one");
-        storeNewCodeVerifier();
+        const newVerifier = storeNewCodeVerifier();
+        console.log("New verifier generated:", newVerifier.substring(0, 10) + "...");
       }
       
       try {
