@@ -15,7 +15,7 @@ import UploadPalm from "./pages/UploadPalm";
 import ReadingResults from "./pages/ReadingResults";
 import NotFound from "./pages/NotFound";
 import DebugSetup from "./pages/DebugSetup";
-import { handleAuthTokensOnLoad, storeNewCodeVerifier } from "./lib/supabase";
+import { handleAuthTokensOnLoad } from "./lib/supabase";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -40,59 +40,16 @@ const AuthRedirectHandler = () => {
       const isResetPasswordPage = location.pathname === '/reset-password';
       const isForgotPasswordPage = location.pathname === '/forgot-password';
       
-      // IMPORTANT: Always ensure we have a code verifier available if there's a code in the URL
-      if (code) {
-        console.log("Code detected in URL:", code.substring(0, 5) + "...");
-        
-        // Try to get the code verifier - check all possible storage locations
-        const codeVerifier = localStorage.getItem('palm_reader.auth.last_used_verifier') || 
-                             localStorage.getItem('palm_reader.auth.code_verifier') || 
-                             localStorage.getItem('supabase.auth.code_verifier');
-                             
-        if (!codeVerifier) {
-          console.log("Code detected in URL but no verifier found - generating new one");
-          const newVerifier = storeNewCodeVerifier();
-          console.log("Generated new verifier:", newVerifier.substring(0, 10) + "... (length: " + newVerifier.length + ")");
-          console.log("WARNING: Authentication may fail as server expects the original verifier");
-        } else {
-          console.log("Code and verifier both present, good!");
-          console.log("Verifier begins with:", codeVerifier.substring(0, 10) + "... (length: " + codeVerifier.length + ")");
-          
-          // Ensure the verifier is stored in all possible locations for maximum compatibility
-          localStorage.setItem('palm_reader.auth.code_verifier', codeVerifier);
-          localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
-          localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
-        }
-        
-        // If URL contains a recovery code, always redirect to reset-password page
-        if (type === 'recovery' && !isResetPasswordPage) {
-          console.log('Password reset code detected, redirecting to reset password page');
-          navigate(`/reset-password?code=${code}&type=${type}`, { replace: true });
-          return;
-        }
-      }
-      
-      // Always generate a fresh code verifier if we're on the reset or forgot password pages
-      // This ensures we have a valid verifier available for the next request
-      if (isResetPasswordPage || isForgotPasswordPage) {
-        if (!code) {
-          console.log(`On ${location.pathname} page, ensuring we have a fresh code verifier`);
-          const newVerifier = storeNewCodeVerifier();
-          console.log("Fresh verifier generated:", newVerifier.substring(0, 10) + "... (length: " + newVerifier.length + ")");
-        }
+      // If URL contains a recovery code, always redirect to reset-password page
+      if (code && type === 'recovery' && !isResetPasswordPage) {
+        console.log('Password reset code detected, redirecting to reset password page');
+        navigate(`/reset-password?code=${code}&type=${type}`, { replace: true });
+        return;
       }
       
       // Check for auth tokens in the URL and handle them
       const result = await handleAuthTokensOnLoad();
       console.log("Auth token handler result:", result);
-      
-      // If URL contains a recovery code and we're not on the reset password page
-      // redirect to reset-password page with the code
-      if (code && type === 'recovery' && !isResetPasswordPage) {
-        console.log('Detected password reset code, redirecting to reset page');
-        navigate(`/reset-password?code=${code}&type=${type}`, { replace: true });
-        return;
-      }
       
       if (result.success) {
         console.log("Successfully processed auth tokens");
@@ -101,6 +58,13 @@ const AuthRedirectHandler = () => {
         if (localStorage.getItem('passwordResetRequested') === 'true' && !isResetPasswordPage) {
           console.log('Detected password reset scenario, redirecting to reset page');
           navigate('/reset-password', { replace: true });
+          return;
+        }
+        
+        // Default successful auth redirect to dashboard
+        if (code && !isResetPasswordPage && !isForgotPasswordPage) {
+          console.log('Auth successful, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
         }
       }
     };
@@ -114,20 +78,6 @@ const AuthRedirectHandler = () => {
 // Define the App component
 function App() {
   console.log("App rendering");
-  
-  // Ensure we always have a code verifier in localStorage
-  useEffect(() => {
-    const codeVerifier = localStorage.getItem('palm_reader.auth.code_verifier') || 
-                         localStorage.getItem('supabase.auth.code_verifier');
-                         
-    if (!codeVerifier) {
-      console.log("No code verifier found on app startup, generating one");
-      const newVerifier = storeNewCodeVerifier();
-      console.log("Generated initial code verifier:", newVerifier.substring(0, 10) + "...");
-    } else {
-      console.log("Existing code verifier found on app startup:", codeVerifier.substring(0, 10) + "...");
-    }
-  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

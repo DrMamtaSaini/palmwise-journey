@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase, storeNewCodeVerifier } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+
+// Define consistent storage keys
+const CODE_VERIFIER_KEY = 'palm_reader.auth.code_verifier';
+const LAST_USED_VERIFIER_KEY = 'palm_reader.auth.last_used_verifier';
+const SUPABASE_CODE_VERIFIER_KEY = 'supabase.auth.code_verifier';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -22,12 +27,41 @@ const ForgotPassword = () => {
   useEffect(() => {
     console.log("Initializing ForgotPassword component");
     
+    // Create and store a fresh code verifier when this page loads
+    const generateAndStoreCodeVerifier = () => {
+      try {
+        // Generate a secure random string for PKCE
+        const generateSecureString = (length) => {
+          const array = new Uint8Array(length);
+          window.crypto.getRandomValues(array);
+          return Array.from(array, byte => 
+            ('0' + (byte & 0xFF).toString(16)).slice(-2)
+          ).join('');
+        };
+        
+        // Generate a code verifier (64 bytes = 128 hex chars)
+        const codeVerifier = generateSecureString(64);
+        
+        // Store in all possible locations to maximize compatibility
+        localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
+        localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
+        localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
+        
+        console.log("Generated fresh code verifier for password reset:", codeVerifier.substring(0, 10) + "...");
+        console.log("Verifier length:", codeVerifier.length);
+        
+        return codeVerifier;
+      } catch (error) {
+        console.error("Error generating code verifier:", error);
+        toast.error("Error setting up password reset", { 
+          description: "Please try again or contact support." 
+        });
+        return null;
+      }
+    };
+    
     // Always generate a fresh code verifier when this page loads
-    // This will be used when the user clicks on the reset link
-    const codeVerifier = storeNewCodeVerifier();
-    console.log("Initial code verifier generated:", codeVerifier ? "success" : "failed");
-    console.log("Verifier length:", codeVerifier.length);
-    console.log("Verifier value (first 10 chars):", codeVerifier.substring(0, 10) + "...");
+    generateAndStoreCodeVerifier();
     
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
@@ -52,11 +86,39 @@ const ForgotPassword = () => {
     }
 
     try {
-      // Generate a fresh code verifier before sending the reset link
-      // This is crucial for the PKCE flow
-      const codeVerifier = storeNewCodeVerifier();
-      console.log("Fresh code verifier for password reset:", codeVerifier.substring(0, 10) + "...");
+      // Generate a fresh code verifier for this specific reset request
+      // Create and store a fresh code verifier
+      const generateSecureString = (length) => {
+        const array = new Uint8Array(length);
+        window.crypto.getRandomValues(array);
+        return Array.from(array, byte => 
+          ('0' + (byte & 0xFF).toString(16)).slice(-2)
+        ).join('');
+      };
+      
+      // Generate a code verifier (64 bytes = 128 hex chars)
+      const codeVerifier = generateSecureString(64);
+        
+      // Store in all possible locations to maximize compatibility
+      localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
+      localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
+      localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
+      
+      console.log("Fresh code verifier for password reset request:", codeVerifier.substring(0, 10) + "...");
       console.log("Verifier length:", codeVerifier.length);
+      
+      // Calculate the code challenge (SHA-256 hash of the code verifier)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(codeVerifier);
+      const digest = await window.crypto.subtle.digest('SHA-256', data);
+      
+      // Convert the digest to a base64url string
+      const base64Digest = btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+      
+      console.log("Code challenge generated:", base64Digest.substring(0, 10) + "...");
       
       // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
@@ -67,10 +129,17 @@ const ForgotPassword = () => {
       // Store email in local storage - this will be used if the user needs to request a new link
       localStorage.setItem('passwordResetEmail', email);
       
-      // Store the code verifier as the last used one - this is critical for PKCE flow
-      localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
+      // Store additional info for debugging and recovery
+      localStorage.setItem('passwordResetInfo', JSON.stringify({
+        email,
+        timestamp: new Date().toISOString(),
+        verifier: codeVerifier.substring(0, 10) + "...",
+        verifierLength: codeVerifier.length,
+        fullVerifier: codeVerifier, // Store full verifier for recovery
+        redirectUrl,
+        challengePreview: base64Digest.substring(0, 10) + "..."
+      }));
       
-      // Use Supabase auth for password reset
       console.log("Calling Supabase resetPasswordForEmail with:", {
         email,
         redirectUrl,
@@ -79,8 +148,11 @@ const ForgotPassword = () => {
         codeVerifierStart: codeVerifier.substring(0, 10) + "..."
       });
       
+      // Use Supabase auth for password reset with explicit code challenge
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        codeChallenge: base64Digest,
+        codeChallengeMethod: 'S256'
       });
       
       console.log("Reset password response:", data ? "Success" : "No data", error ? `Error: ${error.message}` : "No error");
@@ -98,22 +170,6 @@ const ForgotPassword = () => {
       localStorage.setItem('passwordResetRequested', 'true');
       localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
       
-      // Store the code verifier again to ensure it's still available when the user clicks the link
-      localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
-      localStorage.setItem('palm_reader.auth.code_verifier', codeVerifier);
-      localStorage.setItem('palm_reader.auth.last_used_verifier', codeVerifier);
-      console.log("Code verifier stored again to ensure persistence:", codeVerifier.substring(0, 10) + "...");
-      
-      // Create a log of the code verifier for debugging purposes
-      const resetLog = {
-        email,
-        timestamp: new Date().toISOString(),
-        verifier: codeVerifier.substring(0, 10) + "...",
-        verifierLength: codeVerifier.length,
-        fullVerifier: codeVerifier // Include full verifier for debugging
-      };
-      localStorage.setItem('passwordResetLog', JSON.stringify(resetLog));
-      
       setIsSubmitted(true);
       toast.success("Reset link sent", {
         description: "Please check your email for the password reset link.",
@@ -129,9 +185,8 @@ const ForgotPassword = () => {
   };
 
   const handleRetry = () => {
-    // Generate a new code verifier and try again with the same email
+    // Start over with same email
     console.log("Retrying with same email:", email);
-    storeNewCodeVerifier();
     setIsSubmitted(false);
   };
 

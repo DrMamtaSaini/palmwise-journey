@@ -24,8 +24,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // IMPORTANT: Set to false to manually handle redirects
-    storage: window.localStorage,
-    debug: isDevelopment
+    storage: window.localStorage
   }
 });
 
@@ -110,17 +109,37 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
       // Try to use the same code verifier that was used to generate this link
       const lastUsedVerifier = localStorage.getItem(LAST_USED_VERIFIER_KEY);
       
-      // Get code verifier from all possible storage locations
+      // Try to find a code verifier in any of the storage locations
       const palmReaderVerifier = localStorage.getItem(CODE_VERIFIER_KEY);
       const supabaseVerifier = localStorage.getItem(SUPABASE_CODE_VERIFIER_KEY);
-      // Prioritize the last used verifier if available
-      const codeVerifier = lastUsedVerifier || palmReaderVerifier || supabaseVerifier;
+      // Get the password reset info if available
+      let passwordResetInfo = null;
+      try {
+        const infoStr = localStorage.getItem('passwordResetInfo');
+        if (infoStr) {
+          passwordResetInfo = JSON.parse(infoStr);
+        }
+      } catch (e) {
+        console.error("Error parsing passwordResetInfo:", e);
+      }
+      
+      // Prioritize in this order: 
+      // 1. Last used verifier
+      // 2. Full verifier from passwordResetInfo
+      // 3. Palm reader verifier
+      // 4. Supabase verifier
+      const codeVerifier = lastUsedVerifier || 
+                         (passwordResetInfo?.fullVerifier) || 
+                         palmReaderVerifier || 
+                         supabaseVerifier;
       
       console.log("Code verifier search results:");
-      console.log("- Last used verifier:", lastUsedVerifier ? "Yes" : "No");
-      console.log("- PalmReader verifier:", palmReaderVerifier ? "Yes" : "No");
-      console.log("- Supabase verifier:", supabaseVerifier ? "Yes" : "No");
-      console.log("- Selected verifier:", codeVerifier ? "Yes" : "No");
+      console.log("- Last used verifier:", lastUsedVerifier ? lastUsedVerifier.substring(0, 10) + "..." : "Not found");
+      console.log("- Password reset info verifier:", passwordResetInfo?.fullVerifier ? 
+                  passwordResetInfo.fullVerifier.substring(0, 10) + "..." : "Not found");
+      console.log("- PalmReader verifier:", palmReaderVerifier ? palmReaderVerifier.substring(0, 10) + "..." : "Not found");
+      console.log("- Supabase verifier:", supabaseVerifier ? supabaseVerifier.substring(0, 10) + "..." : "Not found");
+      console.log("- Selected verifier:", codeVerifier ? codeVerifier.substring(0, 10) + "..." : "None found");
       
       if (codeVerifier) {
         console.log("Verifier length:", codeVerifier.length);
@@ -131,10 +150,11 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
         localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
         localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
       } else {
-        console.warn("No code verifier found in localStorage, creating a new one");
-        const newVerifier = storeNewCodeVerifier();
-        console.log("New verifier generated:", newVerifier.substring(0, 10) + "...");
-        console.log("WARNING: This might not work as the server expects the original verifier");
+        console.warn("No code verifier found in localStorage");
+        return {
+          success: false,
+          message: "Authentication error: No code verifier found. Please request a new password reset link."
+        };
       }
       
       try {
@@ -244,6 +264,6 @@ export function storeNewCodeVerifier(): string {
   // Store as the last used verifier for reset links
   localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
   
-  console.log("Generated and stored new code verifier");
+  console.log("Generated and stored new code verifier:", codeVerifier.substring(0, 10) + "...");
   return codeVerifier;
 }
