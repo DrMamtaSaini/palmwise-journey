@@ -23,8 +23,20 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Store a new code verifier for potential future auth exchanges
-    storeNewCodeVerifier();
+    // Get the email from localStorage if it was stored during the reset request
+    const email = localStorage.getItem('passwordResetEmail');
+    
+    // Log debugging information
+    console.log("ResetPassword component mounted");
+    console.log("Email from localStorage:", email);
+    console.log("Current URL params:", Object.fromEntries(searchParams.entries()));
+    console.log("Password reset requested flag:", localStorage.getItem('passwordResetRequested'));
+
+    // If this was loaded directly (not from a link), re-generate verifier
+    if (!searchParams.has('code')) {
+      console.log("No code in URL, generating new code verifier");
+      storeNewCodeVerifier();
+    }
     
     // Clear up the URL by removing the error parameter if any
     if (window.history && window.history.replaceState) {
@@ -36,7 +48,7 @@ const ResetPassword = () => {
         window.history.replaceState(null, document.title, cleanUrl.toString());
       }
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     async function verifyResetToken() {
@@ -49,6 +61,10 @@ const ResetPassword = () => {
         const code = searchParams.get('code');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
+        
+        // Get the code verifier from localStorage
+        const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+        console.log("Code verifier from localStorage:", codeVerifier ? "exists" : "missing");
         
         // If there's an error in the URL, show it
         if (error && errorDescription) {
@@ -68,7 +84,7 @@ const ResetPassword = () => {
             
             if (error) {
               console.error("Error exchanging code for session:", error);
-              setTokenError(error.message || "Invalid reset code");
+              setTokenError(`Error: ${error.message || "Invalid reset code"}`);
               setValidToken(false);
               setIsVerifying(false);
               return;
@@ -93,7 +109,7 @@ const ResetPassword = () => {
             }
           } catch (exchangeError) {
             console.error("Exception during code exchange:", exchangeError);
-            setTokenError("Error processing reset code");
+            setTokenError("Error processing reset code. The code may be invalid or expired.");
             setValidToken(false);
           }
         } else {
@@ -163,6 +179,7 @@ const ResetPassword = () => {
       
       // Clean up
       localStorage.removeItem('passwordResetRequested');
+      localStorage.removeItem('passwordResetEmail');
       localStorage.removeItem('passwordResetCode');
       
       // Redirect to login after success
@@ -178,7 +195,15 @@ const ResetPassword = () => {
   };
 
   const handleRequestNewLink = () => {
-    navigate('/forgot-password');
+    // Generate a new code verifier before navigating
+    storeNewCodeVerifier();
+    
+    const email = localStorage.getItem('passwordResetEmail');
+    if (email) {
+      navigate('/forgot-password', { state: { email } });
+    } else {
+      navigate('/forgot-password');
+    }
   };
 
   if (isVerifying) {
@@ -270,7 +295,10 @@ const ResetPassword = () => {
                   className="w-full bg-palm-purple hover:bg-palm-purple/90"
                 >
                   {isLoading ? (
-                    <span className="animate-pulse">Updating...</span>
+                    <span className="flex items-center">
+                      <RefreshCcw size={18} className="mr-2 animate-spin" />
+                      Updating...
+                    </span>
                   ) : (
                     <>
                       <Save size={18} className="mr-2" />
@@ -298,7 +326,7 @@ const ResetPassword = () => {
                 
                 <Button 
                   onClick={handleRequestNewLink}
-                  className="w-full"
+                  className="w-full bg-palm-purple hover:bg-palm-purple/90"
                 >
                   <RefreshCcw size={18} className="mr-2" />
                   Request New Reset Link

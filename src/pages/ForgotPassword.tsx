@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { storeNewCodeVerifier } from "@/lib/supabase";
+import { supabase, storeNewCodeVerifier } from "@/lib/supabase";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +19,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const { forgotPassword, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Generate code verifier and challenge for PKCE flow
   useEffect(() => {
@@ -31,7 +32,12 @@ const ForgotPassword = () => {
     // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
     setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
-  }, []);
+
+    // Pre-fill email if passed in location state
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +91,7 @@ const ForgotPassword = () => {
 
   const handleRetry = () => {
     // Clear existing state and generate a new code verifier
+    console.log("Retrying with same email");
     storeNewCodeVerifier();
     setIsSubmitted(false);
   };
