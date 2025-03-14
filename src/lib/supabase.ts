@@ -14,6 +14,7 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 
 // IMPORTANT: Using separate storage keys for code verifier to avoid conflicts
 const CODE_VERIFIER_KEY = 'palm_reader.auth.code_verifier';
+const SUPABASE_CODE_VERIFIER_KEY = 'supabase.auth.code_verifier';
 
 // Create and export the Supabase client with appropriate configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -21,7 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false, // IMPORTANT: Set to false to manually handle redirects
     storage: window.localStorage,
     debug: isDevelopment
   }
@@ -105,13 +106,22 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     if (code) {
       console.log("Code parameter found:", code.substring(0, 5) + "...");
       
-      // Check for code verifier from localStorage
-      const codeVerifier = localStorage.getItem(CODE_VERIFIER_KEY) || localStorage.getItem('supabase.auth.code_verifier');
+      // Get code verifier from both possible storage locations
+      const palmReaderVerifier = localStorage.getItem(CODE_VERIFIER_KEY);
+      const supabaseVerifier = localStorage.getItem(SUPABASE_CODE_VERIFIER_KEY);
+      const codeVerifier = palmReaderVerifier || supabaseVerifier;
+      
       console.log("Code verifier found:", codeVerifier ? "Yes" : "No");
+      console.log("PalmReader verifier:", palmReaderVerifier ? "Yes" : "No");
+      console.log("Supabase verifier:", supabaseVerifier ? "Yes" : "No");
       
       if (codeVerifier) {
         console.log("Verifier length:", codeVerifier.length);
         console.log("Verifier (first 10 chars):", codeVerifier.substring(0, 10) + "...");
+        
+        // Ensure the verifier is stored in both locations
+        localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
+        localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
       } else {
         console.warn("No code verifier found in localStorage, creating a new one");
         const newVerifier = storeNewCodeVerifier();
@@ -154,11 +164,6 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
         // Check if this was a password reset request
         if (type === 'recovery' || localStorage.getItem('passwordResetRequested') === 'true') {
           console.log("This appears to be a password reset request");
-          
-          // Redirect to reset password page if not already there
-          if (!window.location.pathname.includes('reset-password')) {
-            window.location.href = `${window.location.origin}/reset-password`;
-          }
           
           return { 
             success: true, 
@@ -226,7 +231,7 @@ export function storeNewCodeVerifier(): string {
   localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
   
   // Also store in the default Supabase key for compatibility
-  localStorage.setItem('supabase.auth.code_verifier', codeVerifier);
+  localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
   
   console.log("Generated and stored new code verifier");
   return codeVerifier;

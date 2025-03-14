@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -42,6 +41,8 @@ const AuthRedirectHandler = () => {
       
       // IMPORTANT: Always ensure we have a code verifier available if there's a code in the URL
       if (code) {
+        console.log("Code detected in URL:", code.substring(0, 5) + "...");
+        
         const codeVerifier = localStorage.getItem('palm_reader.auth.code_verifier') || 
                              localStorage.getItem('supabase.auth.code_verifier');
                              
@@ -53,6 +54,13 @@ const AuthRedirectHandler = () => {
         } else {
           console.log("Code and verifier both present, good!");
           console.log("Verifier begins with:", codeVerifier.substring(0, 10) + "... (length: " + codeVerifier.length + ")");
+        }
+        
+        // If URL contains a recovery code, always redirect to reset-password page
+        if (type === 'recovery' && !isResetPasswordPage) {
+          console.log('Password reset code detected, redirecting to reset password page');
+          navigate(`/reset-password?code=${code}&type=${type}`, { replace: true });
+          return;
         }
       }
       
@@ -74,7 +82,7 @@ const AuthRedirectHandler = () => {
       // redirect to reset-password page with the code
       if (code && type === 'recovery' && !isResetPasswordPage) {
         console.log('Detected password reset code, redirecting to reset page');
-        navigate(`/reset-password?code=${code}`, { replace: true });
+        navigate(`/reset-password?code=${code}&type=${type}`, { replace: true });
         return;
       }
       
