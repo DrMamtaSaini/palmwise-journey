@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Send, AlertCircle, RefreshCw } from "lucide-react";
@@ -8,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/lib/supabase";
+import { supabase, generateCodeVerifier } from "@/lib/supabase";
 
+// Define consistent storage keys
 const CODE_VERIFIER_KEY = 'palm_reader.auth.code_verifier';
 const LAST_USED_VERIFIER_KEY = 'palm_reader.auth.last_used_verifier';
 const SUPABASE_CODE_VERIFIER_KEY = 'supabase.auth.code_verifier';
@@ -25,23 +27,18 @@ const ForgotPassword = () => {
   useEffect(() => {
     console.log("Initializing ForgotPassword component");
     
-    const generateAndStoreCodeVerifier = () => {
+    // Create and store a fresh code verifier when this page loads
+    const initializeWithFreshCodeVerifier = () => {
       try {
-        const generateSecureString = (length) => {
-          const array = new Uint8Array(length);
-          window.crypto.getRandomValues(array);
-          return Array.from(array, byte => 
-            ('0' + (byte & 0xFF).toString(16)).slice(-2)
-          ).join('');
-        };
+        // Generate a code verifier (64 bytes = 128 hex chars)
+        const codeVerifier = generateCodeVerifier();
         
-        const codeVerifier = generateSecureString(64);
-        
+        // Store in all possible locations to maximize compatibility
         localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
         localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
         localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
         
-        console.log("Generated fresh code verifier for password reset:", codeVerifier.substring(0, 10) + "...");
+        console.log("Generated fresh code verifier on component mount:", codeVerifier.substring(0, 10) + "...");
         console.log("Verifier length:", codeVerifier.length);
         
         return codeVerifier;
@@ -54,11 +51,14 @@ const ForgotPassword = () => {
       }
     };
     
-    generateAndStoreCodeVerifier();
+    // Always generate a fresh code verifier when this page loads
+    initializeWithFreshCodeVerifier();
     
+    // Check if we're on localhost for special messaging
     const hostname = window.location.hostname;
     setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
 
+    // Pre-fill email if passed in location state
     if (location.state?.email) {
       setEmail(location.state.email);
     }
@@ -77,16 +77,10 @@ const ForgotPassword = () => {
     }
 
     try {
-      const generateSecureString = (length) => {
-        const array = new Uint8Array(length);
-        window.crypto.getRandomValues(array);
-        return Array.from(array, byte => 
-          ('0' + (byte & 0xFF).toString(16)).slice(-2)
-        ).join('');
-      };
-      
-      const codeVerifier = generateSecureString(64);
+      // Generate a fresh code verifier for this specific reset request
+      const codeVerifier = generateCodeVerifier();
         
+      // Store in all possible locations to maximize compatibility
       localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
       localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
       localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
@@ -94,10 +88,12 @@ const ForgotPassword = () => {
       console.log("Fresh code verifier for password reset request:", codeVerifier.substring(0, 10) + "...");
       console.log("Verifier length:", codeVerifier.length);
       
+      // Calculate the code challenge (SHA-256 hash of the code verifier)
       const encoder = new TextEncoder();
       const encodedData = encoder.encode(codeVerifier);
       const digest = await window.crypto.subtle.digest('SHA-256', encodedData);
       
+      // Convert the digest to a base64url string
       const base64Digest = btoa(String.fromCharCode(...new Uint8Array(digest)))
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
@@ -105,19 +101,22 @@ const ForgotPassword = () => {
       
       console.log("Code challenge generated:", base64Digest.substring(0, 10) + "...");
       
+      // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
       const redirectUrl = `${origin}/reset-password`;
       
       console.log('Using redirect URL for password reset:', redirectUrl);
       
+      // Store email in local storage - this will be used if the user needs to request a new link
       localStorage.setItem('passwordResetEmail', email);
       
+      // Store additional info for debugging and recovery
       localStorage.setItem('passwordResetInfo', JSON.stringify({
         email,
         timestamp: new Date().toISOString(),
         verifier: codeVerifier.substring(0, 10) + "...",
         verifierLength: codeVerifier.length,
-        fullVerifier: codeVerifier,
+        fullVerifier: codeVerifier, // Store full verifier for recovery
         redirectUrl,
         challengePreview: base64Digest.substring(0, 10) + "..."
       }));
@@ -130,11 +129,10 @@ const ForgotPassword = () => {
         codeVerifierStart: codeVerifier.substring(0, 10) + "..."
       });
       
+      // Use Supabase auth for password reset
       const response = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
-      
-      console.log("Reset password response:", response.data ? "Success" : "No data", response.error ? `Error: ${response.error.message}` : "No error");
       
       if (response.error) {
         console.error("Supabase password reset error:", response.error);
@@ -145,6 +143,7 @@ const ForgotPassword = () => {
         return;
       }
       
+      // Mark password reset as requested for later verification
       localStorage.setItem('passwordResetRequested', 'true');
       localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
       
@@ -163,6 +162,7 @@ const ForgotPassword = () => {
   };
 
   const handleRetry = () => {
+    // Start over with same email
     console.log("Retrying with same email:", email);
     setIsSubmitted(false);
   };

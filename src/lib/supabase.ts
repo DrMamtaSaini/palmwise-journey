@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Get the Supabase URL and anonymous key from environment variables
@@ -33,11 +32,6 @@ console.log("Supabase client initialized with URL:", supabaseUrl);
 console.log("Current browser location:", window.location.href);
 console.log("Current origin:", window.location.origin);
 
-// Get the origin that should be used for auth redirects
-export const getRedirectOrigin = () => {
-  return window.location.origin;
-};
-
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
@@ -60,6 +54,56 @@ supabase.auth.onAuthStateChange((event, session) => {
     localStorage.removeItem('passwordResetEmail');
   }
 });
+
+// Helper function to generate a secure random string for PKCE
+function generateSecureString(length: number): string {
+  const array = new Uint8Array(length);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => 
+    ('0' + (byte & 0xFF).toString(16)).slice(-2)
+  ).join('');
+}
+
+// Helper function to generate a code verifier for PKCE flow
+export function generateCodeVerifier(): string {
+  // Generate a string that is between 43-128 characters long
+  // Using 64 bytes (128 hex chars) for better security
+  const secureString = generateSecureString(64);
+  return secureString;
+}
+
+// Store a new code verifier in local storage - using ALL storage keys for maximum compatibility
+export function storeNewCodeVerifier(): string {
+  const codeVerifier = generateCodeVerifier();
+  
+  // Store in our custom key
+  localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
+  
+  // Also store in the default Supabase key for compatibility
+  localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
+  
+  // Store as the last used verifier for reset links
+  localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
+  
+  console.log("Generated and stored new code verifier:", codeVerifier.substring(0, 10) + "...");
+  
+  // Store in passwordResetInfo for recovery
+  try {
+    const existingInfoStr = localStorage.getItem('passwordResetInfo');
+    if (existingInfoStr) {
+      const existingInfo = JSON.parse(existingInfoStr);
+      existingInfo.fullVerifier = codeVerifier;
+      existingInfo.verifier = codeVerifier.substring(0, 10) + "...";
+      existingInfo.verifierLength = codeVerifier.length;
+      existingInfo.timestamp = new Date().toISOString();
+      localStorage.setItem('passwordResetInfo', JSON.stringify(existingInfo));
+    }
+  } catch (e) {
+    console.error("Error updating passwordResetInfo with new verifier:", e);
+  }
+  
+  return codeVerifier;
+}
 
 // Define response type for better type safety
 export type AuthTokenHandlerResult = 
@@ -232,38 +276,4 @@ export async function handleAuthTokensOnLoad(): Promise<AuthTokenHandlerResult> 
     console.error("Exception handling auth tokens:", error);
     return { success: false, error, message: "Error processing authentication tokens" };
   }
-}
-
-// Helper function to generate a secure random string for PKCE
-function generateSecureString(length: number): string {
-  const array = new Uint8Array(length);
-  window.crypto.getRandomValues(array);
-  return Array.from(array, byte => 
-    ('0' + (byte & 0xFF).toString(16)).slice(-2)
-  ).join('');
-}
-
-// Helper function to generate a code verifier for PKCE flow
-export function generateCodeVerifier(): string {
-  // Generate a string that is between 43-128 characters long
-  // Using 64 bytes (128 hex chars) for better security
-  const secureString = generateSecureString(64);
-  return secureString;
-}
-
-// Store a new code verifier in local storage - using ALL storage keys for maximum compatibility
-export function storeNewCodeVerifier(): string {
-  const codeVerifier = generateCodeVerifier();
-  
-  // Store in our custom key
-  localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
-  
-  // Also store in the default Supabase key for compatibility
-  localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
-  
-  // Store as the last used verifier for reset links
-  localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
-  
-  console.log("Generated and stored new code verifier:", codeVerifier.substring(0, 10) + "...");
-  return codeVerifier;
 }
