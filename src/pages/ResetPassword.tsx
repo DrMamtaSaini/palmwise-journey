@@ -17,6 +17,15 @@ const ResetPassword = () => {
   // When the component mounts, we'll log some debugging info
   useEffect(() => {
     console.log("ResetPassword component mounted, current URL:", window.location.href);
+    
+    // Store current timestamp for debugging
+    localStorage.setItem('resetPasswordPageVisited', new Date().toISOString());
+    
+    // Check for email in localStorage for recovery purposes
+    const email = localStorage.getItem('passwordResetEmail');
+    if (email) {
+      console.log("Found email in localStorage:", email);
+    }
   }, []);
 
   const handleVerificationComplete = (isValid: boolean, error: string | null) => {
@@ -28,15 +37,19 @@ const ResetPassword = () => {
 
   const handleRequestNewLink = () => {
     // Generate a new code verifier before navigating
-    generateAndStoreCodeVerifier();
+    const newVerifier = generateAndStoreCodeVerifier();
+    console.log("Generated new code verifier for reset request:", newVerifier?.substring(0, 10) + "...");
+    
+    // Store a timestamp for debugging
+    localStorage.setItem('resetPasswordRedirectTime', new Date().toISOString());
     
     const email = localStorage.getItem('passwordResetEmail');
     if (email) {
       console.log("Navigating to forgot-password with email:", email);
-      navigate('/forgot-password', { state: { email } });
+      navigate('/forgot-password', { state: { email, fromFailedReset: true } });
     } else {
       console.log("Navigating to forgot-password without email");
-      navigate('/forgot-password');
+      navigate('/forgot-password', { state: { fromFailedReset: true } });
     }
   };
 

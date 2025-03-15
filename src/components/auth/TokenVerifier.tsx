@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { CODE_VERIFIER_KEY, generateAndStoreCodeVerifier, storeCodeVerifier } from "@/utils/authUtils";
 
 interface TokenVerifierProps {
   onVerificationComplete: (isValid: boolean, error: string | null) => void;
@@ -9,6 +11,7 @@ interface TokenVerifierProps {
 
 const TokenVerifier = ({ onVerificationComplete }: TokenVerifierProps) => {
   const [searchParams] = useSearchParams();
+  const [isRecovering, setIsRecovering] = useState(false);
   
   useEffect(() => {
     async function verifyResetToken() {
@@ -34,33 +37,25 @@ const TokenVerifier = ({ onVerificationComplete }: TokenVerifierProps) => {
           return;
         }
         
-        // Try to recover verifier from passwordResetInfo if available
-        let recoveredVerifier = null;
-        try {
-          const passwordResetInfo = localStorage.getItem('passwordResetInfo');
-          if (passwordResetInfo) {
-            const parsedInfo = JSON.parse(passwordResetInfo);
-            if (parsedInfo.fullVerifier) {
-              console.log("Recovered verifier from passwordResetInfo");
-              recoveredVerifier = parsedInfo.fullVerifier;
-              
-              // Immediately store it in all locations to maximize chances of success
-              localStorage.setItem('palm_reader.auth.code_verifier', recoveredVerifier);
-              localStorage.setItem('supabase.auth.code_verifier', recoveredVerifier);
-              localStorage.setItem('palm_reader.auth.last_used_verifier', recoveredVerifier);
-              
-              console.log("Stored recovered verifier in all storage locations:", 
-                recoveredVerifier.substring(0, 10) + "...");
-            }
-          }
-        } catch (e) {
-          console.error("Error recovering verifier from passwordResetInfo:", e);
-        }
+        // Try to recover verifier from all possible storage locations
+        let recoveredVerifier = await recoverVerifiers();
         
         if (code) {
           console.log("Processing code from URL");
           
           try {
+            // If we couldn't recover a verifier, try an emergency recovery method
+            if (!recoveredVerifier && !isRecovering) {
+              setIsRecovering(true);
+              
+              // Generate a new verifier and store it in all locations as a desperate attempt
+              console.log("No verifier found, attempting emergency recovery...");
+              recoveredVerifier = generateAndStoreCodeVerifier();
+              
+              // Sleep for a second to let storage settle
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
             // Try to exchange the code for a session
             console.log("Attempting to exchange code for session...");
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -125,7 +120,61 @@ const TokenVerifier = ({ onVerificationComplete }: TokenVerifierProps) => {
     }
     
     verifyResetToken();
-  }, [searchParams, onVerificationComplete]);
+  }, [searchParams, onVerificationComplete, isRecovering]);
+  
+  // Function to try and recover a verifier from all possible storage locations
+  async function recoverVerifiers() {
+    try {
+      console.log("Attempting to recover code verifier from all possible locations...");
+      
+      // Try to recover verifier from passwordResetInfo if available
+      let recoveredVerifier = null;
+      
+      // Check all possible storage locations
+      const passwordResetInfo = localStorage.getItem('passwordResetInfo');
+      const palmReaderVerifier = localStorage.getItem(CODE_VERIFIER_KEY);
+      const supabaseVerifier = localStorage.getItem('supabase.auth.code_verifier');
+      const lastUsedVerifier = localStorage.getItem('palm_reader.auth.last_used_verifier');
+      
+      console.log("Found these potential verifiers:");
+      console.log("- passwordResetInfo:", passwordResetInfo ? "present" : "missing");
+      console.log("- palmReaderVerifier:", palmReaderVerifier ? "present" : "missing");
+      console.log("- supabaseVerifier:", supabaseVerifier ? "present" : "missing");
+      console.log("- lastUsedVerifier:", lastUsedVerifier ? "present" : "missing");
+      
+      if (passwordResetInfo) {
+        try {
+          const parsedInfo = JSON.parse(passwordResetInfo);
+          if (parsedInfo.fullVerifier) {
+            console.log("Recovered verifier from passwordResetInfo");
+            recoveredVerifier = parsedInfo.fullVerifier;
+          }
+        } catch (e) {
+          console.error("Error parsing passwordResetInfo:", e);
+        }
+      }
+      
+      // Try other storage locations if passwordResetInfo didn't work
+      if (!recoveredVerifier) {
+        recoveredVerifier = lastUsedVerifier || palmReaderVerifier || supabaseVerifier;
+      }
+      
+      if (recoveredVerifier) {
+        console.log("Found a code verifier:", recoveredVerifier.substring(0, 10) + "...");
+        console.log("Verifier length:", recoveredVerifier.length);
+        
+        // Store it in all locations to maximize chances of success
+        storeCodeVerifier(recoveredVerifier);
+        return recoveredVerifier;
+      }
+      
+      console.warn("Could not recover any code verifier");
+      return null;
+    } catch (e) {
+      console.error("Error during verifier recovery:", e);
+      return null;
+    }
+  }
   
   return (
     <div className="text-center">

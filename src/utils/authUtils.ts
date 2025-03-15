@@ -30,12 +30,27 @@ export const generateCodeVerifier = (): string => {
  * Stores a code verifier in all possible storage locations for maximum compatibility
  */
 export const storeCodeVerifier = (codeVerifier: string): void => {
+  if (!codeVerifier) {
+    console.error("Attempted to store empty code verifier");
+    return;
+  }
+  
   localStorage.setItem(CODE_VERIFIER_KEY, codeVerifier);
   localStorage.setItem(SUPABASE_CODE_VERIFIER_KEY, codeVerifier);
   localStorage.setItem(LAST_USED_VERIFIER_KEY, codeVerifier);
   
+  // Store a timestamp to debug issues with verifier lifespan
+  localStorage.setItem('codeVerifierTimestamp', new Date().toISOString());
+  
   console.log("Stored code verifier:", codeVerifier.substring(0, 10) + "...");
   console.log("Verifier length:", codeVerifier.length);
+  console.log("Stored in all locations at:", new Date().toISOString());
+  
+  // Verify storage succeeded
+  const storedVerifier = localStorage.getItem(CODE_VERIFIER_KEY);
+  if (storedVerifier !== codeVerifier) {
+    console.error("Failed to store code verifier correctly!");
+  }
 };
 
 /**
@@ -45,6 +60,26 @@ export const generateAndStoreCodeVerifier = (): string | null => {
   try {
     const codeVerifier = generateCodeVerifier();
     storeCodeVerifier(codeVerifier);
+    
+    // Store in passwordResetInfo for recovery
+    try {
+      let existingInfo: any = {};
+      const existingInfoStr = localStorage.getItem('passwordResetInfo');
+      
+      if (existingInfoStr) {
+        existingInfo = JSON.parse(existingInfoStr);
+      }
+      
+      existingInfo.fullVerifier = codeVerifier;
+      existingInfo.verifier = codeVerifier.substring(0, 10) + "...";
+      existingInfo.verifierLength = codeVerifier.length;
+      existingInfo.timestamp = new Date().toISOString();
+      
+      localStorage.setItem('passwordResetInfo', JSON.stringify(existingInfo));
+    } catch (e) {
+      console.error("Error updating passwordResetInfo with new verifier:", e);
+    }
+    
     return codeVerifier;
   } catch (error) {
     console.error("Error generating code verifier:", error);
@@ -98,4 +133,15 @@ export const storePasswordResetInfo = (
 export const markPasswordResetRequested = (): void => {
   localStorage.setItem('passwordResetRequested', 'true');
   localStorage.setItem('passwordResetTimestamp', new Date().toISOString());
+};
+
+/**
+ * Clear all password reset information
+ */
+export const clearPasswordResetInfo = (): void => {
+  localStorage.removeItem('passwordResetInfo');
+  localStorage.removeItem('passwordResetEmail');
+  localStorage.removeItem('passwordResetRequested');
+  localStorage.removeItem('passwordResetTimestamp');
+  localStorage.removeItem('resetPasswordError');
 };
