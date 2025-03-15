@@ -1,7 +1,7 @@
 
 import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { storeNewCodeVerifier } from "@/lib/supabase";
+import { CODE_VERIFIER_KEY, generateAndStoreCodeVerifier } from "@/utils/authUtils";
 
 interface InvalidResetLinkProps {
   errorMessage: string | null;
@@ -9,6 +9,12 @@ interface InvalidResetLinkProps {
 }
 
 const InvalidResetLink = ({ errorMessage, onRequestNewLink }: InvalidResetLinkProps) => {
+  const handleRequestNewLink = () => {
+    // Generate a fresh code verifier before requesting a new link
+    generateAndStoreCodeVerifier();
+    onRequestNewLink();
+  };
+
   return (
     <div className="space-y-6">
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
@@ -27,7 +33,7 @@ const InvalidResetLink = ({ errorMessage, onRequestNewLink }: InvalidResetLinkPr
       </div>
       
       <Button 
-        onClick={onRequestNewLink}
+        onClick={handleRequestNewLink}
         className="w-full bg-palm-purple hover:bg-palm-purple/90"
       >
         <RefreshCcw size={18} className="mr-2" />

@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import TokenVerifier from "@/components/auth/TokenVerifier";
 import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 import InvalidResetLink from "@/components/auth/InvalidResetLink";
-import { storeNewCodeVerifier } from "@/lib/supabase";
+import { generateAndStoreCodeVerifier } from "@/utils/authUtils";
 
 const ResetPassword = () => {
   const [validToken, setValidToken] = useState(false);
@@ -14,7 +14,13 @@ const ResetPassword = () => {
   const [tokenError, setTokenError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // When the component mounts, we'll log some debugging info
+  useEffect(() => {
+    console.log("ResetPassword component mounted, current URL:", window.location.href);
+  }, []);
+
   const handleVerificationComplete = (isValid: boolean, error: string | null) => {
+    console.log("Token verification complete:", isValid, error);
     setValidToken(isValid);
     setTokenError(error);
     setIsVerifying(false);
@@ -22,12 +28,14 @@ const ResetPassword = () => {
 
   const handleRequestNewLink = () => {
     // Generate a new code verifier before navigating
-    storeNewCodeVerifier();
+    generateAndStoreCodeVerifier();
     
     const email = localStorage.getItem('passwordResetEmail');
     if (email) {
+      console.log("Navigating to forgot-password with email:", email);
       navigate('/forgot-password', { state: { email } });
     } else {
+      console.log("Navigating to forgot-password without email");
       navigate('/forgot-password');
     }
   };
