@@ -1,258 +1,23 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff, Save, AlertCircle, RefreshCcw } from "lucide-react";
-import { toast } from "sonner";
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { supabase, storeNewCodeVerifier } from "@/lib/supabase";
+import TokenVerifier from "@/components/auth/TokenVerifier";
+import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
+import InvalidResetLink from "@/components/auth/InvalidResetLink";
+import { storeNewCodeVerifier } from "@/lib/supabase";
 
 const ResetPassword = () => {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validToken, setValidToken] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [tokenError, setTokenError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  useEffect(() => {
-    console.log("ResetPassword component mounted");
-    console.log("Current URL params:", Object.fromEntries(searchParams.entries()));
-    
-    // Display full URL for debugging (but mask sensitive parts)
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    if (code) {
-      url.searchParams.set('code', code.substring(0, 5) + '...');
-    }
-    console.log("Full URL (sanitized):", url.toString());
-    
-    // Check if we have a reset log stored for debugging
-    const passwordResetInfo = localStorage.getItem('passwordResetInfo');
-    if (passwordResetInfo) {
-      try {
-        const parsedInfo = JSON.parse(passwordResetInfo);
-        console.log("Password reset info found:", {
-          email: parsedInfo.email,
-          timestamp: parsedInfo.timestamp,
-          verifierStart: parsedInfo.verifier,
-          verifierLength: parsedInfo.verifierLength
-        });
-      } catch (e) {
-        console.log("Failed to parse reset info:", passwordResetInfo);
-      }
-    }
-    
-    // Clean up the URL by removing any error parameters
-    if (window.history && window.history.replaceState) {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('error') || params.has('error_description')) {
-        const cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('error');
-        cleanUrl.searchParams.delete('error_description');
-        window.history.replaceState(null, document.title, cleanUrl.toString());
-      }
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    async function verifyResetToken() {
-      try {
-        console.log("=========== VERIFYING PASSWORD RESET TOKEN ===========");
-        console.log("Current URL:", window.location.href);
-        setIsVerifying(true);
-        
-        // Check for code parameter in URL
-        const code = searchParams.get('code');
-        const type = searchParams.get('type');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
-        
-        console.log("Code from URL:", code ? "present (starts with " + code.substring(0, 5) + "...)" : "missing");
-        console.log("Type from URL:", type || "none");
-        console.log("Error from URL:", error || "none");
-        console.log("Error description:", errorDescription || "none");
-        
-        // If there's an error in the URL, show it
-        if (error && errorDescription) {
-          console.error(`Error in URL: ${error} - ${errorDescription}`);
-          setTokenError(errorDescription);
-          setValidToken(false);
-          setIsVerifying(false);
-          return;
-        }
-        
-        // Try to recover verifier from passwordResetInfo if available
-        let recoveredVerifier = null;
-        try {
-          const passwordResetInfo = localStorage.getItem('passwordResetInfo');
-          if (passwordResetInfo) {
-            const parsedInfo = JSON.parse(passwordResetInfo);
-            if (parsedInfo.fullVerifier) {
-              console.log("Recovered verifier from passwordResetInfo");
-              recoveredVerifier = parsedInfo.fullVerifier;
-              
-              // Immediately store it in all locations to maximize chances of success
-              localStorage.setItem('palm_reader.auth.code_verifier', recoveredVerifier);
-              localStorage.setItem('supabase.auth.code_verifier', recoveredVerifier);
-              localStorage.setItem('palm_reader.auth.last_used_verifier', recoveredVerifier);
-              
-              console.log("Stored recovered verifier in all storage locations:", 
-                recoveredVerifier.substring(0, 10) + "...");
-            }
-          }
-        } catch (e) {
-          console.error("Error recovering verifier from passwordResetInfo:", e);
-        }
-        
-        if (code) {
-          console.log("Processing code from URL");
-          
-          try {
-            // Try to exchange the code for a session
-            console.log("Attempting to exchange code for session...");
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            
-            if (error) {
-              console.error("Error exchanging code for session:", error);
-              
-              // Special handling for common errors
-              if (error.message.includes("auth code and code verifier")) {
-                setTokenError("Authentication error: The code verifier doesn't match the code. Please request a new reset link.");
-              } else {
-                setTokenError(`Error: ${error.message || "Invalid reset code"}`);
-              }
-              
-              setValidToken(false);
-              setIsVerifying(false);
-              
-              // Store diagnostic info for debugging
-              localStorage.setItem('resetPasswordError', JSON.stringify({
-                error: error.message,
-                code: code.substring(0, 5) + "...",
-                hasVerifier: !!recoveredVerifier,
-                verifierLength: recoveredVerifier ? recoveredVerifier.length : 0,
-                timestamp: new Date().toISOString()
-              }));
-              return;
-            }
-            
-            if (!data.session) {
-              console.warn("Code exchange succeeded but no session was returned");
-              setTokenError("Authentication succeeded but no session was created");
-              setValidToken(false);
-              setIsVerifying(false);
-              return;
-            }
-            
-            console.log("Successfully exchanged code for session");
-            setValidToken(true);
-            
-            // Clean up the URL by removing the code parameter
-            if (window.history && window.history.replaceState) {
-              const cleanUrl = new URL(window.location.href);
-              cleanUrl.searchParams.delete('code');
-              cleanUrl.searchParams.delete('type');
-              window.history.replaceState(null, document.title, cleanUrl.toString());
-            }
-          } catch (exchangeError) {
-            console.error("Exception during code exchange:", exchangeError);
-            setTokenError("Error processing reset code. The code may be invalid or expired.");
-            setValidToken(false);
-          }
-        } else {
-          // Check if there's already a valid session
-          const { data: sessionData } = await supabase.auth.getSession();
-          
-          if (sessionData?.session) {
-            console.log("User has a valid session, allowing password reset");
-            setValidToken(true);
-          } else {
-            console.log("No valid session found");
-            setTokenError("No reset code found in URL. Please check your email and click the reset link.");
-            setValidToken(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error in token verification:", error);
-        setTokenError("Error verifying reset link");
-        setValidToken(false);
-      } finally {
-        setIsVerifying(false);
-      }
-    }
-    
-    verifyResetToken();
-  }, [searchParams]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      if (password.length < 8) {
-        toast.error("Password too short", {
-          description: "Your password must be at least 8 characters long."
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      if (password !== confirmPassword) {
-        toast.error("Passwords don't match", {
-          description: "Please make sure both passwords match."
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Attempting to update password");
-      
-      // Direct update through supabase
-      const { data, error } = await supabase.auth.updateUser({
-        password: password
-      });
-      
-      if (error) {
-        console.error("Password update error from Supabase:", error);
-        toast.error("Failed to update password", {
-          description: error.message || "Please try again or request a new reset link."
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Password updated successfully:", data ? "User data updated" : "No data returned");
-      
-      // Success!
-      toast.success("Password updated successfully", {
-        description: "You can now log in with your new password."
-      });
-      
-      // Clean up
-      localStorage.removeItem('passwordResetRequested');
-      localStorage.removeItem('passwordResetEmail');
-      localStorage.removeItem('passwordResetTimestamp');
-      localStorage.removeItem('resetPasswordError');
-      localStorage.removeItem('passwordResetLog');
-      
-      // Redirect to login after success
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (error) {
-      console.error("Password update error:", error);
-      toast.error("Password update failed", {
-        description: "Please try again later."
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleVerificationComplete = (isValid: boolean, error: string | null) => {
+    setValidToken(isValid);
+    setTokenError(error);
+    setIsVerifying(false);
   };
 
   const handleRequestNewLink = () => {
@@ -266,21 +31,6 @@ const ResetPassword = () => {
       navigate('/forgot-password');
     }
   };
-
-  if (isVerifying) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
-          <div className="text-center">
-            <p className="text-xl">Verifying reset link...</p>
-            <div className="mt-4 w-8 h-8 border-4 border-palm-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -296,103 +46,15 @@ const ResetPassword = () => {
               </p>
             </div>
 
-            {validToken ? (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={8}
-                      className="w-full pr-10"
-                      placeholder="Enter new password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Password must be at least 8 characters long
-                  </p>
-                </div>
-
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      className="w-full pr-10"
-                      placeholder="Confirm new password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-palm-purple hover:bg-palm-purple/90"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center">
-                      <RefreshCcw size={18} className="mr-2 animate-spin" />
-                      Updating...
-                    </span>
-                  ) : (
-                    <>
-                      <Save size={18} className="mr-2" />
-                      <span>Update Password</span>
-                    </>
-                  )}
-                </Button>
-              </form>
+            {isVerifying ? (
+              <TokenVerifier onVerificationComplete={handleVerificationComplete} />
+            ) : validToken ? (
+              <ResetPasswordForm />
             ) : (
-              <div className="space-y-6">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-                  <p className="font-medium flex items-center">
-                    <AlertCircle size={18} className="mr-2" />
-                    Invalid or expired reset link
-                  </p>
-                  <p className="text-sm mt-1">
-                    {tokenError || "Please request a new password reset link from the login page."}
-                  </p>
-                  {window.location.hostname === 'localhost' && (
-                    <p className="text-sm mt-2 font-medium">
-                      Note: Password reset links often have issues in local development environments.
-                    </p>
-                  )}
-                </div>
-                
-                <Button 
-                  onClick={handleRequestNewLink}
-                  className="w-full bg-palm-purple hover:bg-palm-purple/90"
-                >
-                  <RefreshCcw size={18} className="mr-2" />
-                  Request New Reset Link
-                </Button>
-              </div>
+              <InvalidResetLink 
+                errorMessage={tokenError}
+                onRequestNewLink={handleRequestNewLink}
+              />
             )}
           </div>
         </div>
