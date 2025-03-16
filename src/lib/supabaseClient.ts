@@ -11,12 +11,19 @@ const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // IMPORTANT: We handle redirects manually for better control
+    detectSessionInUrl: true, // Enable automatic session detection in URL
     storage: window.localStorage
   }
 });
 
 // Log initialization for debugging
 console.log("Supabase client initialized in supabaseClient.ts");
+console.log("Current URL:", window.location.href);
+console.log("Supabase auth config:", {
+  flowType: 'pkce',
+  autoRefreshToken: true,
+  persistSession: true,
+  detectSessionInUrl: true
+});
 
 export default supabaseClient;
