@@ -89,7 +89,7 @@ const ResetEmailForm = ({
       
       setIsSubmitted(true);
       toast.success("Reset link sent", {
-        description: "Please check your email for the password reset link.",
+        description: "Please check your email for the password reset link and use it immediately.",
       });
     } catch (error) {
       console.error("Password reset error:", error);

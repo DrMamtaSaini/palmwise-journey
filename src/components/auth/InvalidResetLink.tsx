@@ -53,11 +53,9 @@ const InvalidResetLink = ({ errorMessage, onRequestNewLink }: InvalidResetLinkPr
           )}
         </AlertDescription>
         
-        {window.location.hostname === 'localhost' && (
-          <p className="text-sm mt-2 font-medium">
-            Note: Password reset links often have issues in local development environments.
-          </p>
-        )}
+        <p className="text-sm mt-2 italic">
+          For security reasons, reset links expire quickly. Please use the link immediately after receiving it.
+        </p>
       </Alert>
       
       <Button 

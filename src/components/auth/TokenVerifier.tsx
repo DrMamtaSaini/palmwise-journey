@@ -65,7 +65,7 @@ const TokenVerifier = ({ onVerificationComplete }: TokenVerifierProps) => {
               
               // Special handling for common errors
               if (error.message.includes("auth code and code verifier")) {
-                onVerificationComplete(false, "Authentication error: The code verifier doesn't match the code. Please request a new reset link.");
+                onVerificationComplete(false, "The password reset link has expired or is invalid. Please request a new reset link.");
               } else {
                 onVerificationComplete(false, `Error: ${error.message || "Invalid reset code"}`);
               }
