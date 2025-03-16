@@ -60,11 +60,9 @@ const ResetPasswordForm = () => {
       });
       
       // Clean up
-      localStorage.removeItem('passwordResetRequested');
       localStorage.removeItem('passwordResetEmail');
-      localStorage.removeItem('passwordResetTimestamp');
+      localStorage.removeItem('passwordResetRequestedAt');
       localStorage.removeItem('resetPasswordError');
-      localStorage.removeItem('passwordResetLog');
       
       // Redirect to login after success
       setTimeout(() => {

@@ -7,12 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
-import { 
-  generateAndStoreCodeVerifier, 
-  generateCodeChallenge, 
-  storePasswordResetInfo, 
-  markPasswordResetRequested 
-} from "@/utils/authUtils";
 
 interface ResetEmailFormProps {
   email: string;
@@ -40,35 +34,17 @@ const ResetEmailForm = ({
     }
 
     try {
-      // Generate a fresh code verifier for this specific reset request
-      const codeVerifier = generateAndStoreCodeVerifier();
+      // For debugging purposes, let's clear any previous error data
+      localStorage.removeItem('resetPasswordError');
       
-      if (!codeVerifier) {
-        toast.error("Error setting up password reset", { 
-          description: "Please try again or contact support." 
-        });
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Fresh code verifier for password reset request:", codeVerifier.substring(0, 10) + "...");
+      // Store email for recovery purposes
+      localStorage.setItem('passwordResetEmail', email);
       
       // Get the absolute URL for the reset-password page
       const origin = window.location.origin;
       const redirectUrl = `${origin}/reset-password`;
       
       console.log('Using redirect URL for password reset:', redirectUrl);
-      
-      // Store password reset info for debugging and recovery
-      storePasswordResetInfo(email, codeVerifier, redirectUrl, "");
-      
-      console.log("Calling Supabase resetPasswordForEmail with:", {
-        email,
-        redirectUrl,
-        codeVerifierExists: !!codeVerifier,
-        codeVerifierLength: codeVerifier.length,
-        codeVerifierStart: codeVerifier.substring(0, 10) + "..."
-      });
       
       // Use Supabase auth for password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -84,12 +60,12 @@ const ResetEmailForm = ({
         return;
       }
       
-      // Mark password reset as requested for later verification
-      markPasswordResetRequested();
+      // Mark timestamp for later verification
+      localStorage.setItem('passwordResetRequestedAt', new Date().toISOString());
       
       setIsSubmitted(true);
       toast.success("Reset link sent", {
-        description: "Please check your email for the password reset link and use it immediately.",
+        description: "Please check your email for the password reset link and use it immediately (within 5 minutes).",
       });
     } catch (error) {
       console.error("Password reset error:", error);
