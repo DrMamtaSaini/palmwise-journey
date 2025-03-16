@@ -1,14 +1,10 @@
-
 import supabaseClient from './supabaseClient';
-
-// Determine if we're in a development environment
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 // Export the Supabase client
 export const supabase = supabaseClient;
 
 // Log the current environment details for debugging
-console.log("Supabase client initialized with URL:", supabaseClient.supabaseUrl);
+console.log("Supabase client exported from lib/supabase.ts");
 console.log("Current browser location:", window.location.href);
 console.log("Current origin:", window.location.origin);
 

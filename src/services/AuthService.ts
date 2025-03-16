@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { User } from "@/hooks/useAuth";
 
@@ -61,7 +60,7 @@ const initializeFromSession = (session: any | null) => {
 
 // Subscribe to authentication state changes
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log(`Auth state changed: ${event}`, session ? 'User session exists' : 'No session');
+  console.log(`Auth state changed in AuthService: ${event}`, session ? 'User session exists' : 'No session');
   
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
     initializeFromSession(session);
@@ -167,16 +166,24 @@ const AuthService = {
   signInWithGoogle: async () => {
     try {
       updateAuthState({ isLoading: true });
+      console.log("AuthService: Initiating Google sign-in");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            prompt: 'select_account' // Force Google to show the account selector
+          }
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Google OAuth error:", error);
+        throw error;
+      }
       
+      console.log("Google sign-in initiated successfully", data);
       return true;
     } catch (error) {
       console.error('Google sign in error:', error);

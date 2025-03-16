@@ -68,12 +68,23 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoggingInWithGoogle(true);
-      await signInWithGoogle();
+      console.log("Starting Google sign-in process...");
+      
+      const success = await signInWithGoogle();
+      
+      if (!success) {
+        setIsLoggingInWithGoogle(false);
+        toast.error("Google login failed", {
+          description: "Could not sign in with Google. Please try again.",
+        });
+      }
+      // Note: We don't set isLoggingInWithGoogle to false on success because the page will redirect
     } catch (error) {
+      console.error("Google sign-in error:", error);
+      setIsLoggingInWithGoogle(false);
       toast.error("Google login failed", {
         description: "Could not sign in with Google. Please try again.",
       });
-      setIsLoggingInWithGoogle(false);
     }
   };
 

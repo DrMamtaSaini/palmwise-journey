@@ -16,4 +16,7 @@ const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
+// Log initialization for debugging
+console.log("Supabase client initialized in supabaseClient.ts");
+
 export default supabaseClient;
