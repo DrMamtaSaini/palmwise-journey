@@ -1,3 +1,4 @@
+
 import supabaseClient from './supabaseClient';
 
 // Export the Supabase client
@@ -12,6 +13,15 @@ console.log("Current origin:", window.location.origin);
 supabase.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
   
+  if (event === 'SIGNED_IN') {
+    console.log("User signed in successfully!");
+    if (session?.user?.app_metadata?.provider) {
+      console.log("Signed in via provider:", session.user.app_metadata.provider);
+    }
+    localStorage.removeItem('passwordResetRequestedAt');
+    localStorage.removeItem('passwordResetEmail');
+  }
+  
   if (event === 'PASSWORD_RECOVERY') {
     console.log("Password recovery event detected!");
     localStorage.setItem('passwordResetRequestedAt', new Date().toISOString());
@@ -20,12 +30,6 @@ supabase.auth.onAuthStateChange((event, session) => {
     if (!window.location.pathname.includes('reset-password')) {
       window.location.href = `${window.location.origin}/reset-password`;
     }
-  }
-  
-  if (event === 'SIGNED_IN') {
-    console.log("User signed in successfully!");
-    localStorage.removeItem('passwordResetRequestedAt');
-    localStorage.removeItem('passwordResetEmail');
   }
 });
 
@@ -90,6 +94,7 @@ export async function handleAuthTokensOnLoad() {
         }
         
         console.log("Successfully exchanged code for session");
+        console.log("Provider used:", data.session.user.app_metadata?.provider || "email");
         
         // Clean up the URL by removing the code parameter
         if (window.history && window.history.replaceState) {

@@ -1,5 +1,5 @@
 
-import { supabase } from "@/lib/supabase";
+import supabaseClient from "@/lib/supabaseClient";
 import { User } from "@/hooks/useAuth";
 
 // Define the shape of the auth state
@@ -60,7 +60,7 @@ const initializeFromSession = (session: any | null) => {
 };
 
 // Subscribe to authentication state changes
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log(`Auth state changed in AuthService: ${event}`, session ? 'User session exists' : 'No session');
   
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -84,7 +84,7 @@ const AuthService = {
   // Check the current session
   checkSession: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
       initializeFromSession(session);
       return !!session;
     } catch (error) {
@@ -99,7 +99,7 @@ const AuthService = {
     try {
       updateAuthState({ isLoading: true });
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password
       });
@@ -119,7 +119,7 @@ const AuthService = {
     try {
       updateAuthState({ isLoading: true });
       
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -149,7 +149,7 @@ const AuthService = {
   signOut: async () => {
     try {
       updateAuthState({ isLoading: true });
-      const { error } = await supabase.auth.signOut();
+      const { error } = await supabaseClient.auth.signOut();
       if (error) throw error;
     } catch (error) {
       console.error('Sign out error:', error);
@@ -169,11 +169,12 @@ const AuthService = {
       updateAuthState({ isLoading: true });
       console.log("AuthService: Initiating Google sign-in");
       
-      // Using the current origin for the redirect URL
+      // Using the callback endpoint that includes /auth/callback
       const redirectUrl = `${window.location.origin}/auth/callback`;
+      
       console.log("Using redirect URL:", redirectUrl);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
@@ -192,6 +193,8 @@ const AuthService = {
       // Log the URL that will be used for the redirect
       if (data?.url) {
         console.log("Google auth URL generated:", data.url);
+        // Redirect the user to the Google authorization URL
+        window.location.href = data.url;
       } else {
         console.warn("No Google auth URL was generated");
       }
@@ -208,7 +211,7 @@ const AuthService = {
   // Forgot password
   forgotPassword: async (email: string, redirectUrl?: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl || `${window.location.origin}/reset-password`
       });
       
@@ -226,7 +229,7 @@ const AuthService = {
     try {
       updateAuthState({ isLoading: true });
       
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseClient.auth.updateUser({
         password: newPassword
       });
       

@@ -26,4 +26,12 @@ console.log("Supabase auth config:", {
   detectSessionInUrl: true
 });
 
+// For Google Sign-In debugging
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  console.log(`Auth state change in supabaseClient: ${event}`, session ? 'Session exists' : 'No session');
+  if (event === 'SIGNED_IN' && session) {
+    console.log("User signed in through provider:", session.user?.app_metadata?.provider);
+  }
+});
+
 export default supabaseClient;
