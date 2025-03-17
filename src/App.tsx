@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
@@ -10,6 +11,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TokenVerifier from './components/auth/TokenVerifier';
 import { Toaster } from "@/components/ui/sonner"
 import AuthCallback from './pages/AuthCallback';
+import UploadPalm from './pages/UploadPalm';
+import ReadingResults from './pages/ReadingResults';
 
 function App() {
   return (
@@ -26,8 +29,9 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/verify" element={<TokenVerifier onVerificationComplete={() => {}} />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/upload-palm" element={<UploadPalm />} />
+        <Route path="/reading-results/:id" element={<ReadingResults />} />
       </Routes>
-      <Toaster />
     </Router>
   );
 }
