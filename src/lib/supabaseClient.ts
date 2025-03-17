@@ -11,26 +11,26 @@ const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // Enable automatic session detection in URL
-    storage: window.localStorage
+    detectSessionInUrl: true,
+    storage: localStorage
   }
 });
 
 // Log initialization for debugging
-console.log("Supabase client initialized in supabaseClient.ts");
-console.log("Current URL:", window.location.href);
-console.log("Supabase auth config:", {
-  flowType: 'pkce',
-  autoRefreshToken: true,
-  persistSession: true,
-  detectSessionInUrl: true
+console.log("Supabase client initialized with:", {
+  url: supabaseUrl,
+  hasAnonKey: !!supabaseAnonKey,
+  currentUrl: window.location.href,
+  localStorage: typeof localStorage !== 'undefined' ? 'available' : 'unavailable'
 });
 
-// For Google Sign-In debugging
+// For OAuth debugging
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  console.log(`Auth state change in supabaseClient: ${event}`, session ? 'Session exists' : 'No session');
+  console.log(`Auth state change event: ${event}`, session ? 'Session exists' : 'No session');
+  
   if (event === 'SIGNED_IN' && session) {
-    console.log("User signed in through provider:", session.user?.app_metadata?.provider);
+    console.log("User signed in successfully, provider:", session.user?.app_metadata?.provider);
+    console.log("User email:", session.user?.email);
   }
 });
 

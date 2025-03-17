@@ -1,4 +1,3 @@
-
 import supabaseClient from "@/lib/supabaseClient";
 import { User } from "@/hooks/useAuth";
 
@@ -169,8 +168,9 @@ const AuthService = {
       updateAuthState({ isLoading: true });
       console.log("AuthService: Initiating Google sign-in");
       
-      // Using the callback endpoint that includes /auth/callback
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      // Use absolute URL for redirect, which must match exactly what's configured in Supabase
+      const origin = window.location.origin;
+      const redirectUrl = `${origin}/auth/callback`;
       
       console.log("Using redirect URL:", redirectUrl);
       
@@ -179,8 +179,8 @@ const AuthService = {
         options: {
           redirectTo: redirectUrl,
           queryParams: {
-            prompt: 'select_account', // Force Google to show the account selector
-            access_type: 'offline'    // Request a refresh token
+            prompt: 'select_account', // Force Google account selector
+            access_type: 'offline'    // Request refresh token
           }
         }
       });
@@ -197,9 +197,10 @@ const AuthService = {
         window.location.href = data.url;
       } else {
         console.warn("No Google auth URL was generated");
+        throw new Error("Failed to generate Google authentication URL");
       }
       
-      console.log("Google sign-in initiated successfully", data);
+      console.log("Google sign-in initiated successfully");
       return true;
     } catch (error) {
       console.error('Google sign in error:', error);

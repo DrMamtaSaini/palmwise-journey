@@ -11,24 +11,12 @@ console.log("Current origin:", window.location.origin);
 
 // Handle auth state changes for debugging
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log(`Auth state change event: ${event}`, session ? "Session exists" : "No session");
+  console.log(`Auth state change event in supabase.ts: ${event}`, session ? "Session exists" : "No session");
   
   if (event === 'SIGNED_IN') {
-    console.log("User signed in successfully!");
+    console.log("User signed in successfully in supabase.ts!");
     if (session?.user?.app_metadata?.provider) {
       console.log("Signed in via provider:", session.user.app_metadata.provider);
-    }
-    localStorage.removeItem('passwordResetRequestedAt');
-    localStorage.removeItem('passwordResetEmail');
-  }
-  
-  if (event === 'PASSWORD_RECOVERY') {
-    console.log("Password recovery event detected!");
-    localStorage.setItem('passwordResetRequestedAt', new Date().toISOString());
-    
-    // Redirect to reset password page if we're not already there
-    if (!window.location.pathname.includes('reset-password')) {
-      window.location.href = `${window.location.origin}/reset-password`;
     }
   }
 });
@@ -47,7 +35,7 @@ export async function handleAuthTokensOnLoad() {
     const errorDescription = params.get('error_description');
     
     console.log("URL parameters:", { 
-      code: code ? code.substring(0, 5) + "..." : "missing", 
+      code: code ? `${code.substring(0, 5)}...` : "missing", 
       type, 
       error, 
       errorDescription 
@@ -62,18 +50,11 @@ export async function handleAuthTokensOnLoad() {
       };
     }
     
-    // If this is a recovery type, store that information
-    if (type === 'recovery') {
-      console.log("This appears to be a password reset link");
-      localStorage.setItem('passwordResetRequestedAt', new Date().toISOString());
-    }
-    
     if (code) {
-      console.log("Code parameter found:", code.substring(0, 5) + "...");
+      console.log("Code parameter found, attempting to exchange for session");
       
       try {
         // Try to exchange the code for a session
-        console.log("Attempting to exchange code for session...");
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         
         if (error) {
@@ -93,7 +74,7 @@ export async function handleAuthTokensOnLoad() {
           };
         }
         
-        console.log("Successfully exchanged code for session");
+        console.log("Successfully exchanged code for session!");
         console.log("Provider used:", data.session.user.app_metadata?.provider || "email");
         
         // Clean up the URL by removing the code parameter
@@ -102,17 +83,6 @@ export async function handleAuthTokensOnLoad() {
           cleanUrl.searchParams.delete('code');
           cleanUrl.searchParams.delete('type');
           window.history.replaceState(null, document.title, cleanUrl.toString());
-        }
-        
-        // Check if this was a password reset request
-        if (type === 'recovery' || localStorage.getItem('passwordResetRequestedAt')) {
-          console.log("This appears to be a password reset request");
-          
-          return { 
-            success: true, 
-            session: data.session,
-            message: "Session created successfully for password reset" 
-          };
         }
         
         return { 
@@ -126,30 +96,6 @@ export async function handleAuthTokensOnLoad() {
           success: false, 
           error, 
           message: "Error exchanging code for session" 
-        };
-      }
-    }
-    
-    // Check if we're on the reset-password page
-    if (window.location.pathname.includes('reset-password')) {
-      if (localStorage.getItem('passwordResetRequestedAt')) {
-        // Check if the reset was requested recently (within 10 minutes)
-        const resetTime = new Date(localStorage.getItem('passwordResetRequestedAt') || "");
-        const nowTime = new Date();
-        const minutesSinceReset = (nowTime.getTime() - resetTime.getTime()) / (1000 * 60);
-        
-        if (minutesSinceReset > 10) {
-          console.log("Reset link expired (requested more than 10 minutes ago)");
-          return { 
-            success: false,
-            message: "Your reset link has expired. Please request a new one."
-          };
-        }
-      } else if (!code) {
-        console.log("On reset password page but no code parameter or reset request found.");
-        return { 
-          success: false,
-          message: "No reset code found in URL. Please request a new password reset link."
         };
       }
     }

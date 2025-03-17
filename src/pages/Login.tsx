@@ -68,7 +68,11 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoggingInWithGoogle(true);
-      console.log("Starting Google sign-in process...");
+      console.log("Starting Google sign-in process from Login page...");
+      
+      // Verify we're using the correct URL
+      console.log("Current URL:", window.location.href);
+      console.log("Origin:", window.location.origin);
       
       const success = await signInWithGoogle();
       
@@ -78,7 +82,7 @@ const Login = () => {
           description: "Could not sign in with Google. Please try again.",
         });
       }
-      // Note: We don't set isLoggingInWithGoogle to false on success because the page will redirect
+      // We don't set isLoggingInWithGoogle to false on success because the page will redirect
     } catch (error) {
       console.error("Google sign-in error:", error);
       setIsLoggingInWithGoogle(false);
