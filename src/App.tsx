@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner"
 import AuthCallback from './pages/AuthCallback';
 import UploadPalm from './pages/UploadPalm';
 import ReadingResults from './pages/ReadingResults';
+import PaymentDebug from './pages/PaymentDebug';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/upload-palm" element={<UploadPalm />} />
         <Route path="/reading-results/:id" element={<ReadingResults />} />
+        <Route path="/payment-debug" element={<PaymentDebug />} />
       </Routes>
     </Router>
   );

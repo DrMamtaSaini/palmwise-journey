@@ -45,15 +45,17 @@ export async function recordPayment(paymentDetails: PaymentRecord): Promise<void
       billing_period: paymentDetails.billing_period
     });
     
-    // Use a manual query since we don't have the payments table in the TypeScript types yet
-    const { data, error } = await supabaseClient.rpc('insert_payment', {
-      p_user_id: paymentDetails.user_id,
-      p_amount: paymentDetails.amount,
-      p_description: paymentDetails.description,
-      p_payment_method: paymentDetails.payment_method,
-      p_payment_id: paymentDetails.payment_id || null,
-      p_billing_period: paymentDetails.billing_period
-    });
+    // Now that we have the payments table, we can insert directly
+    const { error } = await supabaseClient
+      .from('payments')
+      .insert({
+        user_id: paymentDetails.user_id,
+        amount: paymentDetails.amount,
+        description: paymentDetails.description,
+        payment_method: paymentDetails.payment_method,
+        payment_id: paymentDetails.payment_id || null,
+        billing_period: paymentDetails.billing_period
+      });
     
     if (error) {
       console.error("Error recording payment:", error);
@@ -66,7 +68,7 @@ export async function recordPayment(paymentDetails: PaymentRecord): Promise<void
       throw error;
     }
     
-    console.log("Payment recorded successfully:", data);
+    console.log("Payment recorded successfully");
   } catch (error) {
     console.error("Exception in recordPayment:", error);
     console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
