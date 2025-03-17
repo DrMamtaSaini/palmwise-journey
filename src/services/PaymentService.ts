@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import supabaseClient from '@/lib/supabaseClient';
 
 interface PaymentRecord {
   user_id: string;
@@ -13,7 +13,7 @@ interface PaymentRecord {
 export async function getPayPalClientId(): Promise<string> {
   try {
     console.log("Fetching PayPal client ID from Supabase function...");
-    const { data, error } = await supabase.functions.invoke("get-paypal-key");
+    const { data, error } = await supabaseClient.functions.invoke("get-paypal-key");
     
     if (error) {
       console.error("Error fetching PayPal client ID:", error);
@@ -46,7 +46,7 @@ export async function recordPayment(paymentDetails: PaymentRecord): Promise<void
     });
     
     // Use a manual query since we don't have the payments table in the TypeScript types yet
-    const { data, error } = await supabase.rpc('insert_payment', {
+    const { data, error } = await supabaseClient.rpc('insert_payment', {
       p_user_id: paymentDetails.user_id,
       p_amount: paymentDetails.amount,
       p_description: paymentDetails.description,
