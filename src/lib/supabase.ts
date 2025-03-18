@@ -100,55 +100,7 @@ export async function handleAuthTokensOnLoad() {
       }
     }
     
-    // Check for hash parameters for backward compatibility
-    const hash = window.location.hash;
-    if (hash && hash.includes('access_token')) {
-      console.log("Hash parameters found with access_token, handling legacy flow");
-      
-      try {
-        // Let Supabase handle the hash parameters
-        const { data, error } = await supabase.auth.getSessionFromUrl();
-        
-        if (error) {
-          console.error("Error getting session from URL hash:", error);
-          return { 
-            success: false, 
-            error, 
-            message: `Error getting session from URL hash: ${error.message}` 
-          };
-        }
-        
-        if (!data.session) {
-          console.warn("Hash processing succeeded but no session was returned");
-          return {
-            success: false,
-            message: "Authentication succeeded but no session was created"
-          };
-        }
-        
-        console.log("Successfully got session from URL hash!");
-        console.log("Provider used:", data.session.user.app_metadata?.provider || "email");
-        
-        // Clean up the URL by removing the hash
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
-        }
-        
-        return { 
-          success: true, 
-          session: data.session,
-          message: "Session created successfully from hash" 
-        };
-      } catch (error) {
-        console.error("Exception processing URL hash:", error);
-        return { 
-          success: false, 
-          error, 
-          message: "Error processing authentication hash" 
-        };
-      }
-    }
-    
+    // Hash parameters are no longer used in newer Supabase auth
     return { success: false, message: "No auth tokens found in URL" };
   } catch (error) {
     console.error("Exception handling auth tokens:", error);

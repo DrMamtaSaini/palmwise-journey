@@ -163,60 +163,6 @@ const AuthService = {
     }
   },
   
-  // Sign in with Google
-  signInWithGoogle: async () => {
-    try {
-      updateAuthState({ isLoading: true });
-      console.log("AuthService: Initiating Google sign-in");
-      
-      // Get the current URL for redirection
-      const origin = window.location.origin;
-      const currentPath = window.location.pathname;
-      
-      // Use the correct auth callback route for all environments
-      const redirectUrl = `${origin}/auth/callback`;
-      
-      console.log("Using redirect URL:", redirectUrl);
-      
-      // Store this URL in localStorage to restore after auth
-      localStorage.setItem('authRedirectOrigin', origin);
-      localStorage.setItem('authRedirectPath', currentPath);
-      
-      const { data, error } = await supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            prompt: 'select_account', // Force Google account selector
-            access_type: 'offline'    // Request refresh token
-          }
-        }
-      });
-      
-      if (error) {
-        console.error("Google OAuth error:", error);
-        throw error;
-      }
-      
-      // Log the URL that will be used for the redirect
-      if (data?.url) {
-        console.log("Google auth URL generated:", data.url);
-        // Redirect the user to the Google authorization URL
-        window.location.href = data.url;
-      } else {
-        console.warn("No Google auth URL was generated");
-        throw new Error("Failed to generate Google authentication URL");
-      }
-      
-      console.log("Google sign-in initiated successfully");
-      return true;
-    } catch (error) {
-      console.error('Google sign in error:', error);
-      updateAuthState({ isLoading: false });
-      throw error;
-    }
-  },
-  
   // Forgot password
   forgotPassword: async (email: string, redirectUrl?: string) => {
     try {

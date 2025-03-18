@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import AuthService from '../services/AuthService';
@@ -16,7 +17,6 @@ interface UseAuthResult {
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (name: string, email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<boolean>;
   forgotPassword: (email: string, redirectUrl?: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;
   handleEmailVerificationError: (errorCode: string, errorDescription: string) => void;
@@ -143,22 +143,6 @@ export const useAuth = (): UseAuthResult => {
     }
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    try {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
-      const success = await AuthService.signInWithGoogle();
-      return success;
-    } catch (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Google login failed", {
-        description: error instanceof Error ? error.message : "Please try again later.",
-      });
-      return false;
-    } finally {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, []);
-
   const forgotPassword = useCallback(async (email: string, redirectUrl?: string) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -198,7 +182,6 @@ export const useAuth = (): UseAuthResult => {
     signIn,
     signUp,
     signOut,
-    signInWithGoogle,
     forgotPassword,
     updatePassword,
     handleEmailVerificationError,
