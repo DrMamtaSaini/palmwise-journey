@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -13,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json();
+    const { imageUrl, language = 'english' } = await req.json();
     
     if (!imageUrl) {
       return new Response(
@@ -22,10 +23,10 @@ serve(async (req) => {
       );
     }
 
-    console.log("Analyzing palm image:", imageUrl);
+    console.log(`Analyzing palm image: ${imageUrl} in language: ${language}`);
     
     // Perform actual palm analysis based on the image
-    const analysis = await analyzePalmImage(imageUrl);
+    const analysis = await analyzePalmImage(imageUrl, language);
     
     return new Response(
       JSON.stringify(analysis),
@@ -44,7 +45,7 @@ serve(async (req) => {
 });
 
 // Analyze palm image using image processing techniques
-async function analyzePalmImage(imageUrl: string) {
+async function analyzePalmImage(imageUrl: string, language: string = 'english') {
   try {
     // Fetch the image
     const imageResponse = await fetch(imageUrl);
@@ -62,6 +63,9 @@ async function analyzePalmImage(imageUrl: string) {
     
     // Map image characteristics to palm reading interpretations
     const analysis = interpretPalmFeatures(dominantColors);
+
+    // Add the requested language to the response
+    analysis.language = language;
     
     console.log("Palm analysis completed with unique hash:", imageHash);
     return analysis;

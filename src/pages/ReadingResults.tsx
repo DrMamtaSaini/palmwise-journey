@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -26,6 +25,7 @@ const ReadingResults = () => {
   const [isPremiumTest, setIsPremiumTest] = useState(false); // For testing premium features
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<boolean>(false);  // Add error state
   const [fullReadingText, setFullReadingText] = useState<string>("");
   const [readingContent, setReadingContent] = useState<Record<string, any> | null>(null);
 
@@ -51,19 +51,21 @@ const ReadingResults = () => {
 
       try {
         setIsLoading(true);
+        setError(false); // Reset error state
         const result = await PalmAnalysisService.getPalmReading(readingId);
         
         if (result) {
           console.log("Fetched reading data:", result);
           setReading(result as ExtendedPalmReading);
         } else {
+          setError(true); // Set error state
           toast.error("Reading not found", {
             description: "We couldn't find this palm reading"
           });
-          navigate("/upload-palm");
         }
       } catch (error) {
         console.error("Error fetching reading:", error);
+        setError(true);  // Set error state
         toast.error("Error loading reading", {
           description: "Please try again later"
         });
@@ -75,7 +77,6 @@ const ReadingResults = () => {
     fetchReading();
   }, [readingId, navigate]);
 
-  // Process reading content when the reading data is available
   useEffect(() => {
     if (reading) {
       const content = getReadingContent(reading);
@@ -83,7 +84,6 @@ const ReadingResults = () => {
     }
   }, [reading]);
 
-  // Generate full reading text for text-to-speech
   useEffect(() => {
     if (readingContent) {
       const fullText = generateFullReadingText(readingContent, isPremium || isPremiumTest);
@@ -128,7 +128,7 @@ const ReadingResults = () => {
 
             {isLoading ? (
               <ReadingLoader />
-            ) : !reading ? (
+            ) : error || !reading ? (
               <ReadingNotFound />
             ) : (
               <>
