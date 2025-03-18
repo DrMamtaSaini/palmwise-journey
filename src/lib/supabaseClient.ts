@@ -5,9 +5,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vvaextxqyrvcpjwndgby.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2YWV4dHhxeXJ2Y3Bqd25kZ2J5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDExMTc5NTUsImV4cCI6MjA1NjY5Mzk1NX0.Uol-CUVwlLXXX0LZnha8lg7_ojPD2MHQQ7Uh5Lxpo3U';
 
-// Create and export the Supabase client with appropriate configuration
+// Initialize the client variable outside the try block
+let supabaseClient;
+
+// Create the Supabase client with appropriate configuration
 try {
-  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       flowType: 'pkce',
       autoRefreshToken: true,
@@ -29,12 +32,10 @@ try {
   supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log(`Auth state change event: ${event}`, session ? 'Session exists' : 'No session');
   });
-
-  export default supabaseClient;
 } catch (error) {
   console.error("Failed to initialize Supabase client:", error);
   // Create a fallback client that will log errors instead of crashing
-  const fallbackClient = {
+  supabaseClient = {
     auth: {
       onAuthStateChange: () => ({ data: null, error: null }),
       getSession: async () => ({ data: { session: null }, error: null }),
@@ -54,7 +55,8 @@ try {
     functions: {
       invoke: async () => ({ data: null, error: new Error("Supabase client failed to initialize") })
     }
-  };
-  
-  export default fallbackClient as unknown as ReturnType<typeof createClient>;
+  } as unknown as ReturnType<typeof createClient>;
 }
+
+// Export the client outside of the try-catch block
+export default supabaseClient;
