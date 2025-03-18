@@ -8,6 +8,7 @@ export interface PalmReading {
   imageUrl: string;
   createdAt: string;
   language?: string;
+  translationNote?: string;
   results: {
     lifeLine: {
       strength: number;
@@ -91,6 +92,57 @@ export interface PalmReading {
 
 class PalmAnalysisService {
   private static instance: PalmAnalysisService;
+  
+  private hindiTranslations = {
+    "Life Line": "जीवन रेखा",
+    "Heart Line": "हृदय रेखा",
+    "Head Line": "मस्तिष्क रेखा",
+    "Fate Line": "भाग्य रेखा",
+    "Strength": "शक्ति",
+    "Significance": "महत्व",
+    "Past": "भूतकाल",
+    "Present": "वर्तमान",
+    "Future": "भविष्य",
+    "Relationships": "रिश्ते",
+    "Career": "करियर",
+    "Health": "स्वास्थ्य",
+    "Overall Summary": "समग्र सारांश",
+    "Personality Traits": "व्यक्तित्व विशेषताएँ",
+    "Elemental Influences": "तत्वों का प्रभाव",
+    "Earth": "पृथ्वी",
+    "Water": "जल",
+    "Fire": "अग्नि",
+    "Air": "वायु",
+    "Insights": "अंतर्दृष्टि",
+    "Remedies": "उपचार",
+    
+    "Your palm reading indicates": "आपके हस्तरेखा से पता चलता है",
+    "This suggests": "यह सुझाव देता है",
+    "You have": "आपके पास है",
+    "You will": "आप करेंगे",
+    "Your future": "आपका भविष्य",
+    "Strong": "मजबूत",
+    "Weak": "कमजोर",
+    "Balanced": "संतुलित",
+  };
+  
+  private translateKey(text: string, language: string): string {
+    if (language !== 'hindi') return text;
+    
+    return this.hindiTranslations[text] || text;
+  }
+  
+  private simpleTranslate(text: string, language: string): string {
+    if (language !== 'hindi') return text;
+    
+    let translatedText = text;
+    Object.entries(this.hindiTranslations).forEach(([english, hindi]) => {
+      const regex = new RegExp(english, 'gi');
+      translatedText = translatedText.replace(regex, hindi);
+    });
+    
+    return translatedText;
+  }
 
   private constructor() {}
 
@@ -151,12 +203,20 @@ class PalmAnalysisService {
         throw new Error('AI analysis failed: ' + error.message);
       }
       
-      const results = data && data.results ? data : { results: generateFallbackResults() };
+      let results = data && data.results ? data : { results: generateFallbackResults() };
+      let translationNote;
+      
+      if (language === 'hindi') {
+        results = this.applyHindiTranslation(results);
+        translationNote = "हमने आपकी पाम रीडिंग का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।";
+      }
       
       if (results.results.fateLinePresent && !results.results.fate) {
         results.results.fate = {
           strength: Math.random() * 100,
-          prediction: "Your fate line suggests a strong career trajectory with potential for leadership."
+          prediction: language === 'hindi' ? 
+            "आपकी भाग्य रेखा एक मजबूत करियर की ओर इशारा करती है जिसमें नेतृत्व की क्षमता है।" : 
+            "Your fate line suggests a strong career trajectory with potential for leadership."
         };
       }
       
@@ -166,6 +226,7 @@ class PalmAnalysisService {
         imageUrl,
         createdAt: new Date().toISOString(),
         language: language || 'english',
+        translationNote: translationNote,
         results: results.results
       };
       
@@ -180,6 +241,7 @@ class PalmAnalysisService {
             image_url: reading.imageUrl,
             created_at: reading.createdAt,
             language: reading.language,
+            translation_note: reading.translationNote,
             results: reading.results
           }
         ]);
@@ -209,9 +271,72 @@ class PalmAnalysisService {
     }
   }
 
+  private applyHindiTranslation(results: any): any {
+    const translatedResults = JSON.parse(JSON.stringify(results));
+    
+    if (translatedResults.results.lifeLine) {
+      translatedResults.results.lifeLine.prediction = this.simpleTranslate(
+        translatedResults.results.lifeLine.prediction, 'hindi'
+      );
+    }
+    
+    if (translatedResults.results.heartLine) {
+      translatedResults.results.heartLine.prediction = this.simpleTranslate(
+        translatedResults.results.heartLine.prediction, 'hindi'
+      );
+    }
+    
+    if (translatedResults.results.headLine) {
+      translatedResults.results.headLine.prediction = this.simpleTranslate(
+        translatedResults.results.headLine.prediction, 'hindi'
+      );
+    }
+    
+    if (translatedResults.results.fate) {
+      translatedResults.results.fate.prediction = this.simpleTranslate(
+        translatedResults.results.fate.prediction, 'hindi'
+      );
+    }
+    
+    const sections = ['past', 'present', 'future', 'relationships', 'career', 'health'];
+    sections.forEach(section => {
+      if (translatedResults.results[section]) {
+        translatedResults.results[section].prediction = this.simpleTranslate(
+          translatedResults.results[section].prediction, 'hindi'
+        );
+      }
+    });
+    
+    if (translatedResults.results.elementalInfluences) {
+      translatedResults.results.elementalInfluences.description = this.simpleTranslate(
+        translatedResults.results.elementalInfluences.description, 'hindi'
+      );
+    }
+    
+    translatedResults.results.overallSummary = this.simpleTranslate(
+      translatedResults.results.overallSummary, 'hindi'
+    );
+    
+    if (translatedResults.results.personalityTraits && Array.isArray(translatedResults.results.personalityTraits)) {
+      translatedResults.results.personalityTraits = translatedResults.results.personalityTraits.map(
+        trait => this.simpleTranslate(trait, 'hindi')
+      );
+    }
+    
+    return translatedResults;
+  }
+
   private createFallbackReading(imageUrl: string, userId: string, language: string = 'english'): PalmReading {
     const readingId = uuidv4();
-    const results = generateFallbackResults();
+    let results = generateFallbackResults();
+    let translationNote;
+    
+    if (language === 'hindi') {
+      const resultsObj = { results };
+      const translatedObj = this.applyHindiTranslation(resultsObj);
+      results = translatedObj.results;
+      translationNote = "हमने आपकी पाम रीडिंग का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।";
+    }
     
     const reading = {
       id: readingId,
@@ -219,6 +344,7 @@ class PalmAnalysisService {
       imageUrl,
       language,
       createdAt: new Date().toISOString(),
+      translationNote,
       results
     };
     
@@ -231,6 +357,7 @@ class PalmAnalysisService {
           image_url: reading.imageUrl,
           created_at: reading.createdAt,
           language: reading.language,
+          translation_note: reading.translationNote,
           results: reading.results
         }
       ])

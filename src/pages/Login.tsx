@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Mail, Key, LogIn, User, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Mail, Key, LogIn, User, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
@@ -9,7 +9,6 @@ import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -75,14 +74,6 @@ const Login = () => {
               <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
               <p className="text-gray-600">Sign in to continue to your account</p>
             </div>
-
-            <Alert className="mb-6 bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                <p className="font-medium">Authentication configuration tip:</p>
-                <p className="text-sm mt-1">Make sure your Supabase project's Site URL is set to "{window.location.origin}" in the Authentication settings.</p>
-              </AlertDescription>
-            </Alert>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
