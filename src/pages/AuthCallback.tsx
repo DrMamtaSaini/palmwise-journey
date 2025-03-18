@@ -13,12 +13,24 @@ const AuthCallback = () => {
     const processAuthRedirect = async () => {
       console.log('AuthCallback: Processing authentication redirect');
       try {
+        // Process the authentication tokens in the URL
         const result = await handleAuthTokensOnLoad();
         
         if (result.success) {
-          console.log('AuthCallback: Authentication successful, redirecting to dashboard');
+          console.log('AuthCallback: Authentication successful');
           toast.success('Successfully signed in!');
-          navigate('/dashboard');
+          
+          // Check if we have a redirect path stored in localStorage
+          const redirectPath = localStorage.getItem('authRedirectPath');
+          if (redirectPath) {
+            console.log('AuthCallback: Redirecting to stored path:', redirectPath);
+            localStorage.removeItem('authRedirectPath');
+            localStorage.removeItem('authRedirectOrigin');
+            navigate(redirectPath);
+          } else {
+            console.log('AuthCallback: No stored path, redirecting to dashboard');
+            navigate('/dashboard');
+          }
         } else {
           console.error('AuthCallback: Authentication failed', result.message);
           setError(result.message || 'Authentication failed');

@@ -31,6 +31,22 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session) {
     console.log("User signed in successfully, provider:", session.user?.app_metadata?.provider);
     console.log("User email:", session.user?.email);
+    
+    // Redirect to dashboard or stored path after successful sign-in
+    if (session.user?.app_metadata?.provider === 'google') {
+      const redirectPath = localStorage.getItem('authRedirectPath') || '/dashboard';
+      
+      // Clear stored redirect info
+      localStorage.removeItem('authRedirectPath');
+      localStorage.removeItem('authRedirectOrigin');
+      
+      // Only redirect if we're on the callback page
+      if (window.location.pathname.includes('/auth/callback')) {
+        setTimeout(() => {
+          window.location.href = redirectPath;
+        }, 300);
+      }
+    }
   }
 });
 

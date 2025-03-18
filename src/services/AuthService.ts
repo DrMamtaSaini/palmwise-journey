@@ -1,3 +1,4 @@
+
 import supabaseClient from "@/lib/supabaseClient";
 import { User } from "@/hooks/useAuth";
 
@@ -168,11 +169,18 @@ const AuthService = {
       updateAuthState({ isLoading: true });
       console.log("AuthService: Initiating Google sign-in");
       
-      // Use absolute URL for redirect, which must match exactly what's configured in Supabase
+      // Get the current URL for redirection
       const origin = window.location.origin;
+      const currentPath = window.location.pathname;
+      
+      // Use the correct auth callback route for all environments
       const redirectUrl = `${origin}/auth/callback`;
       
       console.log("Using redirect URL:", redirectUrl);
+      
+      // Store this URL in localStorage to restore after auth
+      localStorage.setItem('authRedirectOrigin', origin);
+      localStorage.setItem('authRedirectPath', currentPath);
       
       const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
