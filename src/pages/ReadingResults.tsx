@@ -25,7 +25,7 @@ const ReadingResults = () => {
   const [isPremiumTest, setIsPremiumTest] = useState(false); // For testing premium features
   const [reading, setReading] = useState<ExtendedPalmReading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<boolean>(false);  // Add error state
+  const [error, setError] = useState<boolean>(false);
   const [fullReadingText, setFullReadingText] = useState<string>("");
   const [readingContent, setReadingContent] = useState<Record<string, any> | null>(null);
 
@@ -52,12 +52,14 @@ const ReadingResults = () => {
       try {
         setIsLoading(true);
         setError(false); // Reset error state
+        console.log("Fetching reading with ID:", readingId);
         const result = await PalmAnalysisService.getPalmReading(readingId);
         
         if (result) {
-          console.log("Fetched reading data:", result);
+          console.log("Successfully fetched reading data:", result);
           setReading(result as ExtendedPalmReading);
         } else {
+          console.error("No reading found with ID:", readingId);
           setError(true); // Set error state
           toast.error("Reading not found", {
             description: "We couldn't find this palm reading"
@@ -65,7 +67,7 @@ const ReadingResults = () => {
         }
       } catch (error) {
         console.error("Error fetching reading:", error);
-        setError(true);  // Set error state
+        setError(true);
         toast.error("Error loading reading", {
           description: "Please try again later"
         });
