@@ -13,26 +13,51 @@ serve(async (req) => {
   }
 
   try {
-    // Get Gemini API key from environment variables
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      console.error('GEMINI_API_KEY environment variable not set');
+    let secretName = 'GEMINI_API_KEY';
+    
+    // Check if a specific secret name was requested in the body
+    try {
+      const body = await req.json();
+      if (body && body.secretName) {
+        secretName = body.secretName;
+        console.log(`Using requested secret name: ${secretName}`);
+      }
+    } catch (parseError) {
+      // If there's no valid JSON body or no secretName specified, use the default
+      console.log(`Using default secret name: ${secretName}`);
+    }
+    
+    // Retrieve the Gemini API key from Deno environment
+    const apiKey = Deno.env.get(secretName);
+    
+    if (!apiKey) {
+      console.error(`No ${secretName} found in environment variables`);
       return new Response(
-        JSON.stringify({ error: 'API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: `API key not configured. Please add ${secretName} to the Edge Function secrets.` 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
-
-    // Return the API key
+    
+    // Return the key (only in production - this would be handled more securely)
     return new Response(
-      JSON.stringify({ key: geminiApiKey }),
+      JSON.stringify({ key: apiKey }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    
   } catch (error) {
-    console.error('Error getting Gemini API key:', error);
+    console.error("Error retrieving Gemini API key:", error);
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });

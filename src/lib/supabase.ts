@@ -10,15 +10,25 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce',
+    storage: typeof localStorage !== 'undefined' ? localStorage : undefined
   }
 });
 
 // Log initialization for debugging
 console.log("Supabase client initialized with:", {
   url: supabaseUrl,
-  hasAnonKey: !!supabaseAnonKey
+  hasAnonKey: !!supabaseAnonKey,
+  currentUrl: typeof window !== 'undefined' ? window.location.href : 'not in browser'
 });
+
+// For auth debugging
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log(`Auth state change event: ${event}`, session ? 'Session exists' : 'No session');
+  });
+}
 
 /**
  * Handle authentication token exchange after redirect

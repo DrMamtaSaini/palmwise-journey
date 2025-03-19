@@ -24,7 +24,8 @@ class GeminiService {
       console.log("Fetching Gemini API key from Supabase function...");
       
       const { data, error } = await supabase.functions.invoke('get-gemini-key', {
-        method: 'GET'
+        method: 'GET',
+        body: { secretName: 'latest_pal_reading_secrets' }  // Use the latest secrets
       });
       
       if (error) {
