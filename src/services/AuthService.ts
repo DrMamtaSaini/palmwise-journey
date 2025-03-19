@@ -1,5 +1,5 @@
 
-import supabaseClient from "@/lib/supabaseClient";
+import supabaseClient from "@/lib/supabase";
 import { User } from "@/hooks/useAuth";
 
 // Define the shape of the auth state

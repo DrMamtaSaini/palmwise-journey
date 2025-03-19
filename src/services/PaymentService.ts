@@ -1,5 +1,4 @@
-
-import supabaseClient from '@/lib/supabaseClient';
+import supabaseClient from '@/lib/supabase';
 
 interface PaymentRecord {
   user_id: string;
