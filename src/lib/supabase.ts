@@ -20,4 +20,60 @@ console.log("Supabase client initialized with:", {
   hasAnonKey: !!supabaseAnonKey
 });
 
+/**
+ * Handle authentication token exchange after redirect
+ * Returns a result object with success status and message
+ */
+export const handleAuthTokensOnLoad = async () => {
+  try {
+    // Check if we have a hash in the URL (for auth redirects)
+    const hasHashParams = window.location.hash && window.location.hash.length > 1;
+    const hasQueryParams = window.location.search && window.location.search.length > 1;
+    
+    if (!hasHashParams && !hasQueryParams) {
+      console.warn("No hash or query parameters found in URL");
+      return { 
+        success: false, 
+        message: "No authentication parameters found" 
+      };
+    }
+    
+    // Let Supabase handle the token exchange
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error("Error processing authentication redirect:", error);
+      return { 
+        success: false, 
+        message: error.message 
+      };
+    }
+    
+    // Check if we have a session
+    if (!data.session) {
+      console.warn("No session found after redirect");
+      return { 
+        success: false, 
+        message: "Authentication failed - no session found" 
+      };
+    }
+    
+    // Log auth provider for debugging
+    const provider = data.session.user?.app_metadata?.provider || 'unknown';
+    console.info("Signed in via provider:", provider);
+    
+    return { 
+      success: true, 
+      message: "Authentication successful",
+      user: data.session.user
+    };
+  } catch (err) {
+    console.error("Unexpected error during auth processing:", err);
+    return { 
+      success: false, 
+      message: err instanceof Error ? err.message : "Unknown error occurred" 
+    };
+  }
+};
+
 export default supabase;
