@@ -16,6 +16,7 @@ export type Database = {
           image_url: string
           language: string | null
           results: Json | null
+          translation_note: string | null
           user_id: string
         }
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           image_url: string
           language?: string | null
           results?: Json | null
+          translation_note?: string | null
           user_id: string
         }
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           image_url?: string
           language?: string | null
           results?: Json | null
+          translation_note?: string | null
           user_id?: string
         }
         Relationships: []

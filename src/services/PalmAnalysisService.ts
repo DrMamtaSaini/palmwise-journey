@@ -390,6 +390,7 @@ class PalmAnalysisService {
         imageUrl: item.image_url,
         createdAt: item.created_at,
         language: item.language,
+        translationNote: item.translation_note,
         results: item.results
       }));
     } catch (error) {
@@ -420,6 +421,7 @@ class PalmAnalysisService {
         imageUrl: data.image_url,
         createdAt: data.created_at,
         language: data.language,
+        translationNote: data.translation_note,
         results: data.results
       };
     } catch (error) {
@@ -556,7 +558,7 @@ function generateFallbackResults() {
       ],
       remedies: [
         "Practice Metta (loving-kindness) meditation directed specifically toward challenging relationships",
-        "Wear or carry rose quartz to amplify heart energy and green aventurine to attract harmonious connections",
+        "Wear or carry rose quartz to enhance heart energy and green aventurine to attract harmonious connections",
         "Create a relationship altar with symbols of balanced partnership and revisit it weekly",
         "Practice conscious communication techniques like non-violent communication in all interactions",
         "Incorporate the Vedic practice of seeing the divine in others (namaste) in daily encounters"
