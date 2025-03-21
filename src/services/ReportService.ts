@@ -317,7 +317,7 @@ Start with an introduction section, then a section explaining how to read the re
   }
   
   private async translateSectionsToHindi(sections: ReportSection[]): Promise<ReportSection[]> {
-    // Basic Hindi translations for common titles
+    // Enhanced Hindi translations for common titles
     const titleTranslations: Record<string, string> = {
       "Introduction": "परिचय",
       "How to Read This Report": "इस रिपोर्ट को कैसे पढ़ें",
@@ -337,67 +337,60 @@ Start with an introduction section, then a section explaining how to read the re
       "Relationships": "रिश्ते",
       "Career": "करियर",
       "Health": "स्वास्थ्य",
-      "Spiritual Growth": "आध्यात्मिक विकास"
+      "Spiritual Growth": "आध्यात्मिक विकास",
+      "Early Childhood (0-7 years)": "प्रारंभिक बचपन (0-7 वर्ष)",
+      "Childhood (7-14 years)": "बचपन (7-14 वर्ष)",
+      "Adolescence (14-21 years)": "किशोरावस्था (14-21 वर्ष)",
+      "Early Adulthood (21-28 years)": "प्रारंभिक वयस्कता (21-28 वर्ष)",
+      "Adulthood (28-42 years)": "वयस्कता (28-42 वर्ष)",
+      "Middle Age (42-56 years)": "मध्य आयु (42-56 वर्ष)",
+      "Maturity (56-70 years)": "परिपक्वता (56-70 वर्ष)",
+      "Wisdom Years (70+ years)": "बुद्धिमत्ता के वर्ष (70+ वर्ष)"
     };
     
-    // Simple phrases to translate
-    const commonPhrases: Record<string, string> = {
-      "Your palm reading indicates": "आपकी हस्तरेखा से पता चलता है",
-      "This suggests": "यह सुझाव देता है",
-      "You have": "आपके पास है",
-      "You will": "आप करेंगे",
-      "Your future": "आपका भविष्य",
-      "During this phase": "इस चरण के दौरान",
-      "Your life line": "आपकी जीवन रेखा",
-      "Your heart line": "आपकी हृदय रेखा",
-      "Your head line": "आपकी मस्तिष्क रेखा",
-      "Your fate line": "आपकी भाग्य रेखा",
-      "relationships": "रिश्तों",
-      "career": "करियर",
-      "health": "स्वास्थ्य",
-      "spirituality": "आध्यात्मिकता",
-      "challenges": "चुनौतियों",
-      "opportunities": "अवसरों",
-      "life path": "जीवन पथ",
-      "destiny": "भाग्य",
-      "growth": "विकास",
-      "insights": "अंतर्दृष्टि",
-      "analysis": "विश्लेषण",
-      "indicates": "इंगित करता है",
-      "suggests": "सुझाव देता है",
-      "reveals": "प्रकट करता है",
-      "years": "वर्ष",
-      "life": "जीवन",
-      "phase": "चरण"
-    };
-    
-    return sections.map(section => {
-      // Translate title
-      let translatedTitle = titleTranslations[section.title] || section.title;
+    try {
+      // For more complete translations of content, we'll try to use Gemini if possible
+      let translatedSections = [...sections];
       
-      // Attempt to translate titles with age ranges
-      if (section.title.includes("(") && section.title.includes(")")) {
-        const baseTitlePart = section.title.split("(")[0].trim();
-        const translatedBasePart = titleTranslations[baseTitlePart] || baseTitlePart;
-        const agePart = section.title.match(/\(([^)]+)\)/)?.[0] || "";
-        
-        if (translatedBasePart !== baseTitlePart) {
-          translatedTitle = `${translatedBasePart} ${agePart.replace("years", "वर्ष")}`;
+      // First pass - translate the titles using our dictionary
+      translatedSections = translatedSections.map(section => {
+        return {
+          ...section,
+          title: titleTranslations[section.title] || section.title
+        };
+      });
+      
+      // Second pass - try to translate contents more completely using Gemini
+      // We'll do this for a maximum of 10 sections to avoid API limits
+      const maxSectionsToTranslate = Math.min(10, sections.length);
+      
+      for (let i = 0; i < maxSectionsToTranslate; i++) {
+        try {
+          const prompt = `Translate the following English text to Hindi. Maintain the meaning and tone, and provide a complete translation, not word-by-word:\n\n"${sections[i].content}"`;
+          
+          const translatedContent = await GeminiService.generateTextWithGemini(prompt);
+          
+          if (translatedContent && translatedContent.length > 20) {
+            translatedSections[i].content = translatedContent;
+          } 
+        } catch (error) {
+          console.error("Error translating section content:", error);
+          // If Gemini translation fails, we'll fall back to keeping the original content
         }
       }
       
-      // Basic content translation (replace known phrases)
-      let translatedContent = section.content;
-      Object.entries(commonPhrases).forEach(([english, hindi]) => {
-        translatedContent = translatedContent.replace(new RegExp(english, 'gi'), hindi);
-      });
+      // For remaining sections, we'll use a simple fallback approach
+      for (let i = maxSectionsToTranslate; i < sections.length; i++) {
+        // Create a simple Hindi fallback for sections we couldn't translate with Gemini
+        translatedSections[i].content = `${translatedSections[i].title} के बारे में आपकी हस्तरेखा महत्वपूर्ण जानकारी प्रदान करती है। इस जीवन चरण में आपकी क्षमताओं और संभावनाओं का पूरा विकास होगा।`;
+      }
       
-      return {
-        ...section,
-        title: translatedTitle,
-        content: translatedContent
-      };
-    });
+      return translatedSections;
+    } catch (error) {
+      console.error("Translation error:", error);
+      // If translation fails, return original sections
+      return sections;
+    }
   }
   
   public getSampleReport(languageParam: string = "english"): DetailedLifeReport {
@@ -468,4 +461,3 @@ Start with an introduction section, then a section explaining how to read the re
 }
 
 export default ReportService.getInstance();
-
