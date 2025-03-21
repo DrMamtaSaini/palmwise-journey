@@ -23,6 +23,7 @@ const ReadingResults = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [isPremiumTest, setIsPremiumTest] = useState(false);
 
   useEffect(() => {
     if (!readingId) return;
@@ -98,13 +99,23 @@ const ReadingResults = () => {
           )}
           
           <ReadingHeader 
+            title="Your Palm Reading Results"
             imageUrl={reading.imageUrl} 
             date={reading.createdAt}
             language={reading.language}
+            isPremium={isPremium}
+            isPremiumTest={isPremiumTest}
+            setIsPremium={setIsPremium}
+            setIsPremiumTest={setIsPremiumTest}
+            readingContent={readingContent}
           />
           
           {readingContent && (
-            <ReadingTabs content={readingContent} isPremium={isPremium} />
+            <ReadingTabs 
+              readingContent={readingContent} 
+              isPremium={isPremium}
+              isPremiumTest={isPremiumTest}
+            />
           )}
           
           <DetailedReportGenerator reading={reading} isPremium={isPremium} />

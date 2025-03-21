@@ -10,6 +10,7 @@ import { useAuth } from "../hooks/useAuth";
 import ReadingLoader from "../components/ReadingLoader";
 import ReadingNotFound from "../components/ReadingNotFound";
 import TranslationNote from "../components/TranslationNote";
+import { toast } from "sonner";
 
 const DetailedReport = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -54,8 +55,7 @@ const DetailedReport = () => {
   
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    // Show toast notification
-    // toast.success("Link copied to clipboard");
+    toast.success("Link copied to clipboard");
   };
   
   if (isLoading) {
@@ -128,8 +128,8 @@ const DetailedReport = () => {
             </div>
           </div>
 
-          {report.language === "hindi" && (
-            <TranslationNote note="हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।" />
+          {report.language === "hindi" && report.translationNote && (
+            <TranslationNote note={report.translationNote} />
           )}
 
           <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8 print:shadow-none">

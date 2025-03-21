@@ -1,28 +1,33 @@
 
+import { useState, useEffect } from "react";
 import { Info, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateFullReadingText } from "../utils/readingContentUtils";
 
 interface ReadingHeaderProps {
-  title: string;
+  imageUrl?: string;
+  date?: string;
+  title?: string;
   language?: string;
-  languageDisplay: string;
-  isPremiumTest: boolean;
-  setIsPremiumTest: (value: boolean) => void;
-  setIsPremium: (value: boolean) => void;
-  readingContent: Record<string, any> | null;
-  isPremium: boolean;
+  languageDisplay?: string;
+  isPremiumTest?: boolean;
+  setIsPremiumTest?: (value: boolean) => void;
+  setIsPremium?: (value: boolean) => void;
+  readingContent?: Record<string, any> | null;
+  isPremium?: boolean;
 }
 
 const ReadingHeader = ({ 
-  title, 
+  imageUrl,
+  date,
+  title = "Your Palm Reading Results", 
   language, 
-  languageDisplay, 
-  isPremiumTest, 
-  setIsPremiumTest, 
-  setIsPremium,
-  readingContent,
-  isPremium
+  languageDisplay = language === "hindi" ? "हिन्दी" : "English", 
+  isPremiumTest = false, 
+  setIsPremiumTest = () => {}, 
+  setIsPremium = () => {},
+  readingContent = null,
+  isPremium = false
 }: ReadingHeaderProps) => {
   
   const handleDownload = () => {

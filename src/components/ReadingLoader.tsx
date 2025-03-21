@@ -1,11 +1,21 @@
 
-const ReadingLoader = () => {
+import React from "react";
+import { Loader2 } from "lucide-react";
+
+interface ReadingLoaderProps {
+  message: string;
+}
+
+const ReadingLoader = ({ message }: ReadingLoaderProps) => {
   return (
-    <div className="bg-white rounded-2xl shadow-soft p-8 flex justify-center items-center min-h-[300px]">
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full border-4 border-palm-purple border-t-transparent animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading your palm reading...</p>
-      </div>
+    <div className="flex flex-col items-center justify-center p-8 text-center">
+      <Loader2 className="h-12 w-12 animate-spin text-palm-purple mb-4" />
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">
+        {message || "Loading..."}
+      </h3>
+      <p className="text-gray-500">
+        This may take a few moments, please wait
+      </p>
     </div>
   );
 };

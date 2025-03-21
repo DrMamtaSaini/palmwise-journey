@@ -1,4 +1,3 @@
-
 import { ExtendedPalmReading } from "../types/PalmReading";
 import { generateFullReadingText } from "../utils/readingContentUtils";
 import { getLanguageInfo } from "../components/LanguageSelector";
@@ -23,6 +22,7 @@ export interface DetailedLifeReport {
   pageCount: number;
   createdAt: string;
   downloadUrl?: string;
+  translationNote?: string;
 }
 
 class ReportService {
@@ -37,6 +37,7 @@ class ReportService {
     pageCount: 55,
     createdAt: new Date().toISOString(),
     downloadUrl: "/sample-palm-report.pdf",
+    translationNote: "",
     sections: [
       {
         title: "Introduction",
@@ -65,6 +66,7 @@ class ReportService {
     pageCount: 55,
     createdAt: new Date().toISOString(),
     downloadUrl: "/sample-palm-report-hindi.pdf",
+    translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।",
     sections: [
       {
         title: "परिचय",
@@ -396,8 +398,8 @@ Start with an introduction section, then a section explaining how to read the re
     });
   }
   
-  public getSampleReport(language: string = "english"): DetailedLifeReport {
-    return language === "hindi" ? this.hindiSampleReport : this.sampleReport;
+  public getSampleReport(languageParam: string = "english"): DetailedLifeReport {
+    return languageParam === "hindi" ? this.hindiSampleReport : this.sampleReport;
   }
   
   public async getReportsForUser(userId: string): Promise<DetailedLifeReport[]> {
