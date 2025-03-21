@@ -97,7 +97,7 @@ const PaymentButton = ({
         email: "user@example.com",
       },
       theme: {
-        color: "#6b21a8", // palm-purple
+        color: "#7953F5", // palm-purple
       },
       modal: {
         ondismiss: function() {
@@ -170,10 +170,10 @@ const PaymentButton = ({
     <button
       onClick={handlePayment}
       disabled={isLoading}
-      className={`w-full p-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+      className={`w-full p-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${
         isPrimary 
-          ? "bg-palm-purple text-white hover:shadow-lg" 
-          : "bg-white border border-gray-200 hover:border-palm-purple text-gray-800"
+          ? "bg-gradient-to-r from-[#7953F5] to-[#9672FF] text-white hover:shadow-lg" 
+          : "bg-white border border-gray-200 hover:border-[#7953F5] text-gray-800"
       } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
     >
       {isLoading ? (
