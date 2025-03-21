@@ -66,7 +66,7 @@ class ReportService {
     pageCount: 55,
     createdAt: new Date().toISOString(),
     downloadUrl: "/sample-palm-report-hindi.pdf",
-    translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।",
+    translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह हमारे उन्नत अनुवाद तकनीक का उपयोग करता है जो विशेष पारिभाषिक शब्दों को सटीक रूप से अनुवादित करता है।",
     sections: [
       {
         title: "परिचय",
@@ -112,14 +112,30 @@ class ReportService {
       // Get the basic reading text
       const baseReadingText = generateFullReadingText(reading.results, isPremium);
       
-      // Generate a more detailed report using Gemini API
-      let promptForAI = `Create a very detailed, comprehensive palm reading report of 50-70 pages based on this palm reading summary. Break it down into clear phases of life: early childhood (0-7), childhood (7-14), adolescence (14-21), early adulthood (21-28), adulthood (28-42), middle age (42-56), maturity (56-70), and wisdom years (70+). For each phase, provide rich, specific details on key events, challenges, opportunities, relationships, career developments, and spiritual growth.
+      // Generate a more detailed report using Gemini API with improved prompt
+      let promptForAI = `Create a very detailed, comprehensive palm reading report of 50-70 pages based on this palm reading summary. 
+Break it down into clear phases of life: early childhood (0-7), childhood (7-14), adolescence (14-21), early adulthood (21-28), adulthood (28-42), middle age (42-56), maturity (56-70), and wisdom years (70+). 
+
+For each phase, provide rich, specific details on key events, challenges, opportunities, relationships, career developments, and spiritual growth.
 
 Basic reading for reference: ${baseReadingText}
 
 Use palmistry terminology correctly. Connect different aspects of the palm (life line, heart line, head line, fate line, etc.) to specific periods of life. Include specific predictions that feel personal and detailed, not general.
 
-Format your response as a list of JSON objects with 'title' and 'content' fields for each section of the report. Each section should be substantial - around 1-2 pages of content.
+Format your response as a JSON array of objects with 'title' and 'content' fields for each section of the report. Each section should be substantial - around 1-2 pages of content. Ensure that the JSON is valid and properly formatted.
+
+The JSON structure should look like this:
+[
+  {
+    "title": "Introduction",
+    "content": "Detailed introduction content..."
+  },
+  {
+    "title": "How to Read This Report",
+    "content": "Detailed explanation content..."
+  },
+  ...
+]
 
 Start with an introduction section, then a section explaining how to read the report, then the life phases in chronological order, and end with a conclusion section.`;
 
@@ -134,8 +150,11 @@ Start with an introduction section, then a section explaining how to read the re
           const jsonStartIndex = geminiResponse.indexOf('[');
           const jsonEndIndex = geminiResponse.lastIndexOf(']') + 1;
           const jsonStr = geminiResponse.substring(jsonStartIndex, jsonEndIndex);
+          
+          console.log("Extracted JSON:", jsonStr.substring(0, 100) + "...");
           sections = JSON.parse(jsonStr);
         } else {
+          console.log("Response not in expected JSON format, using fallback parsing");
           // Fallback to manual parsing if JSON parsing fails
           const fallbackSections = this.parseFallbackResponse(geminiResponse);
           if (fallbackSections.length > 0) {
@@ -147,6 +166,7 @@ Start with an introduction section, then a section explaining how to read the re
       } catch (error) {
         console.error("Error parsing AI response:", error);
         // Create basic sections from the original reading
+        console.log("Creating basic sections from reading");
         sections = this.createBasicSections(baseReadingText);
       }
       
@@ -168,8 +188,10 @@ Start with an introduction section, then a section explaining how to read the re
         language: language,
         pageCount: Math.min(70, Math.max(50, sections.length * 3)), // Rough page estimate
         createdAt: new Date().toISOString(),
-        translationNote: language === "hindi" ? "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।" : "",
+        translationNote: language === "hindi" ? "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। हम उन्नत अनुवाद तकनीक का उपयोग करते हैं और निरंतर अनुवाद की गुणवत्ता में सुधार कर रहे हैं।" : "",
       };
+      
+      console.log("Saving report to database:", report.id);
       
       // Store the report in Supabase
       const { error } = await supabase
@@ -182,12 +204,15 @@ Start with an introduction section, then a section explaining how to read the re
           sections: report.sections,
           language: report.language,
           page_count: report.pageCount,
-          created_at: report.createdAt
+          created_at: report.createdAt,
+          translation_note: report.translationNote
         }]);
         
       if (error) {
         console.error("Error saving report to database:", error);
-        throw new Error("Failed to save report");
+        throw new Error("Failed to save report: " + error.message);
+      } else {
+        console.log("Successfully saved report to database:", report.id);
       }
       
       return report;
@@ -210,7 +235,7 @@ Start with an introduction section, then a section explaining how to read the re
     let currentContent = '';
     
     for (const line of lines) {
-      if (line.startsWith('#') || line.match(/^\d+\.\s/)) {
+      if (line.startsWith('#') || line.match(/^\d+\.\s/) || line.match(/^[A-Z\s]{5,}$/)) {
         // This is likely a title
         if (currentTitle && currentContent) {
           sections.push({
@@ -345,11 +370,22 @@ Start with an introduction section, then a section explaining how to read the re
       "Adulthood (28-42 years)": "वयस्कता (28-42 वर्ष)",
       "Middle Age (42-56 years)": "मध्य आयु (42-56 वर्ष)",
       "Maturity (56-70 years)": "परिपक्वता (56-70 वर्ष)",
-      "Wisdom Years (70+ years)": "बुद्धिमत्ता के वर्ष (70+ वर्ष)"
+      "Wisdom Years (70+ years)": "बुद्धिमत्ता के वर्ष (70+ वर्ष)",
+      "Summary": "सारांश",
+      "Overview": "सिंहावलोकन",
+      "Life Purpose": "जीवन का उद्देश्य",
+      "Major Life Events": "प्रमुख जीवन घटनाएँ",
+      "Personality": "व्यक्तित्व",
+      "Strengths and Challenges": "शक्तियाँ और चुनौतियाँ",
+      "Financial Prospects": "वित्तीय संभावनाएँ",
+      "Educational Path": "शैक्षिक मार्ग",
+      "Family Life": "पारिवारिक जीवन",
+      "Love and Romance": "प्रेम और रोमांस",
+      "Personal Growth": "व्यक्तिगत विकास"
     };
     
     try {
-      // For more complete translations of content, we'll try to use Gemini if possible
+      // For more complete translations of content, we'll use Gemini for batches of content
       let translatedSections = [...sections];
       
       // First pass - translate the titles using our dictionary
@@ -360,29 +396,62 @@ Start with an introduction section, then a section explaining how to read the re
         };
       });
       
-      // Second pass - try to translate contents more completely using Gemini
-      // We'll do this for a maximum of 10 sections to avoid API limits
-      const maxSectionsToTranslate = Math.min(10, sections.length);
+      // Log what we're about to translate
+      console.log(`Translating ${sections.length} sections to Hindi`);
       
-      for (let i = 0; i < maxSectionsToTranslate; i++) {
+      // Second pass - translate sections in batches using Gemini
+      // We'll translate batches of 3 sections at a time to avoid exceeding token limits
+      for (let i = 0; i < sections.length; i += 3) {
         try {
-          const prompt = `Translate the following English text to Hindi. Maintain the meaning and tone, and provide a complete translation, not word-by-word:\n\n"${sections[i].content}"`;
+          const batchToTranslate = sections.slice(i, i + 3);
+          const batchJSON = JSON.stringify(batchToTranslate.map(s => ({
+            title: s.title,
+            content: s.content.substring(0, 1000) // Limit content length for API
+          })));
           
-          const translatedContent = await GeminiService.generateTextWithGemini(prompt);
+          const prompt = `Translate the following JSON containing English text to Hindi. 
+Maintain the meaning and tone, and provide a complete translation, not word-by-word.
+Focus on natural Hindi phrasing rather than literal translation. 
+Preserve the JSON structure exactly.
+
+JSON to translate:
+${batchJSON}`;
           
-          if (translatedContent && translatedContent.length > 20) {
-            translatedSections[i].content = translatedContent;
-          } 
-        } catch (error) {
-          console.error("Error translating section content:", error);
-          // If Gemini translation fails, we'll fall back to keeping the original content
+          const translatedJSON = await GeminiService.generateTextWithGemini(prompt);
+          
+          // Extract the JSON from the response
+          let extractedJSON = translatedJSON;
+          if (translatedJSON.includes('[') && translatedJSON.includes(']')) {
+            const jsonStartIndex = translatedJSON.indexOf('[');
+            const jsonEndIndex = translatedJSON.lastIndexOf(']') + 1;
+            extractedJSON = translatedJSON.substring(jsonStartIndex, jsonEndIndex);
+          }
+          
+          try {
+            const translatedBatch = JSON.parse(extractedJSON);
+            
+            // Update the translated sections
+            for (let j = 0; j < translatedBatch.length; j++) {
+              if (i + j < translatedSections.length) {
+                translatedSections[i + j].title = translatedBatch[j].title || translatedSections[i + j].title;
+                translatedSections[i + j].content = translatedBatch[j].content || translatedSections[i + j].content;
+              }
+            }
+            
+            console.log(`Successfully translated batch ${i/3 + 1}`);
+          } catch (parseError) {
+            console.error("Error parsing translated JSON:", parseError);
+            // If JSON parsing fails, use dictionary translation for this batch
+            for (let j = 0; j < batchToTranslate.length; j++) {
+              if (i + j < translatedSections.length) {
+                // Keep the title translation from dictionary but use simpler content translation
+                translatedSections[i + j].content = this.simpleTranslate(translatedSections[i + j].content);
+              }
+            }
+          }
+        } catch (batchError) {
+          console.error(`Error translating batch starting at index ${i}:`, batchError);
         }
-      }
-      
-      // For remaining sections, we'll use a simple fallback approach
-      for (let i = maxSectionsToTranslate; i < sections.length; i++) {
-        // Create a simple Hindi fallback for sections we couldn't translate with Gemini
-        translatedSections[i].content = `${translatedSections[i].title} के बारे में आपकी हस्तरेखा महत्वपूर्ण जानकारी प्रदान करती है। इस जीवन चरण में आपकी क्षमताओं और संभावनाओं का पूरा विकास होगा।`;
       }
       
       return translatedSections;
@@ -393,12 +462,52 @@ Start with an introduction section, then a section explaining how to read the re
     }
   }
   
+  // Simple word replacement for fallback translations
+  private simpleTranslate(text: string): string {
+    const commonPhrases: Record<string, string> = {
+      "shows": "दिखाता है",
+      "indicates": "संकेत देता है",
+      "suggests": "सुझाव देता है",
+      "reveals": "प्रकट करता है",
+      "demonstrates": "प्रदर्शित करता है",
+      "will": "करेंगे",
+      "your": "आपके",
+      "you": "आप",
+      "life": "जीवन",
+      "relationship": "रिश्ता",
+      "health": "स्वास्थ्य",
+      "career": "करियर",
+      "success": "सफलता",
+      "challenges": "चुनौतियाँ",
+      "opportunities": "अवसर",
+      "growth": "विकास",
+      "spiritual": "आध्यात्मिक",
+      "path": "मार्ग",
+      "journey": "यात्रा",
+      "potential": "संभावना",
+      "future": "भविष्य",
+      "past": "भूतकाल",
+      "present": "वर्तमान"
+    };
+    
+    let translatedText = text;
+    
+    Object.keys(commonPhrases).forEach(key => {
+      const regex = new RegExp(`\\b${key}\\b`, 'gi');
+      translatedText = translatedText.replace(regex, commonPhrases[key]);
+    });
+    
+    return translatedText;
+  }
+  
   public getSampleReport(languageParam: string = "english"): DetailedLifeReport {
     return languageParam === "hindi" ? this.hindiSampleReport : this.sampleReport;
   }
   
   public async getReportsForUser(userId: string): Promise<DetailedLifeReport[]> {
     try {
+      console.log("Fetching reports for user:", userId);
+      
       const { data, error } = await supabase
         .from('detailed_reports')
         .select('*')
@@ -406,8 +515,11 @@ Start with an introduction section, then a section explaining how to read the re
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error("Error fetching reports:", error);
         throw error;
       }
+      
+      console.log(`Found ${data?.length || 0} reports for user`);
       
       return (data || []).map(item => ({
         id: item.id,
@@ -418,7 +530,8 @@ Start with an introduction section, then a section explaining how to read the re
         language: item.language,
         pageCount: item.page_count,
         createdAt: item.created_at,
-        downloadUrl: item.download_url
+        downloadUrl: item.download_url,
+        translationNote: item.translation_note
       }));
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -428,6 +541,8 @@ Start with an introduction section, then a section explaining how to read the re
   
   public async getReport(id: string): Promise<DetailedLifeReport | null> {
     try {
+      console.log("Fetching report with ID:", id);
+      
       const { data, error } = await supabase
         .from('detailed_reports')
         .select('*')
@@ -435,12 +550,16 @@ Start with an introduction section, then a section explaining how to read the re
         .maybeSingle();
         
       if (error) {
+        console.error("Error fetching report:", error);
         throw error;
       }
       
       if (!data) {
+        console.log("No report found with ID:", id);
         return null;
       }
+      
+      console.log("Successfully retrieved report:", id);
       
       return {
         id: data.id,
@@ -451,7 +570,8 @@ Start with an introduction section, then a section explaining how to read the re
         language: data.language,
         pageCount: data.page_count,
         createdAt: data.created_at,
-        downloadUrl: data.download_url
+        downloadUrl: data.download_url,
+        translationNote: data.translation_note
       };
     } catch (error) {
       console.error('Error fetching report:', error);

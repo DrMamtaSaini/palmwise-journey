@@ -19,6 +19,7 @@ const DetailedReport = () => {
   const [report, setReport] = useState<DetailedLifeReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   useEffect(() => {
     if (!reportId) {
@@ -29,13 +30,23 @@ const DetailedReport = () => {
     
     const fetchReport = async () => {
       try {
+        console.log(`Fetching report with ID: ${reportId} (retry: ${retryCount})`);
         const fetchedReport = await ReportService.getReport(reportId);
         
         if (!fetchedReport) {
-          setError("Report not found");
+          // If this is a new report and we're within retry limits, try again
+          if (retryCount < 3) {
+            console.log(`Report not found, will retry in 3 seconds (retry ${retryCount + 1})`);
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => setIsLoading(true), 3000);
+            return;
+          }
+          
+          setError("Report not found or still being generated");
         } else if (fetchedReport.userId !== "sample" && (!isAuthenticated || fetchedReport.userId !== user?.id)) {
           setError("You don't have permission to view this report");
         } else {
+          console.log("Report found:", fetchedReport.id);
           setReport(fetchedReport);
         }
       } catch (err) {
@@ -46,8 +57,10 @@ const DetailedReport = () => {
       }
     };
     
-    fetchReport();
-  }, [reportId, isAuthenticated, user]);
+    if (isLoading) {
+      fetchReport();
+    }
+  }, [reportId, isAuthenticated, user, isLoading, retryCount]);
   
   const handlePrint = () => {
     window.print();
@@ -58,12 +71,18 @@ const DetailedReport = () => {
     toast.success("Link copied to clipboard");
   };
   
+  const handleRetry = () => {
+    setIsLoading(true);
+    setError(null);
+    setRetryCount(0);
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
         <main className="flex-grow pt-24 pb-16 px-4 flex items-center justify-center">
-          <ReadingLoader message="Loading your detailed life report..." />
+          <ReadingLoader message={`Loading your detailed life report${retryCount > 0 ? ` (attempt ${retryCount + 1})` : ''}...`} />
         </main>
         <Footer />
       </div>
@@ -75,7 +94,19 @@ const DetailedReport = () => {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
         <main className="flex-grow pt-24 pb-16 px-4 flex items-center justify-center">
-          <ReadingNotFound message={error || "Report not found"} />
+          <div className="w-full max-w-md">
+            <ReadingNotFound message={error || "Report not found"} />
+            {error && error.includes("still being generated") && (
+              <div className="mt-4 text-center">
+                <Button onClick={handleRetry} className="bg-palm-purple hover:bg-palm-purple/90">
+                  Check Again
+                </Button>
+                <p className="mt-2 text-sm text-gray-500">
+                  Report generation can take up to 60 seconds. Please wait or check again later.
+                </p>
+              </div>
+            )}
+          </div>
         </main>
         <Footer />
       </div>

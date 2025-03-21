@@ -18,7 +18,7 @@ const ReadingNotFound = ({ message }: ReadingNotFoundProps) => {
         {message || "Reading Not Found"}
       </h3>
       <p className="text-gray-500 mb-6">
-        We couldn't find the reading you're looking for. It may have been deleted or you may not have permission to view it.
+        We couldn't find the reading you're looking for. It may have been deleted, still processing, or you may not have permission to view it.
       </p>
       <div className="flex gap-4">
         <Button
