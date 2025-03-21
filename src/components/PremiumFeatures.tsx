@@ -13,7 +13,7 @@ interface PremiumFeaturesProps {
 }
 
 const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "paypal">("razorpay");
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [paypalClientId, setPaypalClientId] = useState<string>("sb");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,8 +34,10 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
       }
     }
     
-    fetchPayPalClientId();
-  }, []);
+    if (paymentMethod === "paypal") {
+      fetchPayPalClientId();
+    }
+  }, [paymentMethod]);
   
   const handlePaymentSuccess = async () => {
     setIsLoading(true);
@@ -242,13 +244,13 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
                 <div className="bg-gray-100 p-1 rounded-lg inline-flex">
                   <button
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      paymentMethod === "card" 
+                      paymentMethod === "razorpay" 
                         ? "bg-white shadow-sm text-gray-800" 
                         : "text-gray-600 hover:text-gray-800"
                     }`}
-                    onClick={() => setPaymentMethod("card")}
+                    onClick={() => setPaymentMethod("razorpay")}
                   >
-                    Credit Card
+                    Razorpay
                   </button>
                   <button
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -263,7 +265,7 @@ const PremiumFeatures = ({ onSuccess }: PremiumFeaturesProps) => {
                 </div>
               </div>
               
-              {paymentMethod === "card" ? (
+              {paymentMethod === "razorpay" ? (
                 <PaymentButton 
                   price={getPlanPrice()} 
                   description={getPlanDescription()} 

@@ -1,14 +1,20 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+declare global {
+  interface Window {
+    Razorpay?: any;
+  }
+}
 
 interface PaymentButtonProps {
   price: string;
   description: string;
   isPrimary?: boolean;
   onClick: () => void;
-  priceId?: string; // Stripe price ID
+  priceId?: string;
 }
 
 const PaymentButton = ({ 
@@ -19,15 +25,109 @@ const PaymentButton = ({
   priceId
 }: PaymentButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const { toast } = useToast();
+  
+  // Convert price string to number (remove $ sign and convert to paisa/cents)
+  const getNumericAmount = () => {
+    const numericPrice = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+    return Math.round(numericPrice * 100); // Convert to paisa/cents
+  };
+  
+  // Load Razorpay script
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      // Check if script is already loaded
+      if (document.querySelector('script[src*="razorpay"]') || window.Razorpay) {
+        setRazorpayLoaded(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => setRazorpayLoaded(true);
+      script.onerror = () => {
+        console.error("Failed to load Razorpay");
+        toast({
+          title: "Payment Error",
+          description: "Failed to load payment gateway. Please try again later.",
+          variant: "destructive",
+        });
+      };
+
+      document.body.appendChild(script);
+    };
+
+    loadRazorpayScript();
+  }, [toast]);
+  
+  const handleRazorpayPayment = () => {
+    if (!window.Razorpay) {
+      toast({
+        title: "Payment Error",
+        description: "Payment gateway not loaded. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // In a real app, you would call your backend to create an order
+    // For demo purposes, we're creating the options directly
+    const options = {
+      key: "rzp_test_iCzWHZ3ISj5oYe", // Replace with your key in production
+      amount: getNumericAmount(),
+      currency: "INR",
+      name: "Palm Reader",
+      description: description,
+      image: "https://your-logo-url.png",
+      handler: function(response: any) {
+        // Handle successful payment
+        toast({
+          title: "Payment Successful",
+          description: `Payment ID: ${response.razorpay_payment_id}`,
+        });
+        // Add payment ID to the onClick callback
+        onClick();
+      },
+      prefill: {
+        name: "User Name",
+        email: "user@example.com",
+      },
+      theme: {
+        color: "#6b21a8", // palm-purple
+      },
+      modal: {
+        ondismiss: function() {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    try {
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Razorpay error:", error);
+      toast({
+        title: "Payment Error",
+        description: "There was a problem processing your payment. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
   
   const handlePayment = async () => {
     setIsLoading(true);
     
     try {
-      // If we have a priceId, process through Stripe checkout
-      if (priceId) {
-        // In a real implementation, this would call your backend endpoint to create a checkout session
+      if (razorpayLoaded) {
+        handleRazorpayPayment();
+      } else if (priceId) {
+        // Fallback to Stripe checkout (if implemented)
         const response = await fetch('/api/create-checkout-session', {
           method: 'POST',
           headers: {
@@ -60,7 +160,9 @@ const PaymentButton = ({
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      if (!razorpayLoaded) {
+        setIsLoading(false);
+      }
     }
   };
   

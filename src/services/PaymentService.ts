@@ -1,10 +1,11 @@
+
 import supabaseClient from '@/lib/supabase';
 
 interface PaymentRecord {
   user_id: string;
   amount: number;
   description: string;
-  payment_method: "card" | "paypal";
+  payment_method: "card" | "paypal" | "razorpay";
   payment_id?: string;
   billing_period: "monthly" | "yearly";
 }
@@ -32,6 +33,12 @@ export async function getPayPalClientId(): Promise<string> {
     // Return sandbox client ID as fallback
     return "sb";
   }
+}
+
+export async function getRazorpayApiKey(): Promise<string> {
+  // In a real implementation, this would fetch the key from a secure backend
+  // For demo purposes, we're returning a test key
+  return "rzp_test_iCzWHZ3ISj5oYe";
 }
 
 export async function recordPayment(paymentDetails: PaymentRecord): Promise<void> {
