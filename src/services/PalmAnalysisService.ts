@@ -124,6 +124,92 @@ class PalmAnalysisService {
     "Strong": "मजबूत",
     "Weak": "कमजोर",
     "Balanced": "संतुलित",
+    "The depth and quality of your life line": "आपकी जीवन रेखा की गहराई और गुणवत्ता",
+    "Your heart line reveals": "आपकी हृदय रेखा प्रकट करती है",
+    "Your head line demonstrates": "आपकी मस्तिष्क रेखा प्रदर्शित करती है",
+    "Your fate line shows": "आपकी भाग्य रेखा दिखाती है",
+    "reveals exceptional emotional intelligence": "असाधारण भावनात्मक बुद्धिमत्ता प्रकट करती है",
+    "indicates a life guided by clear purpose": "स्पष्ट उद्देश्य द्वारा निर्देशित जीवन का संकेत देती है",
+    "remarkable vitality and resilience": "असाधारण जीवन शक्ति और लचीलापन",
+    "mental agility paired with uncommon depth": "मानसिक फुर्ती के साथ असामान्य गहराई",
+    "demonstrates exceptional professional potential": "असाधारण पेशेवर क्षमता प्रदर्शित करती है",
+    "exceptional integration of intellect, emotion, and purpose": "बौद्धिकता, भावना और उद्देश्य का असाधारण एकीकरण",
+    
+    "Empathetic yet discerning": "संवेदनशील फिर भी विवेकपूर्ण",
+    "Analytically creative": "विश्लेषणात्मक रूप से रचनात्मक",
+    "Resilient under pressure": "दबाव में लचीला",
+    "Intuitively strategic": "सहज रूप से रणनीतिक",
+    "Authentically diplomatic": "प्रामाणिक रूप से कूटनीतिक",
+    "Thoughtfully expressive": "विचारपूर्वक अभिव्यंजक",
+    "Adaptively persistent": "अनुकूली रूप से दृढ़",
+    
+    "The elemental composition of your palm": "आपके हाथ की तत्व संरचना",
+    "earth influence": "पृथ्वी का प्रभाव",
+    "water element": "जल तत्व",
+    "fire element": "अग्नि तत्व",
+    "air element": "वायु तत्व",
+    
+    "Early Childhood": "प्रारंभिक बचपन",
+    "Childhood": "बचपन",
+    "Adolescence": "किशोरावस्था",
+    "Early Adulthood": "प्रारंभिक वयस्कता",
+    "Adulthood": "वयस्कता",
+    "Middle Age": "मध्य आयु",
+    "Maturity": "परिपक्वता",
+    "Wisdom Years": "बुद्धिमत्ता के वर्ष",
+    
+    "shows": "दिखाता है",
+    "indicates": "संकेत देता है",
+    "suggests": "सुझाव देता है",
+    "reveals": "प्रकट करता है",
+    "demonstrates": "प्रदर्शित करता है",
+    "growth": "विकास",
+    "potential": "संभावना",
+    "challenges": "चुनौतियाँ",
+    "opportunities": "अवसर",
+    "balance": "संतुलन",
+    "harmony": "सामंजस्य",
+    "wisdom": "बुद्धिमत्ता",
+    "creativity": "रचनात्मकता",
+    "intelligence": "बुद्धिमत्ता",
+    "intuition": "अंतर्ज्ञान",
+    "passion": "जुनून",
+    "strength": "शक्ति",
+    "vitality": "जीवन शक्ति",
+    "resilience": "लचीलापन",
+    "stability": "स्थिरता",
+    "adaptability": "अनुकूलनशीलता",
+    "flexibility": "लचीलापन",
+    "determination": "दृढ़ संकल्प",
+    "persistence": "दृढ़ता",
+    "spiritual": "आध्यात्मिक",
+    "emotional": "भावनात्मक",
+    "mental": "मानसिक",
+    "physical": "शारीरिक",
+    "relationship": "रिश्ता",
+    "career": "करियर",
+    "health": "स्वास्थ्य",
+    "wealth": "धन",
+    "success": "सफलता",
+    "happiness": "खुशी",
+    "fulfillment": "संतुष्टि",
+    "destiny": "भाग्य",
+    "fate": "नियति",
+    "path": "मार्ग",
+    "journey": "यात्रा",
+    "life": "जीवन",
+    "palm": "हथेली",
+    "hand": "हाथ",
+    "fingers": "उंगलियाँ",
+    "thumb": "अंगूठा",
+    "mount": "पर्वत",
+    "line": "रेखा",
+    "branch": "शाखा",
+    "island": "द्वीप",
+    "star": "तारा",
+    "cross": "क्रॉस",
+    "triangle": "त्रिकोण",
+    "square": "वर्ग",
   };
   
   private translateKey(text: string, language: string): string {
@@ -136,10 +222,14 @@ class PalmAnalysisService {
     if (language !== 'hindi') return text;
     
     let translatedText = text;
-    Object.entries(this.hindiTranslations).forEach(([english, hindi]) => {
+    
+    const sortedKeys = Object.keys(this.hindiTranslations).sort((a, b) => b.length - a.length);
+    
+    for (const english of sortedKeys) {
+      const hindi = this.hindiTranslations[english];
       const regex = new RegExp(english, 'gi');
       translatedText = translatedText.replace(regex, hindi);
-    });
+    }
     
     return translatedText;
   }
@@ -274,43 +364,60 @@ class PalmAnalysisService {
   private applyHindiTranslation(results: any): any {
     const translatedResults = JSON.parse(JSON.stringify(results));
     
-    if (translatedResults.results.lifeLine) {
-      translatedResults.results.lifeLine.prediction = this.simpleTranslate(
-        translatedResults.results.lifeLine.prediction, 'hindi'
-      );
-    }
-    
-    if (translatedResults.results.heartLine) {
-      translatedResults.results.heartLine.prediction = this.simpleTranslate(
-        translatedResults.results.heartLine.prediction, 'hindi'
-      );
-    }
-    
-    if (translatedResults.results.headLine) {
-      translatedResults.results.headLine.prediction = this.simpleTranslate(
-        translatedResults.results.headLine.prediction, 'hindi'
-      );
-    }
-    
-    if (translatedResults.results.fate) {
-      translatedResults.results.fate.prediction = this.simpleTranslate(
-        translatedResults.results.fate.prediction, 'hindi'
-      );
-    }
-    
-    const sections = ['past', 'present', 'future', 'relationships', 'career', 'health'];
-    sections.forEach(section => {
-      if (translatedResults.results[section]) {
-        translatedResults.results[section].prediction = this.simpleTranslate(
-          translatedResults.results[section].prediction, 'hindi'
+    const mainLines = ['lifeLine', 'heartLine', 'headLine', 'fate'];
+    mainLines.forEach(line => {
+      if (translatedResults.results[line]?.prediction) {
+        translatedResults.results[line].prediction = this.simpleTranslate(
+          translatedResults.results[line].prediction, 'hindi'
+        );
+      }
+      
+      if (translatedResults.results[line]?.insights && Array.isArray(translatedResults.results[line].insights)) {
+        translatedResults.results[line].insights = translatedResults.results[line].insights.map(
+          (insight: string) => this.simpleTranslate(insight, 'hindi')
+        );
+      }
+      
+      if (translatedResults.results[line]?.remedies && Array.isArray(translatedResults.results[line].remedies)) {
+        translatedResults.results[line].remedies = translatedResults.results[line].remedies.map(
+          (remedy: string) => this.simpleTranslate(remedy, 'hindi')
         );
       }
     });
     
-    if (translatedResults.results.elementalInfluences) {
+    const timePeriods = ['past', 'present', 'future', 'relationships', 'career', 'health'];
+    timePeriods.forEach(period => {
+      if (translatedResults.results[period]?.prediction) {
+        translatedResults.results[period].prediction = this.simpleTranslate(
+          translatedResults.results[period].prediction, 'hindi'
+        );
+      }
+      
+      if (translatedResults.results[period]?.insights && Array.isArray(translatedResults.results[period].insights)) {
+        translatedResults.results[period].insights = translatedResults.results[period].insights.map(
+          (insight: string) => this.simpleTranslate(insight, 'hindi')
+        );
+      }
+      
+      if (translatedResults.results[period]?.remedies && Array.isArray(translatedResults.results[period].remedies)) {
+        translatedResults.results[period].remedies = translatedResults.results[period].remedies.map(
+          (remedy: string) => this.simpleTranslate(remedy, 'hindi')
+        );
+      }
+    });
+    
+    if (translatedResults.results.elementalInfluences?.description) {
       translatedResults.results.elementalInfluences.description = this.simpleTranslate(
         translatedResults.results.elementalInfluences.description, 'hindi'
       );
+      
+      if (translatedResults.results.elementalInfluences?.remedies && 
+          Array.isArray(translatedResults.results.elementalInfluences.remedies)) {
+        translatedResults.results.elementalInfluences.remedies = 
+          translatedResults.results.elementalInfluences.remedies.map(
+            (remedy: string) => this.simpleTranslate(remedy, 'hindi')
+          );
+      }
     }
     
     translatedResults.results.overallSummary = this.simpleTranslate(
@@ -319,8 +426,35 @@ class PalmAnalysisService {
     
     if (translatedResults.results.personalityTraits && Array.isArray(translatedResults.results.personalityTraits)) {
       translatedResults.results.personalityTraits = translatedResults.results.personalityTraits.map(
-        trait => this.simpleTranslate(trait, 'hindi')
+        (trait: string) => this.simpleTranslate(trait, 'hindi')
       );
+    }
+    
+    if (translatedResults.results.remedies) {
+      if (translatedResults.results.remedies.general && Array.isArray(translatedResults.results.remedies.general)) {
+        translatedResults.results.remedies.general = translatedResults.results.remedies.general.map(
+          (remedy: string) => this.simpleTranslate(remedy, 'hindi')
+        );
+      }
+      
+      if (translatedResults.results.remedies.specific) {
+        Object.keys(translatedResults.results.remedies.specific).forEach(key => {
+          const translatedKey = this.translateKey(key, 'hindi');
+          
+          if (translatedKey !== key) {
+            translatedResults.results.remedies.specific[translatedKey] = 
+              translatedResults.results.remedies.specific[key];
+            delete translatedResults.results.remedies.specific[key];
+          }
+          
+          if (Array.isArray(translatedResults.results.remedies.specific[translatedKey])) {
+            translatedResults.results.remedies.specific[translatedKey] = 
+              translatedResults.results.remedies.specific[translatedKey].map(
+                (remedy: string) => this.simpleTranslate(remedy, 'hindi')
+              );
+          }
+        });
+      }
     }
     
     return translatedResults;

@@ -181,3 +181,45 @@ export const generateFullReadingText = (readingContent: Record<string, any> | nu
 
   return fullText;
 };
+
+// Helper function to translate text to Hindi if needed
+export const translateReadingText = (text: string, language: string): string => {
+  if (language !== 'hindi') return text;
+  
+  // Dictionary of translations
+  const translations: Record<string, string> = {
+    "PALM READING REPORT": "हस्तरेखा रिपोर्ट",
+    "OVERALL SUMMARY": "समग्र सारांश",
+    "LIFE LINE": "जीवन रेखा",
+    "HEART LINE": "हृदय रेखा",
+    "HEAD LINE": "मस्तिष्क रेखा",
+    "FATE LINE": "भाग्य रेखा",
+    "PAST": "भूतकाल",
+    "PRESENT": "वर्तमान",
+    "FUTURE": "भविष्य",
+    "RELATIONSHIPS": "रिश्ते",
+    "CAREER": "करियर",
+    "HEALTH": "स्वास्थ्य",
+    "ELEMENTAL INFLUENCES": "तत्वों का प्रभाव",
+    "Strength:": "शक्ति:",
+    "Significance:": "महत्व:",
+    "Earth:": "पृथ्वी:",
+    "Water:": "जल:",
+    "Fire:": "अग्नि:",
+    "Air:": "वायु:",
+    "Personality traits:": "व्यक्तित्व विशेषताएँ:",
+    "Key insights for": "के लिए प्रमुख अंतर्दृष्टि",
+    "No past reading available.": "कोई अतीत की रीडिंग उपलब्ध नहीं है।",
+    "No present reading available.": "कोई वर्तमान की रीडिंग उपलब्ध नहीं है।",
+    "No future reading available.": "कोई भविष्य की रीडिंग उपलब्ध नहीं है।",
+  };
+  
+  let translatedText = text;
+  
+  // Replace all occurrences of English terms with Hindi equivalents
+  Object.entries(translations).forEach(([english, hindi]) => {
+    translatedText = translatedText.replace(new RegExp(english, 'g'), hindi);
+  });
+  
+  return translatedText;
+};
