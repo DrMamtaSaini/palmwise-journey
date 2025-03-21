@@ -168,6 +168,7 @@ Start with an introduction section, then a section explaining how to read the re
         language: language,
         pageCount: Math.min(70, Math.max(50, sections.length * 3)), // Rough page estimate
         createdAt: new Date().toISOString(),
+        translationNote: language === "hindi" ? "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह मशीन अनुवाद है और कुछ शब्दों का सटीक अनुवाद नहीं हो सकता है।" : "",
       };
       
       // Store the report in Supabase
@@ -197,7 +198,8 @@ Start with an introduction section, then a section explaining how to read the re
       });
       
       // Return sample report as fallback
-      return language === "hindi" ? this.hindiSampleReport : this.sampleReport;
+      const currentLanguage = reading.language || "english";
+      return currentLanguage === "hindi" ? this.hindiSampleReport : this.sampleReport;
     }
   }
   
@@ -466,3 +468,4 @@ Start with an introduction section, then a section explaining how to read the re
 }
 
 export default ReportService.getInstance();
+
