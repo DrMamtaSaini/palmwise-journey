@@ -7,6 +7,7 @@ import ReportService from "../services/ReportService";
 import { useAuth } from "../hooks/useAuth";
 import { ExtendedPalmReading } from "../types/PalmReading";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 interface DetailedReportGeneratorProps {
   reading: ExtendedPalmReading;
@@ -20,6 +21,16 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  const checkTableExists = async () => {
+    try {
+      await supabase.functions.invoke('create-detailed-report-table', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error("Error checking/creating table:", error);
+    }
+  };
   
   const handleGenerateReport = async () => {
     if (!user) {
@@ -39,12 +50,18 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
     
     setIsGenerating(true);
     toast.info("Generating report", {
-      description: "We're creating your comprehensive 50-70 page life report. This may take a few moments."
+      description: "We're creating your comprehensive 50-70 page life report. This may take up to 1 minute to complete.",
+      duration: 5000
     });
     
     try {
+      // First ensure the table exists
+      await checkTableExists();
+      
+      console.log("Generating report for reading:", reading.id);
       const report = await ReportService.generateDetailedReport(reading, isPremium);
       
+      console.log("Report generated:", report.id);
       toast.success("Report generated", {
         description: `Your ${report.pageCount}-page detailed life report is ready to view and download.`
       });

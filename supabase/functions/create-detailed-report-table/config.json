@@ -1,0 +1,12 @@
+
+{
+  "functions": [
+    {
+      "name": "create-detailed-report-table",
+      "memory": 256,
+      "verify_jwt": false
+    }
+  ],
+  "project_id": "vvaextxqyrvcpjwndgby",
+  "version": 1
+}

@@ -6,9 +6,10 @@ import { useNavigate } from "react-router-dom";
 
 interface ReadingNotFoundProps {
   message: string;
+  retryAction?: () => void;
 }
 
-const ReadingNotFound = ({ message }: ReadingNotFoundProps) => {
+const ReadingNotFound = ({ message, retryAction }: ReadingNotFoundProps) => {
   const navigate = useNavigate();
   
   return (
@@ -21,6 +22,14 @@ const ReadingNotFound = ({ message }: ReadingNotFoundProps) => {
         We couldn't find the reading you're looking for. It may have been deleted, still processing, or you may not have permission to view it.
       </p>
       <div className="flex gap-4">
+        {retryAction && (
+          <Button 
+            onClick={retryAction}
+            className="bg-palm-purple hover:bg-palm-purple/90"
+          >
+            Try Again
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={() => navigate(-1)}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -95,12 +94,12 @@ const DetailedReport = () => {
         <Navbar />
         <main className="flex-grow pt-24 pb-16 px-4 flex items-center justify-center">
           <div className="w-full max-w-md">
-            <ReadingNotFound message={error || "Report not found"} />
+            <ReadingNotFound 
+              message={error || "Report not found"} 
+              retryAction={handleRetry}
+            />
             {error && error.includes("still being generated") && (
               <div className="mt-4 text-center">
-                <Button onClick={handleRetry} className="bg-palm-purple hover:bg-palm-purple/90">
-                  Check Again
-                </Button>
                 <p className="mt-2 text-sm text-gray-500">
                   Report generation can take up to 60 seconds. Please wait or check again later.
                 </p>
