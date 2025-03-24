@@ -7,9 +7,10 @@ import { useNavigate } from "react-router-dom";
 interface ReadingNotFoundProps {
   message: string;
   retryAction?: () => void;
+  showDebugInfo?: boolean;
 }
 
-const ReadingNotFound = ({ message, retryAction }: ReadingNotFoundProps) => {
+const ReadingNotFound = ({ message, retryAction, showDebugInfo = false }: ReadingNotFoundProps) => {
   const navigate = useNavigate();
   
   return (
@@ -21,7 +22,7 @@ const ReadingNotFound = ({ message, retryAction }: ReadingNotFoundProps) => {
       <p className="text-gray-500 mb-6">
         We couldn't find the reading you're looking for. It may have been deleted, still processing, or you may not have permission to view it.
       </p>
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4 justify-center">
         {retryAction && (
           <Button 
             onClick={retryAction}
@@ -42,6 +43,19 @@ const ReadingNotFound = ({ message, retryAction }: ReadingNotFoundProps) => {
           Upload New Palm
         </Button>
       </div>
+      
+      {showDebugInfo && (
+        <div className="mt-6 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 w-full text-left">
+          <p className="font-semibold mb-1">Debug Information:</p>
+          <p>If you're seeing this error repeatedly, please try the following:</p>
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li>Check your internet connection</li>
+            <li>Try logging out and logging back in</li>
+            <li>Clear your browser cache</li>
+            <li>If the problem persists, please contact support</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

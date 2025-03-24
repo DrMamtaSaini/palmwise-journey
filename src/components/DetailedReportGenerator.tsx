@@ -24,11 +24,21 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
   
   const checkTableExists = async () => {
     try {
-      await supabase.functions.invoke('create-detailed-report-table', {
+      const response = await supabase.functions.invoke('create-detailed-report-table', {
         method: 'POST',
       });
+      
+      console.log("Table check response:", response);
+      
+      if (!response.data?.success) {
+        console.error("Error in table creation:", response.data?.error);
+        throw new Error(response.data?.error || "Failed to create table");
+      }
     } catch (error) {
       console.error("Error checking/creating table:", error);
+      toast.error("Setup error", {
+        description: "There was a problem setting up the detailed report feature. Please try again."
+      });
     }
   };
   
@@ -78,6 +88,12 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
     }
   };
   
+  const handleViewSample = () => {
+    // Show the sample report for the current language
+    const sampleReportId = reading.language === "hindi" ? "sample-report-hindi" : "sample-report";
+    navigate(`/detailed-report/${sampleReportId}`);
+  };
+  
   return (
     <div className="mt-6 p-6 bg-white rounded-xl shadow-soft animate-fade-in border border-[#7953F5]/10">
       <div className="flex items-start gap-4">
@@ -110,7 +126,7 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
               )}
             </Button>
             <Button
-              onClick={() => navigate("/sample-report")}
+              onClick={handleViewSample}
               variant="outline"
               className="border border-[#7953F5]/30 text-[#7953F5] hover:bg-[#7953F5]/5"
             >

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -19,6 +20,7 @@ const DetailedReport = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   
   useEffect(() => {
     if (!reportId) {
@@ -30,6 +32,16 @@ const DetailedReport = () => {
     const fetchReport = async () => {
       try {
         console.log(`Fetching report with ID: ${reportId} (retry: ${retryCount})`);
+        
+        // Check if this is a sample report ID
+        if (reportId === "sample-report" || reportId === "sample-report-hindi") {
+          const language = reportId === "sample-report-hindi" ? "hindi" : "english";
+          console.log(`Loading sample report for language: ${language}`);
+          const sampleReport = ReportService.getSampleReport(language);
+          setReport(sampleReport);
+          return;
+        }
+        
         const fetchedReport = await ReportService.getReport(reportId);
         
         if (!fetchedReport) {
@@ -42,7 +54,8 @@ const DetailedReport = () => {
           }
           
           setError("Report not found or still being generated");
-        } else if (fetchedReport.userId !== "sample" && (!isAuthenticated || fetchedReport.userId !== user?.id)) {
+          setShowDebugInfo(retryCount >= 3);
+        } else if (!isAuthenticated || fetchedReport.userId !== user?.id) {
           setError("You don't have permission to view this report");
         } else {
           console.log("Report found:", fetchedReport.id);
@@ -51,6 +64,7 @@ const DetailedReport = () => {
       } catch (err) {
         console.error("Error fetching report:", err);
         setError("Failed to load the report");
+        setShowDebugInfo(true);
       } finally {
         setIsLoading(false);
       }
@@ -74,6 +88,7 @@ const DetailedReport = () => {
     setIsLoading(true);
     setError(null);
     setRetryCount(0);
+    setShowDebugInfo(false);
   };
   
   if (isLoading) {
@@ -97,6 +112,7 @@ const DetailedReport = () => {
             <ReadingNotFound 
               message={error || "Report not found"} 
               retryAction={handleRetry}
+              showDebugInfo={showDebugInfo}
             />
             {error && error.includes("still being generated") && (
               <div className="mt-4 text-center">
