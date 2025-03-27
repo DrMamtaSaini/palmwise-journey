@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Share2 } from "lucide-react";
+import { ArrowLeft, Download, Printer, Share2, FileText } from "lucide-react";
 import ReportService, { DetailedLifeReport } from "../services/ReportService";
 import { useAuth } from "../hooks/useAuth";
 import ReadingLoader from "../components/ReadingLoader";
@@ -21,6 +20,7 @@ const DetailedReport = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   useEffect(() => {
     if (!reportId) {
@@ -91,6 +91,47 @@ const DetailedReport = () => {
     setShowDebugInfo(false);
   };
   
+  const handleDownloadPDF = async () => {
+    if (!report) return;
+    
+    // If PDF already exists, open it
+    if (report.downloadUrl) {
+      window.open(report.downloadUrl, '_blank');
+      return;
+    }
+    
+    // Otherwise generate it
+    try {
+      setIsGeneratingPDF(true);
+      toast.info('Generating PDF', {
+        description: 'Creating your comprehensive palm reading report PDF. This may take a moment...',
+        duration: 5000
+      });
+      
+      const downloadUrl = await ReportService.generatePDFForReport(report);
+      
+      // Update report with download URL
+      setReport({
+        ...report,
+        downloadUrl
+      });
+      
+      // Open the PDF
+      window.open(downloadUrl, '_blank');
+      
+      toast.success('PDF Ready', {
+        description: 'Your comprehensive palm reading report PDF has been generated successfully.'
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error('PDF Generation Failed', {
+        description: 'There was a problem creating your PDF. Please try again later.'
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
@@ -143,7 +184,7 @@ const DetailedReport = () => {
               <ArrowLeft className="h-4 w-4 mr-2" /> Back
             </Button>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 className="text-gray-600"
@@ -160,17 +201,24 @@ const DetailedReport = () => {
                 <Share2 className="h-4 w-4 mr-2" /> Share
               </Button>
               
-              {report.downloadUrl && (
-                <Button
-                  variant="outline"
-                  className="text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
-                  asChild
-                >
-                  <a href={report.downloadUrl} download>
-                    <Download className="h-4 w-4 mr-2" /> Download PDF
-                  </a>
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                className="text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-[#7953F5] border-t-transparent rounded-full"></span>
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download PDF ({report.pageCount} pages)
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
@@ -210,6 +258,37 @@ const DetailedReport = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+          
+          <div className="bg-[#7953F5]/5 p-6 rounded-xl border border-[#7953F5]/20 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="bg-[#7953F5] rounded-full p-3 text-white">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Download Your Full {report.pageCount}-Page Report</h3>
+                <p className="text-gray-600 mt-1">Get your comprehensive palm reading report as a beautifully formatted PDF document.</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button
+                className="bg-gradient-to-r from-[#7953F5] to-[#9672FF] text-white hover:shadow-md transition-all duration-300 w-full sm:w-auto"
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download {report.pageCount}-Page PDF
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>

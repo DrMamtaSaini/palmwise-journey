@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Lightbulb } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -45,13 +45,17 @@ const ReadingNotFound = ({ message, retryAction, showDebugInfo = false }: Readin
       </div>
       
       {showDebugInfo && (
-        <div className="mt-6 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-600 w-full text-left">
-          <p className="font-semibold mb-1">Debug Information:</p>
-          <p>If you're seeing this error repeatedly, please try the following:</p>
-          <ul className="list-disc list-inside mt-1 space-y-1">
+        <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 w-full">
+          <div className="flex items-start gap-2 mb-2">
+            <Lightbulb className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="font-semibold">Need Help?</p>
+          </div>
+          <p className="mb-3">If you're seeing this error repeatedly, please try the following:</p>
+          <ul className="list-disc list-inside mt-1 space-y-2 text-left">
             <li>Check your internet connection</li>
             <li>Try logging out and logging back in</li>
             <li>Clear your browser cache</li>
+            <li>Make sure your palm image is clearly visible</li>
             <li>If the problem persists, please contact support</li>
           </ul>
         </div>

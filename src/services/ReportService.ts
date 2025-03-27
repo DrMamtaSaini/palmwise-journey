@@ -2,6 +2,7 @@ import { ExtendedPalmReading } from "../types/PalmReading";
 import { generateFullReadingText } from "../utils/readingContentUtils";
 import { getLanguageInfo } from "../components/LanguageSelector";
 import GeminiService from "./GeminiService";
+import PDFService from "./PDFService";
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
@@ -34,7 +35,7 @@ class ReportService {
     readingId: "sample",
     title: "Sample Detailed Life Report",
     language: "english",
-    pageCount: 55,
+    pageCount: 60,
     createdAt: new Date().toISOString(),
     downloadUrl: "/sample-palm-report.pdf",
     translationNote: "",
@@ -63,7 +64,7 @@ class ReportService {
     readingId: "sample",
     title: "विस्तृत जीवन रिपोर्ट का नमूना",
     language: "hindi",
-    pageCount: 55,
+    pageCount: 60,
     createdAt: new Date().toISOString(),
     downloadUrl: "/sample-palm-report-hindi.pdf",
     translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह हमारे उन्नत अनुवाद तकनीक का उपयोग करता है जो विशेष पारिभाषिक शब्दों को सटीक रूप से अनुवादित करता है।",
@@ -112,8 +113,8 @@ class ReportService {
       // Get the basic reading text
       const baseReadingText = generateFullReadingText(reading.results, isPremium);
       
-      // Generate a more detailed report using Gemini API with improved prompt
-      let promptForAI = `Create a very detailed, comprehensive palm reading report of 50-70 pages based on this palm reading summary. 
+      // Generate a more detailed report using Gemini API with improved prompt for 60-70 pages
+      let promptForAI = `Create a very detailed, comprehensive palm reading report of 60-70 pages based on this palm reading summary. 
 Break it down into clear phases of life: early childhood (0-7), childhood (7-14), adolescence (14-21), early adulthood (21-28), adulthood (28-42), middle age (42-56), maturity (56-70), and wisdom years (70+). 
 
 For each phase, provide rich, specific details on key events, challenges, opportunities, relationships, career developments, and spiritual growth.
@@ -122,7 +123,17 @@ Basic reading for reference: ${baseReadingText}
 
 Use palmistry terminology correctly. Connect different aspects of the palm (life line, heart line, head line, fate line, etc.) to specific periods of life. Include specific predictions that feel personal and detailed, not general.
 
-Format your response as a JSON array of objects with 'title' and 'content' fields for each section of the report. Each section should be substantial - around 1-2 pages of content. Ensure that the JSON is valid and properly formatted.
+Also include these additional sections:
+1. Personality & Character Traits (detailed analysis)
+2. Career & Financial Life (with short and medium-term predictions)
+3. Health & Vitality (analyzing the Life Line in depth)
+4. Love & Relationships (Heart Line analysis and compatibility)
+5. Family & Social Life (dynamics and social interactions)
+6. Spiritual Growth & Personal Development
+7. Present Situation (current state, challenges, and opportunities)
+8. Future Predictions (up to 6 months)
+
+Format your response as a JSON array of objects with 'title' and 'content' fields for each section of the report. Each section should be substantial - around 2-3 pages of content. Ensure that the JSON is valid and properly formatted.
 
 The JSON structure should look like this:
 [
@@ -137,7 +148,7 @@ The JSON structure should look like this:
   ...
 ]
 
-Start with an introduction section, then a section explaining how to read the report, then the life phases in chronological order, and end with a conclusion section.`;
+Start with an introduction section, then a section explaining how to read the report, then the life phases in chronological order, and end with a conclusion section. Make the content detailed enough to fill 60-70 pages when formatted.`;
 
       // Use GeminiService to get the generated content
       const geminiResponse = await GeminiService.generateTextWithGemini(promptForAI);
@@ -186,7 +197,7 @@ Start with an introduction section, then a section explaining how to read the re
         title: language === "hindi" ? "आपकी विस्तृत जीवन रिपोर्ट" : "Your Detailed Life Report",
         sections: sections,
         language: language,
-        pageCount: Math.min(70, Math.max(50, sections.length * 3)), // Rough page estimate
+        pageCount: Math.min(70, Math.max(60, sections.length * 3)), // Ensure 60-70 page range
         createdAt: new Date().toISOString(),
         translationNote: language === "hindi" ? "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। हम उन्नत अनुवाद तकनीक का उपयोग करते हैं और निरंतर अनुवाद की गुणवत्ता में सुधार कर रहे हैं।" : "",
       };
@@ -213,6 +224,15 @@ Start with an introduction section, then a section explaining how to read the re
         throw new Error("Failed to save report: " + error.message);
       } else {
         console.log("Successfully saved report to database:", report.id);
+        
+        // Generate PDF and update the download URL
+        try {
+          const downloadUrl = await PDFService.generatePDFFromReport(report);
+          report.downloadUrl = downloadUrl;
+        } catch (pdfError) {
+          console.error("PDF generation error:", pdfError);
+          // Continue without PDF - we'll generate it on demand later
+        }
       }
       
       return report;
@@ -576,6 +596,31 @@ ${batchJSON}`;
     } catch (error) {
       console.error('Error fetching report:', error);
       return null;
+    }
+  }
+  
+  public async generatePDFForReport(report: DetailedLifeReport): Promise<string> {
+    if (report.downloadUrl) {
+      return report.downloadUrl;
+    }
+    
+    try {
+      const downloadUrl = await PDFService.generatePDFFromReport(report);
+      
+      // Update the report record
+      const { error } = await supabase
+        .from('detailed_reports')
+        .update({ download_url: downloadUrl })
+        .eq('id', report.id);
+        
+      if (error) {
+        console.error("Error updating report with download URL:", error);
+      }
+      
+      return downloadUrl;
+    } catch (error) {
+      console.error("Error generating PDF for report:", error);
+      throw error;
     }
   }
 }

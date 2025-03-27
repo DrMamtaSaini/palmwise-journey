@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Info } from "lucide-react";
 import { toast } from "sonner";
 import ReportService from "../services/ReportService";
 import { useAuth } from "../hooks/useAuth";
@@ -60,7 +60,7 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
     
     setIsGenerating(true);
     toast.info("Generating report", {
-      description: "We're creating your comprehensive 50-70 page life report. This may take up to 1 minute to complete.",
+      description: "We're creating your comprehensive 60-70 page life report. This may take up to 1 minute to complete.",
       duration: 5000
     });
     
@@ -101,12 +101,21 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
           <FileText size={24} />
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-semibold mb-2">Detailed Life Report</h3>
+          <h3 className="text-xl font-semibold mb-2">60-70 Page Detailed Life Report</h3>
           <p className="text-gray-600 mb-4">
-            Get a comprehensive 50-70 page detailed report that analyzes every phase of your life 
+            Get a comprehensive 60-70 page detailed report that analyzes every phase of your life 
             from birth to old age. The report includes specific insights about relationships, career, 
             health, and spiritual growth at each life stage.
           </p>
+          
+          <div className="bg-blue-50 border border-blue-100 rounded-md p-3 mb-4 flex items-start gap-2">
+            <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-700">
+              <p className="font-medium mb-1">Premium Feature</p>
+              <p>Your detailed report will be generated as a beautifully formatted PDF document that you can download or print.</p>
+            </div>
+          </div>
+          
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               onClick={handleGenerateReport}
@@ -121,7 +130,7 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
               ) : (
                 <span className="flex items-center">
                   <FileText className="mr-2 h-4 w-4" />
-                  Generate Detailed Report
+                  Generate 60-70 Page Report
                 </span>
               )}
             </Button>
