@@ -53,14 +53,14 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
     
     if (!isPremium) {
       toast.error("Premium feature", {
-        description: "Detailed life reports are available for premium users only. Please upgrade to unlock this feature."
+        description: "The Ultimate Palm Reading Report is available for premium users only. Please upgrade to unlock this feature."
       });
       return;
     }
     
     setIsGenerating(true);
-    toast.info("Generating report", {
-      description: "We're creating your comprehensive 60-70 page life report. This may take up to 1 minute to complete.",
+    toast.info("Generating ultimate report", {
+      description: "We're creating your comprehensive 65-page life report with insights on career, relationships, finances, health and more. This may take up to 1 minute.",
       duration: 5000
     });
     
@@ -72,8 +72,8 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
       const report = await ReportService.generateDetailedReport(reading, isPremium);
       
       console.log("Report generated:", report.id);
-      toast.success("Report generated", {
-        description: `Your ${report.pageCount}-page detailed life report is ready to view and download.`
+      toast.success("Ultimate report generated", {
+        description: `Your ${report.pageCount}-page comprehensive life report is ready to view and download.`
       });
       
       // Navigate to report page
@@ -81,7 +81,7 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
     } catch (error) {
       console.error("Report generation error:", error);
       toast.error("Report generation failed", {
-        description: "There was a problem creating your detailed report. Please try again later."
+        description: "There was a problem creating your ultimate report. Please try again later."
       });
     } finally {
       setIsGenerating(false);
@@ -101,18 +101,18 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
           <FileText size={24} />
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-semibold mb-2">60-70 Page Detailed Life Report</h3>
+          <h3 className="text-xl font-semibold mb-2">Ultimate 65-Page Palm Reading Report</h3>
           <p className="text-gray-600 mb-4">
-            Get a comprehensive 60-70 page detailed report that analyzes every phase of your life 
-            from birth to old age. The report includes specific insights about relationships, career, 
-            health, and spiritual growth at each life stage.
+            Get an ultra-detailed 65-page professional report that analyzes every aspect of your life: 
+            career, relationships, finances, health, intelligence, social influence, family, travel, 
+            spirituality, and your ultimate legacy.
           </p>
           
           <div className="bg-blue-50 border border-blue-100 rounded-md p-3 mb-4 flex items-start gap-2">
             <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-700">
               <p className="font-medium mb-1">Premium Feature</p>
-              <p>Your detailed report will be generated as a beautifully formatted PDF document that you can download or print.</p>
+              <p>Your ultimate report includes practical insights and age-based predictions for each life area, beautifully formatted for download or printing.</p>
             </div>
           </div>
           
@@ -125,12 +125,12 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
               {isGenerating ? (
                 <span className="flex items-center">
                   <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                  Generating Report...
+                  Generating Ultimate Report...
                 </span>
               ) : (
                 <span className="flex items-center">
                   <FileText className="mr-2 h-4 w-4" />
-                  Generate 60-70 Page Report
+                  Generate Ultimate Report
                 </span>
               )}
             </Button>
@@ -147,7 +147,7 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
       </div>
       {!isPremium && (
         <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-sm">
-          Detailed life reports are a premium feature. Please upgrade your account to access this feature.
+          The Ultimate Palm Reading Report is a premium feature. Please upgrade your account to access this comprehensive analysis.
         </div>
       )}
     </div>
