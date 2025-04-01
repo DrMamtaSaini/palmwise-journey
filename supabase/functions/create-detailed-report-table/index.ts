@@ -43,7 +43,7 @@ serve(async (req) => {
       const { error: createTableError } = await supabase.rpc('exec_sql', {
         query: `
           CREATE TABLE IF NOT EXISTS public.detailed_reports (
-            id UUID PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             user_id UUID NOT NULL,
             reading_id UUID NOT NULL,
             title TEXT NOT NULL,
@@ -71,6 +71,13 @@ serve(async (req) => {
           ON public.detailed_reports
           FOR UPDATE
           USING (auth.uid() = user_id OR user_id = 'sample');
+          
+          -- Adding sample reports
+          INSERT INTO public.detailed_reports (id, user_id, reading_id, title, sections, language, page_count)
+          VALUES 
+          ('sample-report', 'sample', 'sample', 'Sample Ultimate Palm Reading Report', '[]', 'english', 65),
+          ('sample-report-hindi', 'sample', 'sample', 'नमूना अल्टीमेट हस्तरेखा रिपोर्ट', '[]', 'hindi', 65)
+          ON CONFLICT (id) DO NOTHING;
         `
       });
         
@@ -96,12 +103,87 @@ serve(async (req) => {
           throw new Error(`Failed to create table: ${directSqlError.message}`);
         }
         
+        // Insert sample reports if table creation succeeded
+        try {
+          await supabase
+            .from('detailed_reports')
+            .upsert([
+              {
+                id: 'sample-report',
+                user_id: 'sample',
+                reading_id: 'sample',
+                title: 'Sample Ultimate Palm Reading Report',
+                sections: [],
+                language: 'english',
+                page_count: 65,
+                created_at: new Date().toISOString(),
+              },
+              {
+                id: 'sample-report-hindi',
+                user_id: 'sample',
+                reading_id: 'sample',
+                title: 'नमूना अल्टीमेट हस्तरेखा रिपोर्ट',
+                sections: [],
+                language: 'hindi',
+                page_count: 65,
+                created_at: new Date().toISOString(),
+              }
+            ], { onConflict: 'id' });
+            
+          console.log("Sample reports created or updated");
+        } catch (err) {
+          console.error("Error creating sample reports:", err);
+        }
+        
         console.log("Successfully created detailed_reports table or it already exists");
       } else {
         console.log("Successfully created detailed_reports table via RPC");
       }
     } else {
       console.log("Table already exists");
+      
+      // Ensure sample reports exist
+      try {
+        const { data: sampleReports, error: sampleError } = await supabase
+          .from('detailed_reports')
+          .select('id')
+          .in('id', ['sample-report', 'sample-report-hindi']);
+          
+        if (!sampleError && (!sampleReports || sampleReports.length < 2)) {
+          console.log("Creating or updating sample reports");
+          
+          await supabase
+            .from('detailed_reports')
+            .upsert([
+              {
+                id: 'sample-report',
+                user_id: 'sample',
+                reading_id: 'sample',
+                title: 'Sample Ultimate Palm Reading Report',
+                sections: [],
+                language: 'english',
+                page_count: 65,
+                created_at: new Date().toISOString(),
+              },
+              {
+                id: 'sample-report-hindi',
+                user_id: 'sample',
+                reading_id: 'sample',
+                title: 'नमूना अल्टीमेट हस्तरेखा रिपोर्ट',
+                sections: [],
+                language: 'hindi',
+                page_count: 65,
+                created_at: new Date().toISOString(),
+              }
+            ], { onConflict: 'id' });
+            
+          console.log("Sample reports created or updated");
+        } else {
+          console.log("Sample reports already exist");
+        }
+      } catch (err) {
+        console.error("Error checking/creating sample reports:", err);
+      }
     }
 
     return new Response(JSON.stringify({
