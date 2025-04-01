@@ -8,11 +8,13 @@ import { ArrowLeft, Download, FileText } from "lucide-react";
 import ReportService from "../services/ReportService";
 import LanguageSelector from "../components/LanguageSelector";
 import TranslationNote from "../components/TranslationNote";
+import { toast } from "sonner";
 
 const SampleReport = () => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [report, setReport] = useState(ReportService.getSampleReport());
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     // Update report when language changes
@@ -21,6 +23,36 @@ const SampleReport = () => {
 
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
+  };
+
+  const handleDownloadSample = async () => {
+    try {
+      setIsDownloading(true);
+      toast.info('Preparing sample PDF', {
+        description: 'Generating your sample report PDF...',
+        duration: 5000
+      });
+
+      // Get the sample report for download
+      const sampleReport = ReportService.getSampleReport(selectedLanguage);
+      
+      // Use the PDF service to generate and download the PDF
+      const downloadUrl = await ReportService.generatePDFForReport(sampleReport);
+      
+      // Open the PDF in a new tab
+      window.open(downloadUrl, '_blank');
+      
+      toast.success('Sample PDF ready', {
+        description: 'Your sample report PDF has been generated successfully'
+      });
+    } catch (error) {
+      console.error("Error downloading sample report:", error);
+      toast.error('Download failed', {
+        description: 'There was a problem generating the sample PDF. Please try again.'
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -64,9 +96,20 @@ const SampleReport = () => {
                 <Button
                   variant="outline"
                   className="flex items-center text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
+                  onClick={handleDownloadSample}
+                  disabled={isDownloading}
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Sample
+                  {isDownloading ? (
+                    <>
+                      <span className="animate-spin mr-2 h-4 w-4 border-2 border-[#7953F5] border-t-transparent rounded-full"></span>
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Sample
+                    </>
+                  )}
                 </Button>
               </div>
 

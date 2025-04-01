@@ -37,7 +37,7 @@ class ReportService {
     language: "english",
     pageCount: 65,
     createdAt: new Date().toISOString(),
-    downloadUrl: "/sample-palm-report.pdf",
+    downloadUrl: "", // Remove fixed URL to allow dynamic generation
     translationNote: "",
     sections: [
       {
@@ -111,7 +111,7 @@ class ReportService {
     language: "hindi",
     pageCount: 65,
     createdAt: new Date().toISOString(),
-    downloadUrl: "/sample-palm-report-hindi.pdf",
+    downloadUrl: "", // Remove fixed URL to allow dynamic generation
     translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह हमारे उन्नत अनुवाद तकनीक का उपयोग करता है जो विशेष पारिभाषिक शब्दों को सटीक रूप से अनुवादित करता है।",
     sections: [
       {
@@ -548,7 +548,38 @@ ${batchJSON}`;
   }
   
   public getSampleReport(languageParam: string = "english"): DetailedLifeReport {
-    return languageParam === "hindi" ? this.hindiSampleReport : this.sampleReport;
+    // Create a fresh copy to avoid modifying the original sample report objects
+    const report = languageParam === "hindi" 
+      ? JSON.parse(JSON.stringify(this.hindiSampleReport))
+      : JSON.parse(JSON.stringify(this.sampleReport));
+      
+    // Ensure we have a download URL if it already exists in the database
+    if (!report.downloadUrl) {
+      // Check if we have a stored download URL in the database
+      this.checkForExistingSampleReportURL(report.id).then(url => {
+        if (url) {
+          report.downloadUrl = url;
+        }
+      }).catch(err => console.error("Error checking for existing sample report URL:", err));
+    }
+    
+    return report;
+  }
+  
+  // New method to check for existing sample report download URLs
+  private async checkForExistingSampleReportURL(reportId: string): Promise<string | null> {
+    try {
+      const { data } = await supabase
+        .from('detailed_reports')
+        .select('download_url')
+        .eq('id', reportId)
+        .maybeSingle();
+        
+      return data?.download_url || null;
+    } catch (error) {
+      console.error("Error checking for existing sample report:", error);
+      return null;
+    }
   }
   
   public async getReportsForUser(userId: string): Promise<DetailedLifeReport[]> {
@@ -627,27 +658,94 @@ ${batchJSON}`;
   }
   
   public async generatePDFForReport(report: DetailedLifeReport): Promise<string> {
-    if (report.downloadUrl) {
+    // If PDF already exists, return the URL
+    if (report.downloadUrl && report.downloadUrl.startsWith('http')) {
       return report.downloadUrl;
     }
     
     try {
+      console.log(`Generating PDF for report: ${report.id}`);
+      
+      // For sample reports, check if they exist in the database first
+      if (report.id === "sample-report" || report.id === "sample-report-hindi") {
+        const existingReport = await this.getReport(report.id);
+        if (existingReport && existingReport.downloadUrl) {
+          console.log(`Using existing download URL for sample report: ${existingReport.downloadUrl}`);
+          return existingReport.downloadUrl;
+        }
+        
+        // Ensure sample report exists in database
+        await this.ensureSampleReportExists(report);
+      }
+      
+      // Generate the PDF using PDFService
       const downloadUrl = await PDFService.generatePDFFromReport(report);
       
-      // Update the report record
-      const { error } = await supabase
-        .from('detailed_reports')
-        .update({ download_url: downloadUrl })
-        .eq('id', report.id);
-        
-      if (error) {
-        console.error("Error updating report with download URL:", error);
-      }
+      // Update the report record in the database
+      await this.updateReportDownloadUrl(report.id, downloadUrl);
       
       return downloadUrl;
     } catch (error) {
       console.error("Error generating PDF for report:", error);
       throw error;
+    }
+  }
+  
+  // Helper method to ensure sample reports exist in the database
+  private async ensureSampleReportExists(report: DetailedLifeReport): Promise<void> {
+    try {
+      const { data, error } = await supabase
+        .from('detailed_reports')
+        .select('id')
+        .eq('id', report.id)
+        .maybeSingle();
+        
+      if (!data) {
+        console.log(`Sample report ${report.id} not found in database, creating it...`);
+        
+        // Insert the sample report
+        const { error: insertError } = await supabase
+          .from('detailed_reports')
+          .insert({
+            id: report.id,
+            user_id: report.userId,
+            reading_id: report.readingId,
+            title: report.title,
+            sections: report.sections,
+            language: report.language,
+            page_count: report.pageCount,
+            created_at: report.createdAt,
+            translation_note: report.translationNote || null
+          });
+          
+        if (insertError) {
+          console.error(`Error creating sample report in database: ${insertError.message}`);
+        } else {
+          console.log(`Successfully created sample report ${report.id} in database`);
+        }
+      } else {
+        console.log(`Sample report ${report.id} already exists in database`);
+      }
+    } catch (error) {
+      console.error(`Error ensuring sample report exists: ${error}`);
+    }
+  }
+  
+  // Helper method to update the download URL for a report
+  private async updateReportDownloadUrl(reportId: string, downloadUrl: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('detailed_reports')
+        .update({ download_url: downloadUrl })
+        .eq('id', reportId);
+        
+      if (error) {
+        console.error(`Error updating report download URL: ${error.message}`);
+      } else {
+        console.log(`Successfully updated download URL for report ${reportId}`);
+      }
+    } catch (error) {
+      console.error(`Error updating report download URL: ${error}`);
     }
   }
 }
