@@ -1,3 +1,4 @@
+
 import { ExtendedPalmReading } from "../types/PalmReading";
 import { generateFullReadingText } from "../utils/readingContentUtils";
 import { getLanguageInfo } from "../components/LanguageSelector";
@@ -52,52 +53,52 @@ class ReportService {
       },
       {
         title: "Career & Professional Growth (Job vs. Business)",
-        content: "Your career lines indicate both job stability and potential for entrepreneurship. If you have a strong Sun Line, it suggests recognition in your field, while a deep Mercury Line signifies business acumen.\n\nCareer Analysis:\n- Strong Fate Line: Suitable for long-term jobs and leadership roles.\\n- Prominent Sun Line: Potential for fame and success in creative or public fields.\\n- Well-defined Mercury Line: Business skills and negotiation power.\n\nJob vs. Business Decision:\n- If your Fate Line is deep and unbroken, a corporate career is favorable.\\n- If the Mercury Line is strong with multiple branches, entrepreneurship is a better choice.",
+        content: "Your career lines indicate both job stability and potential for entrepreneurship. If you have a strong Sun Line, it suggests recognition in your field, while a deep Mercury Line signifies business acumen.\n\nCareer Analysis:\n- Strong Fate Line: Suitable for long-term jobs and leadership roles.\n- Prominent Sun Line: Potential for fame and success in creative or public fields.\n- Well-defined Mercury Line: Business skills and negotiation power.\n\nJob vs. Business Decision:\n- If your Fate Line is deep and unbroken, a corporate career is favorable.\n- If the Mercury Line is strong with multiple branches, entrepreneurship is a better choice.",
         image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000"
       },
       {
         title: "Love & Relationships (Romantic, Family, and Social Life)",
-        content: "The heart line in your palm suggests your emotional depth and the way you connect with people. A long, curved heart line indicates a passionate and expressive personality, while a short or broken heart line may suggest emotional struggles.\n\nLove & Marriage Insights:\n- A deep heart line indicates loyalty and strong emotional bonds.\\n- A broken heart line may suggest past heartbreaks or trust issues.\\n- Parallel lines near the heart line show long-lasting relationships.",
+        content: "The heart line in your palm suggests your emotional depth and the way you connect with people. A long, curved heart line indicates a passionate and expressive personality, while a short or broken heart line may suggest emotional struggles.\n\nLove & Marriage Insights:\n- A deep heart line indicates loyalty and strong emotional bonds.\n- A broken heart line may suggest past heartbreaks or trust issues.\n- Parallel lines near the heart line show long-lasting relationships.",
         image: "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=1000"
       },
       {
         title: "Health & Well-being (Mental, Emotional, and Physical Health)",
-        content: "Your life line and health line provide insights into your overall well-being. A deep life line suggests robust health, while breaks in the line may indicate potential health concerns.\n\nKey Health Indicators:\n- A deep life line: Good overall health and longevity.\\n- A faint health line: Potential minor ailments or stress-related issues.\\n- Breaks in the life line: Major life changes affecting health.",
+        content: "Your life line and health line provide insights into your overall well-being. A deep life line suggests robust health, while breaks in the line may indicate potential health concerns.\n\nKey Health Indicators:\n- A deep life line: Good overall health and longevity.\n- A faint health line: Potential minor ailments or stress-related issues.\n- Breaks in the life line: Major life changes affecting health.",
         image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=1000"
       },
       {
         title: "Wealth & Financial Growth (Income, Investments, Stability)",
-        content: "Your palm reveals a steady accumulation of wealth rather than sudden riches. If your fate line is strong, financial stability is likely. A well-developed Sun Mount suggests financial gains through recognition.\n\nWealth & Prosperity Insights:\n- Clear money lines: Indicate financial stability and potential gains.\\n- A well-defined fate line: Shows structured financial growth over time.\\n- Breaks in the money line: Indicate financial ups and downs that require careful planning.",
+        content: "Your palm reveals a steady accumulation of wealth rather than sudden riches. If your fate line is strong, financial stability is likely. A well-developed Sun Mount suggests financial gains through recognition.\n\nWealth & Prosperity Insights:\n- Clear money lines: Indicate financial stability and potential gains.\n- A well-defined fate line: Shows structured financial growth over time.\n- Breaks in the money line: Indicate financial ups and downs that require careful planning.",
         image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=1000"
       },
       {
         title: "Life Phases & Key Transitions (Past, Present, Future)",
-        content: "Palmistry reveals different phases of your life through changes in the fate line, life line, and other markings. Significant transitions can be seen where lines intersect or break.\n\nLife Stages Breakdown:\n- Childhood: Influence of early family life on personality and growth.\\n- Young Adulthood: Career choices, education, and major decisions.\\n- Midlife: Stability, financial growth, and family responsibilities.\\n- Later Years: Wisdom, legacy, and personal fulfillment.",
+        content: "Palmistry reveals different phases of your life through changes in the fate line, life line, and other markings. Significant transitions can be seen where lines intersect or break.\n\nLife Stages Breakdown:\n- Childhood: Influence of early family life on personality and growth.\n- Young Adulthood: Career choices, education, and major decisions.\n- Midlife: Stability, financial growth, and family responsibilities.\n- Later Years: Wisdom, legacy, and personal fulfillment.",
         image: "https://images.unsplash.com/photo-1506485338023-6ce5f36692df?q=80&w=1000"
       },
       {
         title: "Spiritual Growth & Inner Wisdom",
-        content: "Your palm's Saturn and Jupiter mounts indicate your spiritual path and wisdom. A strong Mount of Jupiter suggests leadership in spiritual or philosophical matters.\n\nSpiritual Insights:\n- Strong Jupiter Mount: Leadership and wisdom.\\n- Well-developed Saturn Mount: Deep thinking and spiritual growth.",
+        content: "Your palm's Saturn and Jupiter mounts indicate your spiritual path and wisdom. A strong Mount of Jupiter suggests leadership in spiritual or philosophical matters.\n\nSpiritual Insights:\n- Strong Jupiter Mount: Leadership and wisdom.\n- Well-developed Saturn Mount: Deep thinking and spiritual growth.",
         image: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=1000"
       },
       {
         title: "Name, Fame & Public Influence",
-        content: "The Sun Line plays a key role in determining your social recognition and influence. A strong Sun Line indicates fame and success in public life.\n\nFame & Recognition:\n- A strong Sun Line: Recognition in career and public life.\\n- Parallel success lines: Multiple achievements over time.",
+        content: "The Sun Line plays a key role in determining your social recognition and influence. A strong Sun Line indicates fame and success in public life.\n\nFame & Recognition:\n- A strong Sun Line: Recognition in career and public life.\n- Parallel success lines: Multiple achievements over time.",
         image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1000"
       },
       {
         title: "Challenges & Solutions in Life",
-        content: "Every palm has markings that reveal challenges and possible solutions. Crosses, breaks, and islands in the major lines suggest struggles, while a well-defined fate line indicates overcoming obstacles.\n\nCommon Challenges & Their Solutions:\n- Breaks in the fate line: Career or financial shifts; adaptability is key.\\n- Crosses on the heart line: Emotional struggles; patience is required.\\n- Weak life line: Low energy; focus on health and wellness.",
+        content: "Every palm has markings that reveal challenges and possible solutions. Crosses, breaks, and islands in the major lines suggest struggles, while a well-defined fate line indicates overcoming obstacles.\n\nCommon Challenges & Their Solutions:\n- Breaks in the fate line: Career or financial shifts; adaptability is key.\n- Crosses on the heart line: Emotional struggles; patience is required.\n- Weak life line: Low energy; focus on health and wellness.",
         image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
       },
       {
         title: "Predictions for the Future (Opportunities & Threats)",
-        content: "Based on your palm's current markings, the following predictions can be made:\n\n- Career Growth: Your career is set for major growth between the ages of 30-40.\\n- Financial Stability: Financial gains will be steady with possible investment success.\\n- Relationships: A strong, lasting relationship is likely, with some emotional hurdles.\\n- Health Awareness: Minor health concerns may arise, but can be managed with self-care.",
+        content: "Based on your palm's current markings, the following predictions can be made:\n\n- Career Growth: Your career is set for major growth between the ages of 30-40.\n- Financial Stability: Financial gains will be steady with possible investment success.\n- Relationships: A strong, lasting relationship is likely, with some emotional hurdles.\n- Health Awareness: Minor health concerns may arise, but can be managed with self-care.",
         image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000"
       },
       {
         title: "Personalized Advice & Guidance",
-        content: "Based on your palm reading, here are some key recommendations:\n- Career: Focus on stability and strategic career moves.\\n- Love: Communicate openly to strengthen relationships.\\n- Health: Adopt a stress-free lifestyle for long-term wellness.\\n- Finance: Invest wisely and plan for financial security.\\n- Personal Growth: Work on self-confidence and emotional intelligence.",
+        content: "Based on your palm reading, here are some key recommendations:\n- Career: Focus on stability and strategic career moves.\n- Love: Communicate openly to strengthen relationships.\n- Health: Adopt a stress-free lifestyle for long-term wellness.\n- Finance: Invest wisely and plan for financial security.\n- Personal Growth: Work on self-confidence and emotional intelligence.",
         image: "https://images.unsplash.com/photo-1513135185947-4f716b9c3b6f?q=80&w=1000"
       },
       {
@@ -337,6 +338,68 @@ Format your response as a JSON array of objects with 'title' and 'content' field
     }
   }
   
+  // Helper method to get a report by ID
+  public async getReport(reportId: string): Promise<DetailedLifeReport | null> {
+    try {
+      const { data, error } = await supabase
+        .from('detailed_reports')
+        .select('*')
+        .eq('id', reportId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching report:", error);
+        return null;
+      }
+      
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        userId: data.user_id,
+        readingId: data.reading_id,
+        title: data.title,
+        sections: data.sections,
+        language: data.language,
+        pageCount: data.page_count,
+        createdAt: data.created_at,
+        downloadUrl: data.download_url,
+        translationNote: data.translation_note
+      };
+    } catch (error) {
+      console.error("Error in getReport:", error);
+      return null;
+    }
+  }
+  
+  // Helper method to get a sample report
+  public getSampleReport(language: string = "english"): DetailedLifeReport {
+    return language === "hindi" ? this.hindiSampleReport : this.sampleReport;
+  }
+  
+  // Helper to generate PDF for a report on demand
+  public async generatePDFForReport(reportId: string): Promise<string | null> {
+    try {
+      const report = await this.getReport(reportId);
+      if (!report) {
+        throw new Error("Report not found");
+      }
+      
+      const downloadUrl = await PDFService.generatePDFFromReport(report);
+      
+      // Update the report record with the download URL
+      await supabase
+        .from('detailed_reports')
+        .update({ download_url: downloadUrl })
+        .eq('id', reportId);
+        
+      return downloadUrl;
+    } catch (error) {
+      console.error("Error generating PDF for report:", error);
+      return null;
+    }
+  }
+  
   private parseFallbackResponse(response: string): ReportSection[] {
     const sections: ReportSection[] = [];
     const lines = response.split('\n');
@@ -463,4 +526,95 @@ Format your response as a JSON array of objects with 'title' and 'content' field
       "Childhood": "बचपन",
       "Adolescence": "किशोरावस्था",
       "Early Adulthood": "प्रारंभिक वयस्कता",
-      "Ad
+      "Adulthood": "वयस्कता",
+      "Middle Age": "मध्य आयु",
+      "Maturity": "परिपक्वता",
+      "Wisdom Years": "बुद्धिमत्ता के वर्ष",
+      "Introduction to Your Palm Reading": "आपकी हस्तरेखा पढ़ने का परिचय",
+      "Personality Analysis": "व्यक्तित्व विश्लेषण",
+      "Career & Professional Growth": "कैरियर और व्यावसायिक विकास",
+      "Love & Relationships": "प्यार और रिश्ते",
+      "Health & Well-being": "स्वास्थ्य और कल्याण",
+      "Wealth & Financial Growth": "धन और वित्तीय विकास",
+      "Life Phases & Key Transitions": "जीवन चरण और प्रमुख संक्रमण",
+      "Spiritual Growth & Inner Wisdom": "आध्यात्मिक विकास और आंतरिक ज्ञान",
+      "Name, Fame & Public Influence": "नाम, प्रसिद्धि और सार्वजनिक प्रभाव",
+      "Challenges & Solutions in Life": "जीवन में चुनौतियाँ और समाधान",
+      "Predictions for the Future": "भविष्य के लिए भविष्यवाणियां",
+      "Personalized Advice & Guidance": "व्यक्तिगत सलाह और मार्गदर्शन",
+      "Ask Any Question": "कोई भी प्रश्न पूछें"
+    };
+    
+    // Basic translation of common words and phrases
+    const contentTranslations: Record<string, string> = {
+      "Your palm": "आपकी हथेली",
+      "indicates": "इंगित करता है",
+      "suggests": "सुझाव देता है",
+      "shows": "दिखाता है",
+      "reveals": "प्रकट करता है",
+      "deep": "गहरी",
+      "strong": "मजबूत",
+      "weak": "कमज़ोर",
+      "fate line": "भाग्य रेखा",
+      "life line": "जीवन रेखा",
+      "heart line": "हृदय रेखा",
+      "head line": "सिर रेखा",
+      "key": "प्रमुख",
+      "analysis": "विश्लेषण",
+      "insights": "अंतर्दृष्टि",
+      "traits": "लक्षण",
+      "personality": "व्यक्तित्व",
+      "career": "कैरियर",
+      "love": "प्यार",
+      "health": "स्वास्थ्य",
+      "wealth": "धन",
+      "spiritual": "आध्यात्मिक",
+      "growth": "विकास",
+      "challenges": "चुनौतियाँ",
+      "solutions": "समाधान",
+      "predictions": "भविष्यवाणियां",
+      "advice": "सलाह",
+      "guidance": "मार्गदर्शन",
+      "future": "भविष्य",
+      "past": "अतीत",
+      "present": "वर्तमान",
+      "adulthood": "वयस्कता"
+    };
+    
+    // Attempt a basic translation for titles that aren't in the dictionary
+    const translateTitle = (title: string): string => {
+      if (titleTranslations[title]) {
+        return titleTranslations[title];
+      }
+      
+      // Try to translate each word in the title
+      return title
+        .split(' ')
+        .map(word => contentTranslations[word.toLowerCase()] || word)
+        .join(' ');
+    };
+    
+    // For simple translations, replace content words using the dictionary
+    const simplifyContent = (content: string): string => {
+      let result = content;
+      
+      Object.entries(contentTranslations).forEach(([english, hindi]) => {
+        // Case-insensitive replacement of whole words only
+        const regex = new RegExp(`\\b${english}\\b`, 'gi');
+        result = result.replace(regex, hindi);
+      });
+      
+      return result;
+    };
+    
+    return sections.map(section => ({
+      ...section,
+      title: translateTitle(section.title),
+      // For real product, we would use a proper translation API here
+      // This is just a simple simulation of translation for demo purposes
+      content: simplifyContent(section.content)
+    }));
+  }
+}
+
+export default ReportService.getInstance();

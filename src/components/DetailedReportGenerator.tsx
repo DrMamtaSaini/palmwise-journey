@@ -12,11 +12,13 @@ import { supabase } from "../lib/supabase";
 interface DetailedReportGeneratorProps {
   reading: ExtendedPalmReading;
   isPremium?: boolean;
+  onGenerateClick?: () => void;
 }
 
 const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
   reading,
-  isPremium = false
+  isPremium = false,
+  onGenerateClick
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +58,11 @@ const DetailedReportGenerator: React.FC<DetailedReportGeneratorProps> = ({
         description: "The Comprehensive Palm Reading Report is available for premium users only. Please upgrade to unlock this feature."
       });
       return;
+    }
+    
+    // Call the onGenerateClick callback if provided
+    if (onGenerateClick) {
+      onGenerateClick();
     }
     
     setIsGenerating(true);
