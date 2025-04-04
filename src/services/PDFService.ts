@@ -116,40 +116,58 @@ class PDFService {
       // Generate PDF blob
       const pdfBlob = doc.output('blob');
       
-      // Upload to Supabase Storage
-      const fileName = `reports/${report.userId}/${report.id}.pdf`;
-      
-      const { data, error } = await supabase.storage
-        .from('palm-readings')
-        .upload(fileName, pdfBlob, {
-          contentType: 'application/pdf',
-          upsert: true
+      try {
+        // Try to upload to Supabase Storage
+        const fileName = `reports/${report.userId}/${report.id}.pdf`;
+        
+        const { data, error } = await supabase.storage
+          .from('palm-readings')
+          .upload(fileName, pdfBlob, {
+            contentType: 'application/pdf',
+            upsert: true
+          });
+          
+        if (error) {
+          console.error("Error uploading PDF:", error);
+          // If we get a "Bucket not found" error, fall back to local download
+          if (error.message?.includes("Bucket not found")) {
+            throw new Error("Storage bucket not configured");
+          }
+          throw new Error("Failed to upload PDF");
+        }
+        
+        // Get public URL
+        const { data: urlData } = await supabase.storage
+          .from('palm-readings')
+          .getPublicUrl(fileName);
+          
+        const downloadUrl = urlData.publicUrl;
+        
+        // Update report record with download URL
+        await supabase
+          .from('detailed_reports')
+          .update({ download_url: downloadUrl })
+          .eq('id', report.id);
+          
+        toast.success('PDF Generated', {
+          description: `Your comprehensive ${report.pageCount}-page palm reading report is ready to download.`,
+          duration: 5000
+        });
+          
+        return downloadUrl;
+      } catch (storageError) {
+        console.error("Storage error, falling back to local download:", storageError);
+        
+        // Create a local download URL as fallback
+        const localUrl = URL.createObjectURL(pdfBlob);
+        
+        toast.success('PDF Generated', {
+          description: `Your report is ready. Since cloud storage is not configured, this is a temporary download link.`,
+          duration: 5000
         });
         
-      if (error) {
-        console.error("Error uploading PDF:", error);
-        throw new Error("Failed to upload PDF");
+        return localUrl;
       }
-      
-      // Get public URL
-      const { data: urlData } = await supabase.storage
-        .from('palm-readings')
-        .getPublicUrl(fileName);
-        
-      const downloadUrl = urlData.publicUrl;
-      
-      // Update report record with download URL
-      await supabase
-        .from('detailed_reports')
-        .update({ download_url: downloadUrl })
-        .eq('id', report.id);
-        
-      toast.success('PDF Generated', {
-        description: `Your comprehensive ${report.pageCount}-page palm reading report is ready to download.`,
-        duration: 5000
-      });
-        
-      return downloadUrl;
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error('PDF Generation Failed', {

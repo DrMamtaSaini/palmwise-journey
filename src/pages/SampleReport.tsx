@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -43,29 +44,14 @@ const SampleReport = () => {
       const sampleReport = ReportService.getSampleReport(selectedLanguage);
       
       // Use the PDF service to generate and download the PDF
-      const url = await ReportService.generatePDFForReport(sampleReport)
-        .catch(error => {
-          console.error("PDF generation error:", error);
-          
-          // Create a local PDF as fallback if server generation fails
-          if (error.message?.includes("relation") || error.message?.includes("Bucket not found")) {
-            toast.warning('Using simplified PDF', {
-              description: 'Database or storage not set up for full PDF. Creating a simplified version instead.',
-              duration: 5000
-            });
-            
-            // Generate a data URL for a simple PDF using client-side PDF generation
-            // This will open in a new tab directly
-            const pdfBlob = new Blob(['Sample Comprehensive Palmistry Report - simplified version'], { type: 'application/pdf' });
-            return URL.createObjectURL(pdfBlob);
-          }
-          throw error;
-        });
-      
+      const url = await ReportService.generatePDFForReport(sampleReport);
       setDownloadUrl(url);
       
-      // Open the PDF in a new tab
-      window.open(url, '_blank');
+      // For URLs created with URL.createObjectURL, we don't automatically open in a new tab
+      // as it could be blocked by popup blockers. Instead, let the user click the "Open PDF" button
+      if (!url.startsWith('blob:')) {
+        window.open(url, '_blank');
+      }
       
       toast.success('Sample PDF ready', {
         description: 'Your comprehensive 20+ page sample report PDF has been generated successfully'
@@ -77,7 +63,7 @@ const SampleReport = () => {
         error.message?.includes("relation") ? 
           "Database tables not set up. Please run the setup function first." :
         error.message?.includes("Bucket not found") ?
-          "Storage bucket not configured. Please set up storage first." :
+          "Storage bucket not configured. The PDF can still be downloaded locally." :
           "There was a problem generating the sample PDF. Please try again."
       );
       
@@ -86,6 +72,12 @@ const SampleReport = () => {
       });
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleOpenPDF = () => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank');
     }
   };
 
@@ -132,7 +124,7 @@ const SampleReport = () => {
                     <Button
                       variant="outline"
                       className="flex items-center text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
-                      onClick={() => window.open(downloadUrl, '_blank')}
+                      onClick={handleOpenPDF}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Open PDF
@@ -161,7 +153,7 @@ const SampleReport = () => {
 
               {downloadError && (
                 <div className="mb-6 p-4 border border-amber-200 bg-amber-50 rounded-md text-amber-700">
-                  <p className="font-medium">PDF Generation Issue</p>
+                  <p className="font-medium">PDF Generation Info</p>
                   <p className="text-sm">{downloadError}</p>
                 </div>
               )}

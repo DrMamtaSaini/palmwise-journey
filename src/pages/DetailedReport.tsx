@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -94,8 +95,8 @@ const DetailedReport = () => {
   const handleDownloadPDF = async () => {
     if (!report) return;
     
-    // If PDF already exists, open it
-    if (report.downloadUrl) {
+    // If PDF already exists and is not a blob URL, open it
+    if (report.downloadUrl && !report.downloadUrl.startsWith('blob:')) {
       window.open(report.downloadUrl, '_blank');
       return;
     }
@@ -116,12 +117,15 @@ const DetailedReport = () => {
         downloadUrl
       });
       
-      // Open the PDF
-      window.open(downloadUrl, '_blank');
-      
-      toast.success('PDF Ready', {
-        description: 'Your comprehensive palm reading report PDF has been generated successfully.'
-      });
+      // If it's not a blob URL (from storage), open it automatically
+      if (!downloadUrl.startsWith('blob:')) {
+        window.open(downloadUrl, '_blank');
+      } else {
+        // For blob URLs, we'll let the user click manually to avoid popup blockers
+        toast.success('PDF Ready', {
+          description: 'Click the Download PDF button again to open your report'
+        });
+      }
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error('PDF Generation Failed', {
