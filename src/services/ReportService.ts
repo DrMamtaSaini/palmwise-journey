@@ -33,72 +33,77 @@ class ReportService {
     id: "sample-report",
     userId: "sample",
     readingId: "sample",
-    title: "The Ultimate Palm Reading Report",
+    title: "Comprehensive Palmistry Report (20+ Pages)",
     language: "english",
-    pageCount: 65,
+    pageCount: 24,
     createdAt: new Date().toISOString(),
-    downloadUrl: "", // Remove fixed URL to allow dynamic generation
+    downloadUrl: "",
     translationNote: "",
     sections: [
       {
-        title: "Introduction: Your Palm, Your Destiny",
-        content: "Your palm is a map of your past, present, and future—revealing hidden strengths, destined challenges, and pathways to success. The shape of your hand, the depth of your lines, and the mounts all contribute to who you are and where you're headed.\n\nThis report explores every area of your life—career, relationships, finances, health, intelligence, social influence, emotions, family life, travel, and legacy.",
+        title: "Introduction to Your Palm Reading",
+        content: "This report is based on your palm features, including the shape, lines, mounts, and markings. It provides deep insights into your past, present, and future, helping you understand your strengths, weaknesses, and opportunities for growth.\n\nYour palm is a map of your life journey, revealing the potential paths and possibilities that lie ahead. The analysis provided here is based on the ancient science of palmistry, combined with modern psychological insights.",
         image: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1000"
       },
       {
-        title: "Career & Professional Growth",
-        content: "Your Fate Line & Sun Line indicate stability, leadership, and growth in your professional journey. The direction and depth of your Head Line suggest strategic thinking and problem-solving abilities—key qualities for achieving success.\n\nKey Phases in Your Career:\n- 18-25 Years (Foundation Stage): Education, skill-building, and early career experiences.\n- 25-35 Years (Growth Stage): Rapid rise, financial stability, leadership roles.\n- 35-50 Years (Peak Stage): Industry recognition, career mastery, major achievements.\n- 50+ Years (Legacy Stage): Mentorship, business expansion, advisory roles.\n\nIdeal Career Choices:\n✔ Leadership (CEO, Director, Consultant)\n✔ Entrepreneurship (Startup, Business Ownership)\n✔ Strategic Professions (Law, Finance, Technology)\n✔ Creative Fields (Writing, Media, Advertising)\n\n🔹 Business vs. Job? Your palm strongly supports business success, but you can thrive in high-level job roles as well.",
+        title: "Personality Analysis (Strengths, Weaknesses, Temperament)",
+        content: "Your palm structure suggests a strong and independent personality. You have a sharp intellect and a keen sense of intuition. The shape of your fingers indicates a natural ability to analyze situations and make calculated decisions.\n\nKey Personality Traits:\n- Strong fate line: Indicates determination and success through hard work.\n- Deep head line: Suggests intelligence and deep thinking.\n- Straight fingers: Show discipline and organization.\n- Curved heart line: Reveals emotional depth and a need for strong relationships.",
+        image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000"
+      },
+      {
+        title: "Career & Professional Growth (Job vs. Business)",
+        content: "Your career lines indicate both job stability and potential for entrepreneurship. If you have a strong Sun Line, it suggests recognition in your field, while a deep Mercury Line signifies business acumen.\n\nCareer Analysis:\n- Strong Fate Line: Suitable for long-term jobs and leadership roles.\n- Prominent Sun Line: Potential for fame and success in creative or public fields.\n- Well-defined Mercury Line: Business skills and negotiation power.\n\nJob vs. Business Decision:\n- If your Fate Line is deep and unbroken, a corporate career is favorable.\n- If the Mercury Line is strong with multiple branches, entrepreneurship is a better choice.",
         image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000"
       },
       {
-        title: "Love & Relationships",
-        content: "Your Heart Line reveals how you experience and express love. A deep, well-defined line suggests intense emotions and loyalty, while breaks or curves indicate evolving relationships and personal growth through love.\n\nLove Life Stages:\n- Early Years (18-25): Passionate but learning experiences.\n- Mid-Life (25-40): Deep emotional connections, long-term commitments.\n- Later Years (40+): Stability, companionship, deep understanding of love.\n\nYour Personality in Relationships:\n✔ Deeply passionate and emotionally intuitive\n✔ Loyal and committed, values long-term bonds\n✔ Needs emotional security and trust\n\n🔹 Best Partner Match: Someone who complements your intellectual curiosity and emotional depth.",
+        title: "Love & Relationships (Romantic, Family, and Social Life)",
+        content: "The heart line in your palm suggests your emotional depth and the way you connect with people. A long, curved heart line indicates a passionate and expressive personality, while a short or broken heart line may suggest emotional struggles.\n\nLove & Marriage Insights:\n- A deep heart line indicates loyalty and strong emotional bonds.\n- A broken heart line may suggest past heartbreaks or trust issues.\n- Parallel lines near the heart line show long-lasting relationships.",
         image: "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=1000"
       },
       {
-        title: "Financial Outlook",
-        content: "Your Fate Line and Sun Line indicate increasing prosperity over time. Financial success is strongly linked to your ability to take calculated risks and make strategic investments.\n\nFinancial Growth Timeline:\n- 20s: Learning and investment in skills.\n- 30s: Strong earning potential, possible business ventures.\n- 40s & Beyond: Financial stability, wealth accumulation, strategic investments.\n\nSources of Wealth:\n✔ Business and entrepreneurial ventures\n✔ Real estate and smart financial planning\n✔ High-income careers in strategy, finance, or leadership\n\n🔹 Money Management Tip: Focus on long-term investments and avoid impulsive spending.",
-        image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=1000"
-      },
-      {
-        title: "Health & Well-Being",
-        content: "Your Life Line suggests a strong energy flow and resilience. A well-marked line indicates good stamina, while breaks or chains might hint at periods of stress or low immunity.\n\nHealth Phases:\n- Youth (0-25 Years): High energy, minimal health concerns.\n- Mid-Life (25-50 Years): Need for balance in work and health.\n- Later Years (50+): Focus on diet, mental wellness, and physical fitness.\n\nWellness Focus:\n✔ A balanced lifestyle for longevity\n✔ Mental well-being through meditation and stress management\n✔ Regular exercise for sustained energy\n\n🔹 Health Tip: Mindfulness and stress management will help maintain long-term vitality.",
+        title: "Health & Well-being (Mental, Emotional, and Physical Health)",
+        content: "Your life line and health line provide insights into your overall well-being. A deep life line suggests robust health, while breaks in the line may indicate potential health concerns.\n\nKey Health Indicators:\n- A deep life line: Good overall health and longevity.\n- A faint health line: Potential minor ailments or stress-related issues.\n- Breaks in the life line: Major life changes affecting health.",
         image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=1000"
       },
       {
-        title: "Intelligence & Talents",
-        content: "Your Head Line indicates a sharp intellect, creativity, and an ability to think critically. A long, clear Head Line suggests logical reasoning and problem-solving skills, while a curved one shows artistic and intuitive thinking.\n\nKey Strengths:\n✔ Analytical and logical mindset\n✔ Creative problem-solving abilities\n✔ Strong communication and leadership skills\n\n🔹 Best Skill Development Areas: Public speaking, writing, critical thinking, leadership training.",
-        image: "https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?q=80&w=1000"
+        title: "Wealth & Financial Growth (Income, Investments, Stability)",
+        content: "Your palm reveals a steady accumulation of wealth rather than sudden riches. If your fate line is strong, financial stability is likely. A well-developed Sun Mount suggests financial gains through recognition.\n\nWealth & Prosperity Insights:\n- Clear money lines: Indicate financial stability and potential gains.\n- A well-defined fate line: Shows structured financial growth over time.\n- Breaks in the money line: Indicate financial ups and downs that require careful planning.",
+        image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=1000"
       },
       {
-        title: "Social Influence & Charisma",
-        content: "The Mount of Jupiter on your palm reveals your leadership potential and influence in society. A well-developed Jupiter Mount signifies charisma, confidence, and the ability to inspire others.\n\nSocial Strengths:\n✔ Natural leadership and authority\n✔ Strong networking and public speaking skills\n✔ Ability to command respect in social settings\n\n🔹 Growth Tip: Engaging in public speaking, social networking, and leadership programs will enhance your influence.",
-        image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1000"
+        title: "Life Phases & Key Transitions (Past, Present, Future)",
+        content: "Palmistry reveals different phases of your life through changes in the fate line, life line, and other markings. Significant transitions can be seen where lines intersect or break.\n\nLife Stages Breakdown:\n- Childhood: Influence of early family life on personality and growth.\n- Young Adulthood: Career choices, education, and major decisions.\n- Midlife: Stability, financial growth, and family responsibilities.\n- Later Years: Wisdom, legacy, and personal fulfillment.",
+        image: "https://images.unsplash.com/photo-1506485338023-6ce5f36692df?q=80&w=1000"
       },
       {
-        title: "Family & Home Life",
-        content: "Your Venus Mount and Heart Line indicate your approach to family relationships. A well-developed Venus Mount signifies deep emotional bonds and strong family ties.\n\nFamily Life Phases:\n- Early Life: Strong dependence on family support.\n- Mid-Life: Becoming a pillar of support for family.\n- Later Life: Creating a lasting family legacy.\n\n🔹 Family Tip: Strengthening emotional connections ensures a harmonious home life.",
-        image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=1000"
-      },
-      {
-        title: "Travel & Exploration",
-        content: "Your Mount of Moon and travel lines indicate a strong desire for exploration. A well-marked line suggests frequent travel for career, personal growth, or adventure.\n\nTravel Style:\n✔ Travel for work and global networking\n✔ Exploring different cultures and philosophies\n✔ Seeking adventure and spiritual experiences\n\n🔹 Best Travel Destinations: Historical and culturally rich places align with your intellectual curiosity.",
-        image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000"
-      },
-      {
-        title: "Personal Growth & Spirituality",
-        content: "Your Mount of Moon and intuition lines suggest a deep connection to wisdom and spirituality. You are drawn toward self-discovery and personal development.\n\nSelf-Development Path:\n- Early Life: Seeking knowledge and experiences.\n- Mid-Life: Finding purpose and deeper meaning.\n- Later Life: Becoming a mentor, spiritual guide, or thought leader.\n\n🔹 Personal Growth Tip: Meditation, self-reflection, and continuous learning enhance your inner wisdom.",
+        title: "Spiritual Growth & Inner Wisdom",
+        content: "Your palm's Saturn and Jupiter mounts indicate your spiritual path and wisdom. A strong Mount of Jupiter suggests leadership in spiritual or philosophical matters.\n\nSpiritual Insights:\n- Strong Jupiter Mount: Leadership and wisdom.\n- Well-developed Saturn Mount: Deep thinking and spiritual growth.",
         image: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=1000"
       },
       {
-        title: "Legacy & Life Purpose",
-        content: "Your Fate Line and Sun Line suggest a lasting impact on your industry, community, or family. Your legacy is one of knowledge, leadership, and inspiration.\n\nLegacy Impact:\n✔ Contribution to society through career or philanthropy\n✔ Influence in guiding and mentoring others\n✔ Leaving a lasting mark through creative or intellectual work\n\n🔹 Final Thought: Your journey is one of impact and success—embrace it with confidence!",
+        title: "Name, Fame & Public Influence",
+        content: "The Sun Line plays a key role in determining your social recognition and influence. A strong Sun Line indicates fame and success in public life.\n\nFame & Recognition:\n- A strong Sun Line: Recognition in career and public life.\n- Parallel success lines: Multiple achievements over time.",
+        image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1000"
+      },
+      {
+        title: "Challenges & Solutions in Life",
+        content: "Every palm has markings that reveal challenges and possible solutions. Crosses, breaks, and islands in the major lines suggest struggles, while a well-defined fate line indicates overcoming obstacles.\n\nCommon Challenges & Their Solutions:\n- Breaks in the fate line: Career or financial shifts; adaptability is key.\n- Crosses on the heart line: Emotional struggles; patience is required.\n- Weak life line: Low energy; focus on health and wellness.",
+        image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
+      },
+      {
+        title: "Predictions for the Future (Opportunities & Threats)",
+        content: "Based on your palm's current markings, the following predictions can be made:\n\n- Career Growth: Your career is set for major growth between the ages of 30-40.\n- Financial Stability: Financial gains will be steady with possible investment success.\n- Relationships: A strong, lasting relationship is likely, with some emotional hurdles.\n- Health Awareness: Minor health concerns may arise, but can be managed with self-care.",
         image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000"
       },
       {
-        title: "Final Summary: Your Life Blueprint",
-        content: "✔ Career Peak: 35-50 years, with steady growth before and after.\n✔ Financial Strength: Business and investments ensure long-term wealth.\n✔ Relationship Style: Passionate, loyal, and emotionally deep.\n✔ Health & Wellness: Strong vitality, with stress management needed.\n✔ Social Influence: Charismatic, a natural leader.\n✔ Spiritual Path: Growing wisdom and connection to higher purpose.",
-        image: "https://images.unsplash.com/photo-1506485338023-6ce5f36692df?q=80&w=1000"
+        title: "Personalized Advice & Guidance",
+        content: "Based on your palm reading, here are some key recommendations:\n- Career: Focus on stability and strategic career moves.\n- Love: Communicate openly to strengthen relationships.\n- Health: Adopt a stress-free lifestyle for long-term wellness.\n- Finance: Invest wisely and plan for financial security.\n- Personal Growth: Work on self-confidence and emotional intelligence.",
+        image: "https://images.unsplash.com/photo-1513135185947-4f716b9c3b6f?q=80&w=1000"
+      },
+      {
+        title: "Ask Any Question",
+        content: "Would you like to ask about your career, business, love life, health, or any other aspect? Feel free to ask, and we will provide specific insights based on your palm reading.\n\nThis full detailed report provides an in-depth analysis of your palm, covering every aspect of life from career and wealth to relationships and health. It is designed to give you clarity and actionable guidance for your journey ahead.",
+        image: "https://images.unsplash.com/photo-1577457943926-11d6cd3ce8ae?q=80&w=1000"
       }
     ]
   };
@@ -107,19 +112,78 @@ class ReportService {
     id: "sample-report-hindi",
     userId: "sample",
     readingId: "sample",
-    title: "परम हस्तरेखा रिपोर्ट",
+    title: "व्यापक हस्तरेखा रिपोर्ट (20+ पृष्ठ)",
     language: "hindi",
-    pageCount: 65,
+    pageCount: 24,
     createdAt: new Date().toISOString(),
-    downloadUrl: "", // Remove fixed URL to allow dynamic generation
+    downloadUrl: "",
     translationNote: "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। यह हमारे उन्नत अनुवाद तकनीक का उपयोग करता है जो विशेष पारिभाषिक शब्दों को सटीक रूप से अनुवादित करता है।",
     sections: [
       {
-        title: "परिचय: आपकी हथेली, आपका भाग्य",
-        content: "आपकी हथेली आपके अतीत, वर्तमान और भविष्य का एक नक्शा है—छिपी हुई ताकतों, निर्धारित चुनौतियों और सफलता के मार्गों को प्रकट करती है। आपके हाथ का आकार, आपकी रेखाओं की गहराई, और पहाड़ियाँ सभी योगदान करती हैं कि आप कौन हैं और आप कहाँ जा रहे हैं।\n\nयह रिपोर्ट आपके जीवन के हर क्षेत्र का अन्वेषण करती है—करियर, रिश्ते, वित्त, स्वास्थ्य, बुद्धिमत्ता, सामाजिक प्रभाव, भावनाएँ, पारिवारिक जीवन, यात्रा, और विरासत।",
+        title: "आपकी हस्तरेखा पढ़ने का परिचय",
+        content: "यह रिपोर्ट आपकी हथेली की विशेषताओं पर आधारित है, जिसमें आकार, रेखाएं, पर्वत और निशान शामिल हैं। यह आपके अतीत, वर्तमान और भविष्य में गहरी अंतर्दृष्टि प्रदान करता है, जिससे आपको अपनी ताकत, कमजोरियों और विकास के अवसरों को समझने में मदद मिलती है।\n\nआपकी हथेली आपके जीवन की यात्रा का एक नक्शा है, जो संभावित रास्तों और संभावनाओं को प्रकट करता है जो आगे हैं। यहां प्रदान किया गया विश्लेषण हस्तरेखा विज्ञान के प्राचीन विज्ञान पर आधारित है, जो आधुनिक मनोवैज्ञानिक अंतर्दृष्टि के साथ संयुक्त है।",
         image: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=1000"
       },
-      // ... keep existing code (Hindi sections similar to the English sample but translated)
+      {
+        title: "व्यक्तित्व विश्लेषण (ताकत, कमजोरियाँ, स्वभाव)",
+        content: "आपकी हथेली की संरचना एक मजबूत और स्वतंत्र व्यक्तित्व का सुझाव देती है। आपके पास एक तेज बुद्धि और अंतर्ज्ञान की गहरी भावना है। आपकी उंगलियों का आकार स्थितियों का विश्लेषण करने और गणनात्मक निर्णय लेने की एक प्राकृतिक क्षमता को इंगित करता है।\n\nमुख्य व्यक्तित्व लक्षण:\n- मजबूत भाग्य रेखा: कड़ी मेहनत के माध्यम से दृढ़ संकल्प और सफलता को इंगित करता है।\n- गहरी सिर रेखा: बुद्धि और गहरी सोच का सुझाव देता है।\n- सीधी उंगलियां: अनुशासन और संगठन दिखाती हैं।\n- घुमावदार हृदय रेखा: भावनात्मक गहराई और मजबूत रिश्तों की आवश्यकता को प्रकट करता है।",
+        image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000"
+      },
+      {
+        title: "कैरियर और व्यावसायिक विकास (नौकरी बनाम व्यवसाय)",
+        content: "आपकी करियर लाइनें नौकरी की स्थिरता और उद्यमिता दोनों की क्षमता को दर्शाती हैं। यदि आपके पास एक मजबूत सूर्य रेखा है, तो यह आपके क्षेत्र में मान्यता का सुझाव देता है, जबकि एक गहरी बुध रेखा व्यावसायिक कौशल को दर्शाती है।\n\nकैरियर विश्लेषण:\n- मजबूत भाग्य रेखा: दीर्घकालिक नौकरियों और नेतृत्व भूमिकाओं के लिए उपयुक्त।\n- प्रमुख सूर्य रेखा: रचनात्मक या सार्वजनिक क्षेत्रों में प्रसिद्धि और सफलता की क्षमता।\n- अच्छी तरह से परिभाषित बुध रेखा: व्यावसायिक कौशल और बातचीत की शक्ति।\n\nनौकरी बनाम व्यवसाय निर्णय:\n- यदि आपकी भाग्य रेखा गहरी और अटूट है, तो एक कॉर्पोरेट कैरियर अनुकूल है।\n- यदि बुध रेखा कई शाखाओं के साथ मजबूत है, तो उद्यमिता एक बेहतर विकल्प है।",
+        image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000"
+      },
+      {
+        title: "प्यार और रिश्ते (रोमांटिक, पारिवारिक और सामाजिक जीवन)",
+        content: "आपकी हथेली में हृदय रेखा आपकी भावनात्मक गहराई और जिस तरह से आप लोगों से जुड़ते हैं, उसका सुझाव देती है। एक लंबी, घुमावदार हृदय रेखा एक भावुक और अभिव्यंजक व्यक्तित्व को इंगित करती है, जबकि एक छोटी या टूटी हुई हृदय रेखा भावनात्मक संघर्षों का सुझाव दे सकती है।\n\nप्यार और विवाह अंतर्दृष्टि:\n- एक गहरी हृदय रेखा वफादारी और मजबूत भावनात्मक बंधन को इंगित करती है।\n- एक टूटी हुई हृदय रेखा अतीत के दिल टूटने या विश्वास के मुद्दों का सुझाव दे सकती है।\n- हृदय रेखा के पास समानांतर रेखाएं लंबे समय तक चलने वाले रिश्तों को दिखाती हैं।",
+        image: "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=1000"
+      },
+      {
+        title: "स्वास्थ्य और कल्याण (मानसिक, भावनात्मक और शारीरिक स्वास्थ्य)",
+        content: "आपकी जीवन रेखा और स्वास्थ्य रेखा आपके समग्र कल्याण में अंतर्दृष्टि प्रदान करती है। एक गहरी जीवन रेखा मजबूत स्वास्थ्य का सुझाव देती है, जबकि रेखा में विराम संभावित स्वास्थ्य चिंताओं को इंगित कर सकते हैं।\n\nमुख्य स्वास्थ्य संकेतक:\n- एक गहरी जीवन रेखा: अच्छा समग्र स्वास्थ्य और दीर्घायु।\n- एक बेहोश स्वास्थ्य रेखा: संभावित मामूली बीमारियों या तनाव से संबंधित मुद्दे।\n- जीवन रेखा में विराम: स्वास्थ्य को प्रभावित करने वाले प्रमुख जीवन परिवर्तन।",
+        image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=1000"
+      },
+      {
+        title: "धन और वित्तीय विकास (आय, निवेश, स्थिरता)",
+        content: "आपकी हथेली अचानक धन के बजाय धन के स्थिर संचय को दर्शाती है। यदि आपकी भाग्य रेखा मजबूत है, तो वित्तीय स्थिरता की संभावना है। एक अच्छी तरह से विकसित सूर्य पर्वत मान्यता के माध्यम से वित्तीय लाभ का सुझाव देता है।\n\nधन और समृद्धि अंतर्दृष्टि:\n- स्पष्ट धन रेखाएं: वित्तीय स्थिरता और संभावित लाभ का संकेत देती हैं।\n- एक अच्छी तरह से परिभाषित भाग्य रेखा: समय के साथ संरचित वित्तीय विकास को दर्शाता है।\n- धन रेखा में विराम: वित्तीय उतार-चढ़ाव का संकेत देते हैं जिनके लिए सावधानीपूर्वक योजना की आवश्यकता होती है।",
+        image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=1000"
+      },
+      {
+        title: "जीवन चरण और प्रमुख संक्रमण (अतीत, वर्तमान, भविष्य)",
+        content: "हस्तरेखा विज्ञान भाग्य रेखा, जीवन रेखा और अन्य निशानों में परिवर्तन के माध्यम से आपके जीवन के विभिन्न चरणों को प्रकट करता है। महत्वपूर्ण संक्रमणों को देखा जा सकता है जहां रेखाएं प्रतिच्छेद करती हैं या टूटती हैं।\n\nजीवन चरणों का टूटना:\n- बचपन: व्यक्तित्व और विकास पर प्रारंभिक पारिवारिक जीवन का प्रभाव।\n- युवा वयस्कता: कैरियर विकल्प, शिक्षा और प्रमुख निर्णय।\n- मध्य जीवन: स्थिरता, वित्तीय विकास और पारिवारिक जिम्मेदारियाँ।\n- बाद के वर्ष: ज्ञान, विरासत और व्यक्तिगत पूर्ति।",
+        image: "https://images.unsplash.com/photo-1506485338023-6ce5f36692df?q=80&w=1000"
+      },
+      {
+        title: "आध्यात्मिक विकास और आंतरिक ज्ञान",
+        content: "आपकी हथेली के शनि और बृहस्पति पर्वत आपके आध्यात्मिक पथ और ज्ञान को दर्शाते हैं। बृहस्पति का एक मजबूत पर्वत आध्यात्मिक या दार्शनिक मामलों में नेतृत्व का सुझाव देता है।\n\nआध्यात्मिक अंतर्दृष्टि:\n- मजबूत बृहस्पति पर्वत: नेतृत्व और ज्ञान।\n- अच्छी तरह से विकसित शनि पर्वत: गहरी सोच और आध्यात्मिक विकास।",
+        image: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=1000"
+      },
+      {
+        title: "नाम, प्रसिद्धि और सार्वजनिक प्रभाव",
+        content: "सूर्य रेखा आपकी सामाजिक मान्यता और प्रभाव को निर्धारित करने में महत्वपूर्ण भूमिका निभाती है। एक मजबूत सूर्य रेखा सार्वजनिक जीवन में प्रसिद्धि और सफलता को इंगित करती है।\n\nप्रसिद्धि और मान्यता:\n- एक मजबूत सूर्य रेखा: कैरियर और सार्वजनिक जीवन में मान्यता।\n- समानांतर सफलता रेखाएं: समय के साथ कई उपलब्धियां।",
+        image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1000"
+      },
+      {
+        title: "जीवन में चुनौतियाँ और समाधान",
+        content: "प्रत्येक हथेली में ऐसे निशान होते हैं जो चुनौतियों और संभावित समाधानों को प्रकट करते हैं। प्रमुख रेखाओं में क्रॉस, ब्रेक और द्वीप संघर्षों का सुझाव देते हैं, जबकि एक अच्छी तरह से परिभाषित भाग्य रेखा बाधाओं को दूर करने का संकेत देती है।\n\nसामान्य चुनौतियाँ और उनके समाधान:\n- भाग्य रेखा में विराम: कैरियर या वित्तीय बदलाव; अनुकूलनशीलता महत्वपूर्ण है।\n- हृदय रेखा पर क्रॉस: भावनात्मक संघर्ष; धैर्य की आवश्यकता है।\n- कमजोर जीवन रेखा: कम ऊर्जा; स्वास्थ्य और कल्याण पर ध्यान दें।",
+        image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
+      },
+      {
+        title: "भविष्य के लिए भविष्यवाणियां (अवसर और खतरे)",
+        content: "आपकी हथेली के वर्तमान निशानों के आधार पर, निम्नलिखित भविष्यवाणियां की जा सकती हैं:\n\n- कैरियर विकास: आपका कैरियर 30-40 वर्ष की आयु के बीच प्रमुख विकास के लिए तैयार है।\n- वित्तीय स्थिरता: संभावित निवेश सफलता के साथ वित्तीय लाभ स्थिर रहेगा।\n- रिश्ते: कुछ भावनात्मक बाधाओं के साथ एक मजबूत, स्थायी रिश्ते की संभावना है।\n- स्वास्थ्य जागरूकता: मामूली स्वास्थ्य संबंधी चिंताएं उत्पन्न हो सकती हैं, लेकिन स्व-देखभाल के साथ प्रबंधित की जा सकती हैं।",
+        image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000"
+      },
+      {
+        title: "व्यक्तिगत सलाह और मार्गदर्शन",
+        content: "आपकी हस्तरेखा पढ़ने के आधार पर, यहां कुछ प्रमुख सिफारिशें दी गई हैं:\n- कैरियर: स्थिरता और रणनीतिक कैरियर चालों पर ध्यान दें।\n- प्यार: रिश्तों को मजबूत करने के लिए खुलकर संवाद करें।\n- स्वास्थ्य: दीर्घकालिक कल्याण के लिए तनाव मुक्त जीवन शैली अपनाएं।\n- वित्त: बुद्धिमानी से निवेश करें और वित्तीय सुरक्षा के लिए योजना बनाएं।\n- व्यक्तिगत विकास: आत्मविश्वास और भावनात्मक बुद्धिमत्ता पर काम करें।",
+        image: "https://images.unsplash.com/photo-1513135185947-4f716b9c3b6f?q=80&w=1000"
+      },
+      {
+        title: "कोई भी प्रश्न पूछें",
+        content: "क्या आप अपने कैरियर, व्यवसाय, प्रेम जीवन, स्वास्थ्य या किसी अन्य पहलू के बारे में पूछना चाहेंगे? बेझिझक पूछें, और हम आपकी हस्तरेखा पढ़ने के आधार पर विशिष्ट अंतर्दृष्टि प्रदान करेंगे।\n\nयह पूरी विस्तृत रिपोर्ट आपके हाथ की गहराई से विश्लेषण प्रदान करती है, जिसमें कैरियर और धन से लेकर रिश्तों और स्वास्थ्य तक जीवन के हर पहलू को शामिल किया गया है। यह आपको आगे की अपनी यात्रा के लिए स्पष्टता और कार्रवाई योग्य मार्गदर्शन देने के लिए डिज़ाइन किया गया है।",
+        image: "https://images.unsplash.com/photo-1577457943926-11d6cd3ce8ae?q=80&w=1000"
+      }
     ]
   };
 
@@ -142,7 +206,7 @@ class ReportService {
       const languageInfo = getLanguageInfo(language);
       
       toast.info('Generating your detailed life report...', {
-        description: 'This comprehensive 65-page report will include all life aspects and will take a few moments to complete.',
+        description: 'This comprehensive 20+ page report will include all life aspects and will take a few moments to complete.',
         duration: 5000
       });
 
@@ -150,34 +214,32 @@ class ReportService {
       const baseReadingText = generateFullReadingText(reading.results, isPremium);
       
       // Generate a more detailed report using Gemini API with improved prompt for a modern, comprehensive report
-      let promptForAI = `Create an ultra-detailed modern palm reading report covering every major life aspect in depth, following this structured format:
+      let promptForAI = `Create a comprehensive 20+ page palmistry report that follows this exact structure:
 
-The report should be titled "The Ultimate Palm Reading Report" with a subtitle "A Deep Insight into Your Life's Journey"
-
-The report must include these major sections (with emojis as shown):
-1. 🔮 Introduction: Your Palm, Your Destiny - Explain how the palm reveals past, present and future
-2. 🛠 Career & Professional Growth - Analyze career path, ideal careers, key phases (18-25, 25-35, 35-50, 50+)
-3. ❤️ Love & Relationships - Cover emotional style, relationship stages and patterns
-4. 💰 Financial Outlook - Detail financial timeline, sources of wealth, money management
-5. ⚕ Health & Well-Being - Cover physical and mental health phases and wellness focus
-6. 🧠 Intelligence & Talents - Analyze mental strengths, skills and development areas
-7. 🌍 Social Influence & Charisma - Examine leadership qualities and social impact
-8. 👨‍👩‍👧 Family & Home Life - Explore family connections and home environment
-9. ✈ Travel & Exploration - Discuss travel tendencies and exploration patterns
-10. 🌟 Personal Growth & Spirituality - Cover inner development and spiritual journey
-11. 📜 Legacy & Life Purpose - Examine lasting impact and ultimate purpose
-12. 📌 Final Summary: Life Blueprint - Summarize key insights from all sections
+1. Introduction to Your Palm Reading
+2. Personality Analysis (Strengths, Weaknesses, Temperament)
+3. Career & Professional Growth (Job vs. Business)
+4. Love & Relationships (Romantic, Family, and Social Life)
+5. Health & Well-being (Mental, Emotional, and Physical Health)
+6. Wealth & Financial Growth (Income, Investments, Stability)
+7. Life Phases & Key Transitions (Past, Present, Future)
+8. Spiritual Growth & Inner Wisdom
+9. Name, Fame & Public Influence
+10. Challenges & Solutions in Life
+11. Predictions for the Future (Opportunities & Threats)
+12. Personalized Advice & Guidance
+13. Ask Any Question
 
 For each section, provide detailed insights with:
-- Specific timeframes where relevant
-- Bullet points for key insights marked with ✔
-- Special tips marked with 🔹
-- Age-based phases and predictions
+- Clear titles and subtitles
+- Bullet points for key insights
+- Age-based phases and predictions where relevant
 - Practical advice based on palm features
+- Specific personalized recommendations
 
-Make the report engaging and positive while being specific and personalized based on these palm reading insights: ${baseReadingText}
+Make the report engaging, positive, professional, and personalized based on these palm reading insights: ${baseReadingText}
 
-Format your response as a JSON array of objects with 'title' and 'content' fields for each section. Each section should have rich, detailed content with around 2-3 pages worth of analysis. Ensure the JSON is valid and properly formatted.`;
+Format your response as a JSON array of objects with 'title' and 'content' fields for each section. Each section should have rich, detailed content with solid analysis. Ensure the JSON is valid and properly formatted.`;
 
       // Use GeminiService to get the generated content
       const geminiResponse = await GeminiService.generateTextWithGemini(promptForAI);
@@ -221,10 +283,10 @@ Format your response as a JSON array of objects with 'title' and 'content' field
         id: reportId,
         userId: reading.userId,
         readingId: reading.id,
-        title: language === "hindi" ? "परम हस्तरेखा रिपोर्ट" : "The Ultimate Palm Reading Report",
+        title: language === "hindi" ? "व्यापक हस्तरेखा रिपोर्ट (20+ पृष्ठ)" : "Comprehensive Palmistry Report (20+ Pages)",
         sections: sections,
         language: language,
-        pageCount: 65, // Fixed page count for this premium report format
+        pageCount: 24, // Updated page count for this new report format
         createdAt: new Date().toISOString(),
         translationNote: language === "hindi" ? "हमने आपकी विस्तृत रिपोर्ट का हिंदी में अनुवाद किया है। हम उन्नत अनुवाद तकनीक का उपयोग करते हैं और निरंतर अनुवाद की गुणवत्ता में सुधार कर रहे हैं।" : "",
       };
@@ -401,353 +463,4 @@ Format your response as a JSON array of objects with 'title' and 'content' field
       "Childhood": "बचपन",
       "Adolescence": "किशोरावस्था",
       "Early Adulthood": "प्रारंभिक वयस्कता",
-      "Adulthood": "वयस्कता",
-      "Middle Age": "मध्य आयु",
-      "Maturity": "परिपक्वता",
-      "Wisdom Years": "बुद्धिमत्ता के वर्ष",
-      "Conclusion": "निष्कर्ष",
-      "Relationships": "रिश्ते",
-      "Career": "करियर",
-      "Health": "स्वास्थ्य",
-      "Spiritual Growth": "आध्यात्मिक विकास",
-      "Early Childhood (0-7 years)": "प्रारंभिक बचपन (0-7 वर्ष)",
-      "Childhood (7-14 years)": "बचपन (7-14 वर्ष)",
-      "Adolescence (14-21 years)": "किशोरावस्था (14-21 वर्ष)",
-      "Early Adulthood (21-28 years)": "प्रारंभिक वयस्कता (21-28 वर्ष)",
-      "Adulthood (28-42 years)": "वयस्कता (28-42 वर्ष)",
-      "Middle Age (42-56 years)": "मध्य आयु (42-56 वर्ष)",
-      "Maturity (56-70 years)": "परिपक्वता (56-70 वर्ष)",
-      "Wisdom Years (70+ years)": "बुद्धिमत्ता के वर्ष (70+ वर्ष)",
-      "Summary": "सारांश",
-      "Overview": "सिंहावलोकन",
-      "Life Purpose": "जीवन का उद्देश्य",
-      "Major Life Events": "प्रमुख जीवन घटनाएँ",
-      "Personality": "व्यक्तित्व",
-      "Strengths and Challenges": "शक्तियाँ और चुनौतियाँ",
-      "Financial Prospects": "वित्तीय संभावनाएँ",
-      "Educational Path": "शैक्षिक मार्ग",
-      "Family Life": "पारिवारिक जीवन",
-      "Love and Romance": "प्रेम और रोम���ंस",
-      "Personal Growth": "व्यक्तिगत विकास"
-    };
-    
-    try {
-      // For more complete translations of content, we'll use Gemini for batches of content
-      let translatedSections = [...sections];
-      
-      // First pass - translate the titles using our dictionary
-      translatedSections = translatedSections.map(section => {
-        return {
-          ...section,
-          title: titleTranslations[section.title] || section.title
-        };
-      });
-      
-      // Log what we're about to translate
-      console.log(`Translating ${sections.length} sections to Hindi`);
-      
-      // Second pass - translate sections in batches using Gemini
-      // We'll translate batches of 3 sections at a time to avoid exceeding token limits
-      for (let i = 0; i < sections.length; i += 3) {
-        try {
-          const batchToTranslate = sections.slice(i, i + 3);
-          const batchJSON = JSON.stringify(batchToTranslate.map(s => ({
-            title: s.title,
-            content: s.content.substring(0, 1000) // Limit content length for API
-          })));
-          
-          const prompt = `Translate the following JSON containing English text to Hindi. 
-Maintain the meaning and tone, and provide a complete translation, not word-by-word.
-Focus on natural Hindi phrasing rather than literal translation. 
-Preserve the JSON structure exactly.
-
-JSON to translate:
-${batchJSON}`;
-          
-          const translatedJSON = await GeminiService.generateTextWithGemini(prompt);
-          
-          // Extract the JSON from the response
-          let extractedJSON = translatedJSON;
-          if (translatedJSON.includes('[') && translatedJSON.includes(']')) {
-            const jsonStartIndex = translatedJSON.indexOf('[');
-            const jsonEndIndex = translatedJSON.lastIndexOf(']') + 1;
-            extractedJSON = translatedJSON.substring(jsonStartIndex, jsonEndIndex);
-          }
-          
-          try {
-            const translatedBatch = JSON.parse(extractedJSON);
-            
-            // Update the translated sections
-            for (let j = 0; j < translatedBatch.length; j++) {
-              if (i + j < translatedSections.length) {
-                translatedSections[i + j].title = translatedBatch[j].title || translatedSections[i + j].title;
-                translatedSections[i + j].content = translatedBatch[j].content || translatedSections[i + j].content;
-              }
-            }
-            
-            console.log(`Successfully translated batch ${i/3 + 1}`);
-          } catch (parseError) {
-            console.error("Error parsing translated JSON:", parseError);
-            // If JSON parsing fails, use dictionary translation for this batch
-            for (let j = 0; j < batchToTranslate.length; j++) {
-              if (i + j < translatedSections.length) {
-                // Keep the title translation from dictionary but use simpler content translation
-                translatedSections[i + j].content = this.simpleTranslate(translatedSections[i + j].content);
-              }
-            }
-          }
-        } catch (batchError) {
-          console.error(`Error translating batch starting at index ${i}:`, batchError);
-        }
-      }
-      
-      return translatedSections;
-    } catch (error) {
-      console.error("Translation error:", error);
-      // If translation fails, return original sections
-      return sections;
-    }
-  }
-  
-  // Simple word replacement for fallback translations
-  private simpleTranslate(text: string): string {
-    const commonPhrases: Record<string, string> = {
-      "shows": "दिखाता है",
-      "indicates": "संकेत देता है",
-      "suggests": "सुझाव देता है",
-      "reveals": "प्रकट करता है",
-      "demonstrates": "प्रदर्शित करता है",
-      "will": "करेंगे",
-      "your": "आपके",
-      "you": "आप",
-      "life": "जीवन",
-      "relationship": "रिश्ता",
-      "health": "स्वास्थ्य",
-      "career": "करियर",
-      "success": "सफलता",
-      "challenges": "चुनौतियाँ",
-      "opportunities": "अवसर",
-      "growth": "विकास",
-      "spiritual": "आध्यात्मिक",
-      "path": "मार्ग",
-      "journey": "यात्रा",
-      "potential": "संभावना",
-      "future": "भविष्य",
-      "past": "भूतकाल",
-      "present": "वर्तमान"
-    };
-    
-    let translatedText = text;
-    
-    Object.keys(commonPhrases).forEach(key => {
-      const regex = new RegExp(`\\b${key}\\b`, 'gi');
-      translatedText = translatedText.replace(regex, commonPhrases[key]);
-    });
-    
-    return translatedText;
-  }
-  
-  public getSampleReport(languageParam: string = "english"): DetailedLifeReport {
-    // Create a fresh copy to avoid modifying the original sample report objects
-    const report = languageParam === "hindi" 
-      ? JSON.parse(JSON.stringify(this.hindiSampleReport))
-      : JSON.parse(JSON.stringify(this.sampleReport));
-      
-    // Ensure we have a download URL if it already exists in the database
-    if (!report.downloadUrl) {
-      // Check if we have a stored download URL in the database
-      this.checkForExistingSampleReportURL(report.id).then(url => {
-        if (url) {
-          report.downloadUrl = url;
-        }
-      }).catch(err => console.error("Error checking for existing sample report URL:", err));
-    }
-    
-    return report;
-  }
-  
-  // New method to check for existing sample report download URLs
-  private async checkForExistingSampleReportURL(reportId: string): Promise<string | null> {
-    try {
-      const { data } = await supabase
-        .from('detailed_reports')
-        .select('download_url')
-        .eq('id', reportId)
-        .maybeSingle();
-        
-      return data?.download_url || null;
-    } catch (error) {
-      console.error("Error checking for existing sample report:", error);
-      return null;
-    }
-  }
-  
-  public async getReportsForUser(userId: string): Promise<DetailedLifeReport[]> {
-    try {
-      console.log("Fetching reports for user:", userId);
-      
-      const { data, error } = await supabase
-        .from('detailed_reports')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        console.error("Error fetching reports:", error);
-        throw error;
-      }
-      
-      console.log(`Found ${data?.length || 0} reports for user`);
-      
-      return (data || []).map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        readingId: item.reading_id,
-        title: item.title,
-        sections: item.sections,
-        language: item.language,
-        pageCount: item.page_count,
-        createdAt: item.created_at,
-        downloadUrl: item.download_url,
-        translationNote: item.translation_note
-      }));
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-      return [];
-    }
-  }
-  
-  public async getReport(id: string): Promise<DetailedLifeReport | null> {
-    try {
-      console.log("Fetching report with ID:", id);
-      
-      const { data, error } = await supabase
-        .from('detailed_reports')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-        
-      if (error) {
-        console.error("Error fetching report:", error);
-        throw error;
-      }
-      
-      if (!data) {
-        console.log("No report found with ID:", id);
-        return null;
-      }
-      
-      console.log("Successfully retrieved report:", id);
-      
-      return {
-        id: data.id,
-        userId: data.user_id,
-        readingId: data.reading_id,
-        title: data.title,
-        sections: data.sections,
-        language: data.language,
-        pageCount: data.page_count,
-        createdAt: data.created_at,
-        downloadUrl: data.download_url,
-        translationNote: data.translation_note
-      };
-    } catch (error) {
-      console.error('Error fetching report:', error);
-      return null;
-    }
-  }
-  
-  public async generatePDFForReport(report: DetailedLifeReport): Promise<string> {
-    // If PDF already exists, return the URL
-    if (report.downloadUrl && report.downloadUrl.startsWith('http')) {
-      return report.downloadUrl;
-    }
-    
-    try {
-      console.log(`Generating PDF for report: ${report.id}`);
-      
-      // For sample reports, check if they exist in the database first
-      if (report.id === "sample-report" || report.id === "sample-report-hindi") {
-        const existingReport = await this.getReport(report.id);
-        if (existingReport && existingReport.downloadUrl) {
-          console.log(`Using existing download URL for sample report: ${existingReport.downloadUrl}`);
-          return existingReport.downloadUrl;
-        }
-        
-        // Ensure sample report exists in database
-        await this.ensureSampleReportExists(report);
-      }
-      
-      // Generate the PDF using PDFService
-      const downloadUrl = await PDFService.generatePDFFromReport(report);
-      
-      // Update the report record in the database
-      await this.updateReportDownloadUrl(report.id, downloadUrl);
-      
-      return downloadUrl;
-    } catch (error) {
-      console.error("Error generating PDF for report:", error);
-      throw error;
-    }
-  }
-  
-  // Helper method to ensure sample reports exist in the database
-  private async ensureSampleReportExists(report: DetailedLifeReport): Promise<void> {
-    try {
-      const { data, error } = await supabase
-        .from('detailed_reports')
-        .select('id')
-        .eq('id', report.id)
-        .maybeSingle();
-        
-      if (!data) {
-        console.log(`Sample report ${report.id} not found in database, creating it...`);
-        
-        // Insert the sample report
-        const { error: insertError } = await supabase
-          .from('detailed_reports')
-          .insert({
-            id: report.id,
-            user_id: report.userId,
-            reading_id: report.readingId,
-            title: report.title,
-            sections: report.sections,
-            language: report.language,
-            page_count: report.pageCount,
-            created_at: report.createdAt,
-            translation_note: report.translationNote || null
-          });
-          
-        if (insertError) {
-          console.error(`Error creating sample report in database: ${insertError.message}`);
-        } else {
-          console.log(`Successfully created sample report ${report.id} in database`);
-        }
-      } else {
-        console.log(`Sample report ${report.id} already exists in database`);
-      }
-    } catch (error) {
-      console.error(`Error ensuring sample report exists: ${error}`);
-    }
-  }
-  
-  // Helper method to update the download URL for a report
-  private async updateReportDownloadUrl(reportId: string, downloadUrl: string): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('detailed_reports')
-        .update({ download_url: downloadUrl })
-        .eq('id', reportId);
-        
-      if (error) {
-        console.error(`Error updating report download URL: ${error.message}`);
-      } else {
-        console.log(`Successfully updated download URL for report ${reportId}`);
-      }
-    } catch (error) {
-      console.error(`Error updating report download URL: ${error}`);
-    }
-  }
-}
-
-export default ReportService.getInstance();
+      "Ad

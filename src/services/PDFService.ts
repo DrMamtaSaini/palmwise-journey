@@ -145,7 +145,7 @@ class PDFService {
         .eq('id', report.id);
         
       toast.success('PDF Generated', {
-        description: 'Your comprehensive palm reading report is ready to download.',
+        description: `Your comprehensive ${report.pageCount}-page palm reading report is ready to download.`,
         duration: 5000
       });
         
@@ -203,6 +203,11 @@ class PDFService {
       ? "यह रिपोर्ट मार्गदर्शन के लिए है और इसे चिकित्सा या वित्तीय सलाह के रूप में नहीं लिया जाना चाहिए।"
       : "This report is for guidance purposes and should not be taken as medical or financial advice.";
     doc.text(disclaimer, pageWidth / 2, pageHeight - 30, { align: 'center' });
+    
+    // Add a decorative element
+    doc.setDrawColor(121, 83, 245);
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth / 2 - 40, 95, pageWidth / 2 + 40, 95);
   }
   
   private addTableOfContents(doc: jsPDF, report: DetailedLifeReport): number {

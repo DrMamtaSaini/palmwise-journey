@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -55,7 +56,7 @@ const DetailedReport = () => {
           
           setError("Report not found or still being generated");
           setShowDebugInfo(retryCount >= 3);
-        } else if (!isAuthenticated || fetchedReport.userId !== user?.id) {
+        } else if (!isAuthenticated || (fetchedReport.userId !== user?.id && fetchedReport.userId !== "sample")) {
           setError("You don't have permission to view this report");
         } else {
           console.log("Report found:", fetchedReport.id);

@@ -36,7 +36,7 @@ const SampleReport = () => {
       setDownloadUrl(null);
       
       toast.info('Preparing sample PDF', {
-        description: 'Generating your sample report PDF...',
+        description: 'Generating your comprehensive 20+ page sample report PDF...',
         duration: 5000
       });
 
@@ -57,7 +57,7 @@ const SampleReport = () => {
             
             // Generate a data URL for a simple PDF using client-side PDF generation
             // This will open in a new tab directly
-            const pdfBlob = new Blob(['Sample Palm Reading Report - simplified version'], { type: 'application/pdf' });
+            const pdfBlob = new Blob(['Sample Comprehensive Palmistry Report - simplified version'], { type: 'application/pdf' });
             return URL.createObjectURL(pdfBlob);
           }
           throw error;
@@ -69,7 +69,7 @@ const SampleReport = () => {
       window.open(url, '_blank');
       
       toast.success('Sample PDF ready', {
-        description: 'Your sample report PDF has been generated successfully'
+        description: 'Your comprehensive 20+ page sample report PDF has been generated successfully'
       });
     } catch (error) {
       console.error("Error downloading sample report:", error);
@@ -200,10 +200,11 @@ const SampleReport = () => {
                   <FileText size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Get Your Personal Detailed Life Report</h3>
+                  <h3 className="text-xl font-semibold mb-2">Get Your Personal Detailed 20+ Page Life Report</h3>
                   <p className="opacity-90 mb-4">
-                    Unlock a comprehensive 50-70 page analysis of your entire life journey, from childhood to old age, 
-                    with specific insights for each phase of your life.
+                    Unlock a comprehensive 20+ page analysis of your entire life journey, with specific insights 
+                    for career, relationships, health, wealth, and more. This professional report gives you actionable 
+                    guidance for your path ahead.
                   </p>
                   <Button 
                     onClick={() => navigate("/pricing")}
