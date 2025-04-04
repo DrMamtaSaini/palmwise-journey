@@ -52,52 +52,52 @@ class ReportService {
       },
       {
         title: "Career & Professional Growth (Job vs. Business)",
-        content: "Your career lines indicate both job stability and potential for entrepreneurship. If you have a strong Sun Line, it suggests recognition in your field, while a deep Mercury Line signifies business acumen.\n\nCareer Analysis:\n- Strong Fate Line: Suitable for long-term jobs and leadership roles.\n- Prominent Sun Line: Potential for fame and success in creative or public fields.\n- Well-defined Mercury Line: Business skills and negotiation power.\n\nJob vs. Business Decision:\n- If your Fate Line is deep and unbroken, a corporate career is favorable.\n- If the Mercury Line is strong with multiple branches, entrepreneurship is a better choice.",
+        content: "Your career lines indicate both job stability and potential for entrepreneurship. If you have a strong Sun Line, it suggests recognition in your field, while a deep Mercury Line signifies business acumen.\n\nCareer Analysis:\n- Strong Fate Line: Suitable for long-term jobs and leadership roles.\\n- Prominent Sun Line: Potential for fame and success in creative or public fields.\\n- Well-defined Mercury Line: Business skills and negotiation power.\n\nJob vs. Business Decision:\n- If your Fate Line is deep and unbroken, a corporate career is favorable.\\n- If the Mercury Line is strong with multiple branches, entrepreneurship is a better choice.",
         image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000"
       },
       {
         title: "Love & Relationships (Romantic, Family, and Social Life)",
-        content: "The heart line in your palm suggests your emotional depth and the way you connect with people. A long, curved heart line indicates a passionate and expressive personality, while a short or broken heart line may suggest emotional struggles.\n\nLove & Marriage Insights:\n- A deep heart line indicates loyalty and strong emotional bonds.\n- A broken heart line may suggest past heartbreaks or trust issues.\n- Parallel lines near the heart line show long-lasting relationships.",
+        content: "The heart line in your palm suggests your emotional depth and the way you connect with people. A long, curved heart line indicates a passionate and expressive personality, while a short or broken heart line may suggest emotional struggles.\n\nLove & Marriage Insights:\n- A deep heart line indicates loyalty and strong emotional bonds.\\n- A broken heart line may suggest past heartbreaks or trust issues.\\n- Parallel lines near the heart line show long-lasting relationships.",
         image: "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=1000"
       },
       {
         title: "Health & Well-being (Mental, Emotional, and Physical Health)",
-        content: "Your life line and health line provide insights into your overall well-being. A deep life line suggests robust health, while breaks in the line may indicate potential health concerns.\n\nKey Health Indicators:\n- A deep life line: Good overall health and longevity.\n- A faint health line: Potential minor ailments or stress-related issues.\n- Breaks in the life line: Major life changes affecting health.",
+        content: "Your life line and health line provide insights into your overall well-being. A deep life line suggests robust health, while breaks in the line may indicate potential health concerns.\n\nKey Health Indicators:\n- A deep life line: Good overall health and longevity.\\n- A faint health line: Potential minor ailments or stress-related issues.\\n- Breaks in the life line: Major life changes affecting health.",
         image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=1000"
       },
       {
         title: "Wealth & Financial Growth (Income, Investments, Stability)",
-        content: "Your palm reveals a steady accumulation of wealth rather than sudden riches. If your fate line is strong, financial stability is likely. A well-developed Sun Mount suggests financial gains through recognition.\n\nWealth & Prosperity Insights:\n- Clear money lines: Indicate financial stability and potential gains.\n- A well-defined fate line: Shows structured financial growth over time.\n- Breaks in the money line: Indicate financial ups and downs that require careful planning.",
+        content: "Your palm reveals a steady accumulation of wealth rather than sudden riches. If your fate line is strong, financial stability is likely. A well-developed Sun Mount suggests financial gains through recognition.\n\nWealth & Prosperity Insights:\n- Clear money lines: Indicate financial stability and potential gains.\\n- A well-defined fate line: Shows structured financial growth over time.\\n- Breaks in the money line: Indicate financial ups and downs that require careful planning.",
         image: "https://images.unsplash.com/photo-1633158829585-23ba8f7c8caf?q=80&w=1000"
       },
       {
         title: "Life Phases & Key Transitions (Past, Present, Future)",
-        content: "Palmistry reveals different phases of your life through changes in the fate line, life line, and other markings. Significant transitions can be seen where lines intersect or break.\n\nLife Stages Breakdown:\n- Childhood: Influence of early family life on personality and growth.\n- Young Adulthood: Career choices, education, and major decisions.\n- Midlife: Stability, financial growth, and family responsibilities.\n- Later Years: Wisdom, legacy, and personal fulfillment.",
+        content: "Palmistry reveals different phases of your life through changes in the fate line, life line, and other markings. Significant transitions can be seen where lines intersect or break.\n\nLife Stages Breakdown:\n- Childhood: Influence of early family life on personality and growth.\\n- Young Adulthood: Career choices, education, and major decisions.\\n- Midlife: Stability, financial growth, and family responsibilities.\\n- Later Years: Wisdom, legacy, and personal fulfillment.",
         image: "https://images.unsplash.com/photo-1506485338023-6ce5f36692df?q=80&w=1000"
       },
       {
         title: "Spiritual Growth & Inner Wisdom",
-        content: "Your palm's Saturn and Jupiter mounts indicate your spiritual path and wisdom. A strong Mount of Jupiter suggests leadership in spiritual or philosophical matters.\n\nSpiritual Insights:\n- Strong Jupiter Mount: Leadership and wisdom.\n- Well-developed Saturn Mount: Deep thinking and spiritual growth.",
+        content: "Your palm's Saturn and Jupiter mounts indicate your spiritual path and wisdom. A strong Mount of Jupiter suggests leadership in spiritual or philosophical matters.\n\nSpiritual Insights:\n- Strong Jupiter Mount: Leadership and wisdom.\\n- Well-developed Saturn Mount: Deep thinking and spiritual growth.",
         image: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=1000"
       },
       {
         title: "Name, Fame & Public Influence",
-        content: "The Sun Line plays a key role in determining your social recognition and influence. A strong Sun Line indicates fame and success in public life.\n\nFame & Recognition:\n- A strong Sun Line: Recognition in career and public life.\n- Parallel success lines: Multiple achievements over time.",
+        content: "The Sun Line plays a key role in determining your social recognition and influence. A strong Sun Line indicates fame and success in public life.\n\nFame & Recognition:\n- A strong Sun Line: Recognition in career and public life.\\n- Parallel success lines: Multiple achievements over time.",
         image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1000"
       },
       {
         title: "Challenges & Solutions in Life",
-        content: "Every palm has markings that reveal challenges and possible solutions. Crosses, breaks, and islands in the major lines suggest struggles, while a well-defined fate line indicates overcoming obstacles.\n\nCommon Challenges & Their Solutions:\n- Breaks in the fate line: Career or financial shifts; adaptability is key.\n- Crosses on the heart line: Emotional struggles; patience is required.\n- Weak life line: Low energy; focus on health and wellness.",
+        content: "Every palm has markings that reveal challenges and possible solutions. Crosses, breaks, and islands in the major lines suggest struggles, while a well-defined fate line indicates overcoming obstacles.\n\nCommon Challenges & Their Solutions:\n- Breaks in the fate line: Career or financial shifts; adaptability is key.\\n- Crosses on the heart line: Emotional struggles; patience is required.\\n- Weak life line: Low energy; focus on health and wellness.",
         image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
       },
       {
         title: "Predictions for the Future (Opportunities & Threats)",
-        content: "Based on your palm's current markings, the following predictions can be made:\n\n- Career Growth: Your career is set for major growth between the ages of 30-40.\n- Financial Stability: Financial gains will be steady with possible investment success.\n- Relationships: A strong, lasting relationship is likely, with some emotional hurdles.\n- Health Awareness: Minor health concerns may arise, but can be managed with self-care.",
+        content: "Based on your palm's current markings, the following predictions can be made:\n\n- Career Growth: Your career is set for major growth between the ages of 30-40.\\n- Financial Stability: Financial gains will be steady with possible investment success.\\n- Relationships: A strong, lasting relationship is likely, with some emotional hurdles.\\n- Health Awareness: Minor health concerns may arise, but can be managed with self-care.",
         image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000"
       },
       {
         title: "Personalized Advice & Guidance",
-        content: "Based on your palm reading, here are some key recommendations:\n- Career: Focus on stability and strategic career moves.\n- Love: Communicate openly to strengthen relationships.\n- Health: Adopt a stress-free lifestyle for long-term wellness.\n- Finance: Invest wisely and plan for financial security.\n- Personal Growth: Work on self-confidence and emotional intelligence.",
+        content: "Based on your palm reading, here are some key recommendations:\n- Career: Focus on stability and strategic career moves.\\n- Love: Communicate openly to strengthen relationships.\\n- Health: Adopt a stress-free lifestyle for long-term wellness.\\n- Finance: Invest wisely and plan for financial security.\\n- Personal Growth: Work on self-confidence and emotional intelligence.",
         image: "https://images.unsplash.com/photo-1513135185947-4f716b9c3b6f?q=80&w=1000"
       },
       {
