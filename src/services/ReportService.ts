@@ -126,7 +126,7 @@ class ReportService {
       },
       {
         title: "व्यक्तित्व विश्लेषण (ताकत, कमजोरियाँ, स्वभाव)",
-        content: "आपकी हथेली की संरचना एक मजबूत और स्वतंत्र व्यक्तित्व का सुझाव देती है। आपके पास एक तेज बुद्धि और अंतर्ज्ञान की गहरी भावना है। आपकी उंगलियों का आकार स्थितियों का विश्लेषण करने और गणनात्मक निर्णय लेने की एक प्राकृतिक क्षमता को इंगित करता है।\n\nमुख्य व्यक्तित्व लक्षण:\n- मजबूत भाग्य रेखा: कड़ी मेहनत के माध्यम से दृढ़ संकल्प और सफलता को इंगित करता है।\n- गहरी सिर रेखा: बुद्धि और गहरी सोच का सुझाव देता है।\n- सीधी उंगलियां: अनुशासन और संगठन दिखाती हैं।\n- घुमावदार हृदय रेखा: भावनात्मक गहराई और मजबूत रिश्तों की आवश्यकता को प्रकट करता है।",
+        content: "आपकी हथेली की संरचना एक मजबूत और स्वतंत्र व्यक्तित्व का सुझाव देती है। आपके पास एक तेज बुद्धि और अंतर्ज्ञान की गहरी भावना है। आपकी उंगलियों का आकार स्थितियों का विश्लेषण करने और गणनात्मक निर्णय लेने की एक प्राकृतिक क्षमता को इंगित करता है।\n\nमुख्य व्यक्तित्व लक्षण:\n- मजबूत भाग्य रेखा: कड़ी मेहनत के माध्यम से दृढ़ संकल्प और सफलता को इंगित करता है।\n- गहरी सिर रेखा: बुद्धि और गहरी सोच का सुझाव देता है।\n- सीधी उंगलियां: अनुशासन और संगठन दिखाती हैं।\n- घुमावदार हृदय रेखा: भावनात्मक गहराई और मजबूत रिश्तों को प्रकट करता है।",
         image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000"
       },
       {
@@ -166,7 +166,7 @@ class ReportService {
       },
       {
         title: "जीवन में चुनौतियाँ और समाधान",
-        content: "प्रत्येक हथेली में ऐसे निशान होते हैं जो चुनौतियों और संभावित समाधानों को प्रकट करते हैं। प्रमुख रेखाओं में क्रॉス, ब���रेक और द्वीप संघर्षों का सुझाव देते हैं, जबकि एक अच्छी तरह से परिभाषित भाग्य रेखा बाधाओं को दूर करने का संकेत देती है।\n\nसामान्य चुनौतियाँ और उनके समाधान:\n- भाग्य रेखा में विराम: कैरियर या वित्तीय बदलाव; अनुकूलनशीलता महत्वपूर्ण है।\n- हृदय रेखा पर क्रॉस: भावनात्मक संघर्ष; धैर्य की आवश्यकता है।\n- कमजोर जीवन रेखा: कम ऊर्जा; स्वास्थ्य और कल्याण पर ध्यान दें।",
+        content: "प्रत्येक हथेली में ऐसे निशान होते हैं जो चुनौतियों और संभावित समाधानों को प्रकट करते हैं। प्रमुख रेखाओं में क्रॉス, ब���र��क और द्वीप संघर्षों का सुझाव देते हैं, जबकि एक अच्छी तरह से परिभाषित भाग्य रेखा बाधाओं को दूर करने का संकेत देती है।\n\nसामान्य चुनौतियाँ और उनके समाधान:\n- भाग्य रेखा में विराम: कैरियर या वित्तीय बदलाव; अनुकूलनशीलता महत्वपूर्ण है।\n- हृदय रेखा पर क्रॉス: भावनात्मक संघर्ष; धैर्य की आवश्यकता है।\n- कमजोर जीवन रेखा: कम ऊर्जा; स्वास्थ्य और कल्याण पर ध्यान दें।",
         image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
       },
       {
@@ -340,6 +340,15 @@ Format your response as a JSON array of objects with 'title' and 'content' field
   // Helper method to get a report by ID
   public async getReport(reportId: string): Promise<DetailedLifeReport | null> {
     try {
+      // For sample reports, return the predefined sample
+      if (reportId === "sample-report") {
+        return this.getSampleReport("english");
+      }
+      
+      if (reportId === "sample-report-hindi") {
+        return this.getSampleReport("hindi");
+      }
+      
       const { data, error } = await supabase
         .from('detailed_reports')
         .select('*')
@@ -383,22 +392,32 @@ Format your response as a JSON array of objects with 'title' and 'content' field
       
       // Check if we received a report ID (string) or a report object
       if (typeof report === 'string') {
-        const fetchedReport = await this.getReport(report);
-        if (!fetchedReport) {
-          throw new Error("Report not found");
+        // For sample reports, get them directly without database lookup
+        if (report === "sample-report") {
+          reportObj = this.getSampleReport("english");
+        } else if (report === "sample-report-hindi") {
+          reportObj = this.getSampleReport("hindi");
+        } else {
+          // For other reports, fetch from database
+          const fetchedReport = await this.getReport(report);
+          if (!fetchedReport) {
+            throw new Error("Report not found");
+          }
+          reportObj = fetchedReport;
         }
-        reportObj = fetchedReport;
       } else {
         reportObj = report;
       }
       
       const downloadUrl = await PDFService.generatePDFFromReport(reportObj);
       
-      // Update the report record with the download URL
-      await supabase
-        .from('detailed_reports')
-        .update({ download_url: downloadUrl })
-        .eq('id', reportObj.id);
+      // If not a sample report, update the record with download URL
+      if (!reportObj.id.includes('sample')) {
+        await supabase
+          .from('detailed_reports')
+          .update({ download_url: downloadUrl })
+          .eq('id', reportObj.id);
+      }
         
       return downloadUrl;
     } catch (error) {

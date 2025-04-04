@@ -117,9 +117,15 @@ class PDFService {
       const pdfBlob = doc.output('blob');
       
       try {
-        // Try to upload to Supabase Storage
-        const fileName = `reports/${report.userId}/${report.id}.pdf`;
+        // Check if the report is a sample report
+        const isSampleReport = report.id.includes('sample');
         
+        // For sample reports, use a fixed path
+        const fileName = isSampleReport 
+          ? `reports/samples/${report.language === 'hindi' ? 'hindi' : 'english'}_sample.pdf`
+          : `reports/${report.userId}/${report.id}.pdf`;
+        
+        // Try to upload to Supabase Storage
         const { data, error } = await supabase.storage
           .from('palm-readings')
           .upload(fileName, pdfBlob, {
@@ -143,11 +149,13 @@ class PDFService {
           
         const downloadUrl = urlData.publicUrl;
         
-        // Update report record with download URL
-        await supabase
-          .from('detailed_reports')
-          .update({ download_url: downloadUrl })
-          .eq('id', report.id);
+        // For non-sample reports, update the report record with download URL
+        if (!isSampleReport) {
+          await supabase
+            .from('detailed_reports')
+            .update({ download_url: downloadUrl })
+            .eq('id', report.id);
+        }
           
         toast.success('PDF Generated', {
           description: `Your comprehensive ${report.pageCount}-page palm reading report is ready to download.`,

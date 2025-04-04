@@ -40,10 +40,10 @@ const SampleReport = () => {
         duration: 5000
       });
 
-      // Get the sample report for download
+      // Get the sample report
       const sampleReport = ReportService.getSampleReport(selectedLanguage);
       
-      // Use the PDF service to generate and download the PDF
+      // Generate PDF for the sample report
       const url = await ReportService.generatePDFForReport(sampleReport);
       setDownloadUrl(url);
       
