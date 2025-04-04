@@ -15,6 +15,7 @@ const SampleReport = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [report, setReport] = useState(ReportService.getSampleReport());
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
@@ -29,6 +30,34 @@ const SampleReport = () => {
     setSelectedLanguage(language);
   };
 
+  const handleGenerateAISample = async () => {
+    try {
+      setIsGeneratingAI(true);
+      setDownloadError(null);
+      setDownloadUrl(null);
+      
+      toast.info('Generating AI sample report', {
+        description: 'Creating an AI-powered sample palm reading report...',
+        duration: 5000
+      });
+      
+      // Use the new AI-powered report generator
+      const aiReport = await ReportService.generateAISampleReport(selectedLanguage);
+      setReport(aiReport);
+      
+      toast.success('AI Sample Ready', {
+        description: 'Your AI-generated sample report has been created'
+      });
+    } catch (error) {
+      console.error("Error generating AI sample report:", error);
+      toast.error('Generation failed', {
+        description: 'There was a problem generating the AI sample report'
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleDownloadSample = async () => {
     try {
       setIsDownloading(true);
@@ -40,11 +69,8 @@ const SampleReport = () => {
         duration: 5000
       });
 
-      // Get the sample report
-      const sampleReport = ReportService.getSampleReport(selectedLanguage);
-      
       // Generate PDF for the sample report
-      const url = await ReportService.generatePDFForReport(sampleReport);
+      const url = await ReportService.generatePDFForReport(report);
       setDownloadUrl(url);
       
       // For URLs created with URL.createObjectURL, we don't automatically open in a new tab
@@ -119,7 +145,7 @@ const SampleReport = () => {
                 <h2 className="text-xl font-semibold text-gray-900">
                   Preview
                 </h2>
-                <div className="space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {downloadUrl && (
                     <Button
                       variant="outline"
@@ -145,6 +171,24 @@ const SampleReport = () => {
                       <>
                         <Download className="h-4 w-4 mr-2" />
                         Download Sample
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
+                    onClick={handleGenerateAISample}
+                    disabled={isGeneratingAI}
+                  >
+                    {isGeneratingAI ? (
+                      <>
+                        <span className="animate-spin mr-2 h-4 w-4 border-2 border-[#7953F5] border-t-transparent rounded-full"></span>
+                        Generating AI Sample...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Generate AI Sample
                       </>
                     )}
                   </Button>
