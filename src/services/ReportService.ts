@@ -1,4 +1,3 @@
-
 import { ExtendedPalmReading } from "../types/PalmReading";
 import { generateFullReadingText } from "../utils/readingContentUtils";
 import { getLanguageInfo } from "../components/LanguageSelector";
@@ -137,7 +136,7 @@ class ReportService {
       },
       {
         title: "प्यार और रिश्ते (रोमांटिक, पारिवारिक और सामाजिक जीवन)",
-        content: "आपकी हथेली में हृदय रेखा आपकी भावनात्मक गहराई और जिस तरह से आप लोगों से जुड़ते हैं, उसका सुझाव देती है। एक लंबी, घुमावदार हृदय रेखा एक भावुक और अभिव्यंजक व्यक्तित्व को इंगित करती है, जबकि एक छोटी या टूटी हुई हृदय रेखा भावनात्मक संघर्षों का सुझाव दे सकती है।\n\nप्यार और विवाह अंतर्दृष्टि:\n- एक गहरी हृदय रेखा वफादारी और मजबूत भावनात्मक बंधन को इंगित करती है।\n- एक टूटी हुई हृदय रेखा अतीत के दिल टूटने या विश्वास के मुद्दों का सुझाव दे सकती है।\n- हृदय रेखा के पास समानांतर रेखाएं लंबे समय तक चलने वाले रिश्तों को दिखाती हैं।",
+        content: "आपकी हथेली में हृदय रेखा आपकी भावनात्मक गहराई और जिस तरह से आप लोगों से जुड़ते हैं, उसका सुझाव देती है। एक लंबी, घुमावदार हृदय रेखा एक भावुक और अभिव्यंजक व्यक्तित्व को इंगित करती है, जबकि एक छोटी या टूटी हृदय रेखा भावनात्मक संघर्षों का सुझाव दे सकती है।\n\nप्यार और विवाह अंतर्दृष्टि:\n- एक गहरी हृदय रेखा वफादारी और मजबूत भावनात्मक बंधन को इंगित करती है।\n- एक टूटी हुई हृदय रेखा अतीत के दिल टूटने या विश्वास के मुद्दों का सुझाव दे सकती है।\n- हृदय रेखा के पास समानांतर रेखाएं लंबे समय तक चलने वाले रिश्तों को दिखाती हैं।",
         image: "https://images.unsplash.com/photo-1494774157365-9e04c6720e47?q=80&w=1000"
       },
       {
@@ -167,7 +166,7 @@ class ReportService {
       },
       {
         title: "जीवन में चुनौतियाँ और समाधान",
-        content: "प्रत्येक हथेली में ऐसे निशान होते हैं जो चुनौतियों और संभावित समाधानों को प्रकट करते हैं। प्रमुख रेखाओं में क्रॉस, ब्रेक और द्वीप संघर्षों का सुझाव देते हैं, जबकि एक अच्छी तरह से परिभाषित भाग्य रेखा बाधाओं को दूर करने का संकेत देती है।\n\nसामान्य चुनौतियाँ और उनके समाधान:\n- भाग्य रेखा में विराम: कैरियर या वित्तीय बदलाव; अनुकूलनशीलता महत्वपूर्ण है।\n- हृदय रेखा पर क्रॉस: भावनात्मक संघर्ष; धैर्य की आवश्यकता है।\n- कमजोर जीवन रेखा: कम ऊर्जा; स्वास्थ्य और कल्याण पर ध्यान दें।",
+        content: "प्रत्येक हथेली में ऐसे निशान होते हैं जो चुनौतियों और संभावित समाधानों को प्रकट करते हैं। प्रमुख रेखाओं में क्रॉス, ब���रेक और द्वीप संघर्षों का सुझाव देते हैं, जबकि एक अच्छी तरह से परिभाषित भाग्य रेखा बाधाओं को दूर करने का संकेत देती है।\n\nसामान्य चुनौतियाँ और उनके समाधान:\n- भाग्य रेखा में विराम: कैरियर या वित्तीय बदलाव; अनुकूलनशीलता महत्वपूर्ण है।\n- हृदय रेखा पर क्रॉस: भावनात्मक संघर्ष; धैर्य की आवश्यकता है।\n- कमजोर जीवन रेखा: कम ऊर्जा; स्वास्थ्य और कल्याण पर ध्यान दें।",
         image: "https://images.unsplash.com/photo-1544306094-e2dcf9479da3?q=80&w=1000"
       },
       {
@@ -378,25 +377,33 @@ Format your response as a JSON array of objects with 'title' and 'content' field
   }
   
   // Helper to generate PDF for a report on demand
-  public async generatePDFForReport(reportId: string): Promise<string | null> {
+  public async generatePDFForReport(report: DetailedLifeReport | string): Promise<string> {
     try {
-      const report = await this.getReport(reportId);
-      if (!report) {
-        throw new Error("Report not found");
+      let reportObj: DetailedLifeReport;
+      
+      // Check if we received a report ID (string) or a report object
+      if (typeof report === 'string') {
+        const fetchedReport = await this.getReport(report);
+        if (!fetchedReport) {
+          throw new Error("Report not found");
+        }
+        reportObj = fetchedReport;
+      } else {
+        reportObj = report;
       }
       
-      const downloadUrl = await PDFService.generatePDFFromReport(report);
+      const downloadUrl = await PDFService.generatePDFFromReport(reportObj);
       
       // Update the report record with the download URL
       await supabase
         .from('detailed_reports')
         .update({ download_url: downloadUrl })
-        .eq('id', reportId);
+        .eq('id', reportObj.id);
         
       return downloadUrl;
     } catch (error) {
       console.error("Error generating PDF for report:", error);
-      return null;
+      throw error;
     }
   }
   
