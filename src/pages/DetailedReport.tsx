@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Download, RefreshCw, AlertTriangle } from "lucide-react";
@@ -182,40 +183,43 @@ const DetailedReport = () => {
         <Navbar />
         <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
           <div className="max-w-lg w-full mx-auto">
-            <div className="bg-white rounded-xl shadow-sm p-8 border border-red-100 text-center mb-6">
-              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-red-500 mb-2">Error Loading Report</h2>
-              <p className="text-gray-600">
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-red-500 mb-4">Error Loading Report</h2>
+              <p className="text-gray-600 text-lg mb-6">
                 {errorMessage || "Sorry, we couldn't find the report you were looking for."}
               </p>
-            </div>
-            
-            {errorMessage && errorMessage.includes("database table") && (
-              <div className="mt-4 text-center">
-                <p className="mb-4 text-gray-600">
-                  Would you like to create the required database table now?
-                </p>
-                <Button 
-                  onClick={handleCreateTable} 
-                  disabled={isLoading}
-                  className="bg-palm-purple text-white hover:bg-palm-purple/90 mb-4"
+              
+              {errorMessage && errorMessage.includes("database table") && (
+                <div className="mt-4 text-center">
+                  <p className="mb-4 text-gray-600">
+                    Would you like to create the required database table now?
+                  </p>
+                  <Button 
+                    onClick={handleCreateTable} 
+                    disabled={isLoading}
+                    className="bg-palm-purple text-white hover:bg-palm-purple/90 mb-4"
+                  >
+                    {isLoading ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Setting Up...
+                      </>
+                    ) : (
+                      "Set Up Database Table"
+                    )}
+                  </Button>
+                </div>
+              )}
+              
+              <div className="mt-8">
+                <Link 
+                  to="/" 
+                  className="text-purple-600 hover:text-purple-800 font-medium text-lg"
                 >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Setting Up...
-                    </>
-                  ) : (
-                    "Set Up Database Table"
-                  )}
-                </Button>
+                  Go back to homepage
+                </Link>
               </div>
-            )}
-            
-            <div className="text-center mt-6">
-              <Link to="/" className="text-purple-600 hover:underline font-medium">
-                Go back to homepage
-              </Link>
             </div>
           </div>
         </main>
@@ -230,17 +234,20 @@ const DetailedReport = () => {
         <Navbar />
         <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
           <div className="max-w-lg w-full mx-auto">
-            <div className="bg-white rounded-xl shadow-sm p-8 border border-red-100 text-center">
-              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-red-500 mb-2">Error Loading Report</h2>
-              <p className="text-gray-600">
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-red-500 mb-4">Error Loading Report</h2>
+              <p className="text-gray-600 text-lg mb-6">
                 Sorry, we couldn't find the report you were looking for.
               </p>
-            </div>
-            <div className="text-center mt-6">
-              <Link to="/" className="text-purple-600 hover:underline font-medium">
-                Go back to homepage
-              </Link>
+              <div className="mt-8">
+                <Link 
+                  to="/" 
+                  className="text-purple-600 hover:text-purple-800 font-medium text-lg"
+                >
+                  Go back to homepage
+                </Link>
+              </div>
             </div>
           </div>
         </main>
