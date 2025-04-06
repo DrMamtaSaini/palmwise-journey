@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Download, RefreshCw, AlertTriangle } from "lucide-react";
@@ -37,7 +36,6 @@ const DetailedReport = () => {
       try {
         setIsLoading(true);
         
-        // Check if this is a special sample report case
         if (reportId === 'sample-report' || reportId === 'sample-report-hindi') {
           const sampleReport = ReportService.getSampleReport(
             reportId === 'sample-report-hindi' ? 'hindi' : 'english'
@@ -62,7 +60,6 @@ const DetailedReport = () => {
         console.error("Error fetching report:", error);
         setIsError(true);
         
-        // Check for specific database error
         if ((error as any)?.code === "42P01") {
           setErrorMessage("The detailed reports database table does not exist yet. Please try generating a report first.");
         } else {
@@ -101,8 +98,6 @@ const DetailedReport = () => {
       return;
     }
     
-    // In a real app, you would regenerate the report in the new language
-    // For this demo, we'll just update the state
     toast.info("Regenerating report in " + newLanguage);
   };
 
@@ -114,7 +109,6 @@ const DetailedReport = () => {
       const pdfUrl = await ReportService.generatePDFForReport(report);
       setDownloadUrl(pdfUrl);
       
-      // Trigger the download
       const link = document.createElement('a');
       link.href = pdfUrl;
       link.download = `${report.title}.pdf`;
@@ -156,7 +150,6 @@ const DetailedReport = () => {
       await ReportService.setupDetailedReportTable();
       toast.success("Database table created successfully");
       
-      // Refresh the page after a brief delay
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -189,13 +182,13 @@ const DetailedReport = () => {
         <Navbar />
         <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
           <div className="max-w-lg w-full mx-auto">
-            <Alert variant="destructive" className="mb-6">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Error Loading Report</AlertTitle>
-              <AlertDescription>
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-red-100 text-center mb-6">
+              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-red-500 mb-2">Error Loading Report</h2>
+              <p className="text-gray-600">
                 {errorMessage || "Sorry, we couldn't find the report you were looking for."}
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
             
             {errorMessage && errorMessage.includes("database table") && (
               <div className="mt-4 text-center">
@@ -220,7 +213,7 @@ const DetailedReport = () => {
             )}
             
             <div className="text-center mt-6">
-              <Link to="/" className="text-palm-purple hover:underline">
+              <Link to="/" className="text-purple-600 hover:underline font-medium">
                 Go back to homepage
               </Link>
             </div>
@@ -236,14 +229,19 @@ const DetailedReport = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Report Not Found</h1>
-            <p className="text-gray-600">
-              Sorry, we couldn't find the report you were looking for.
-            </p>
-            <Link to="/" className="text-palm-purple hover:underline">
-              Go back to homepage
-            </Link>
+          <div className="max-w-lg w-full mx-auto">
+            <div className="bg-white rounded-xl shadow-sm p-8 border border-red-100 text-center">
+              <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-red-500 mb-2">Error Loading Report</h2>
+              <p className="text-gray-600">
+                Sorry, we couldn't find the report you were looking for.
+              </p>
+            </div>
+            <div className="text-center mt-6">
+              <Link to="/" className="text-purple-600 hover:underline font-medium">
+                Go back to homepage
+              </Link>
+            </div>
           </div>
         </main>
         <Footer />
