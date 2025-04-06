@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Download, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
@@ -9,6 +10,8 @@ import ReportSection from "../components/ReportSection";
 import LanguageSelector from "../components/LanguageSelector";
 import PaymentModal from "../components/PaymentModal";
 import ReportService, { DetailedLifeReport } from "@/services/ReportService";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DetailedReport = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -16,6 +19,7 @@ const DetailedReport = () => {
   const [report, setReport] = useState<DetailedLifeReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>('english');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
@@ -32,6 +36,18 @@ const DetailedReport = () => {
 
       try {
         setIsLoading(true);
+        
+        // Check if this is a special sample report case
+        if (reportId === 'sample-report' || reportId === 'sample-report-hindi') {
+          const sampleReport = ReportService.getSampleReport(
+            reportId === 'sample-report-hindi' ? 'hindi' : 'english'
+          );
+          setReport(sampleReport);
+          setSelectedLanguage(sampleReport.language || 'english');
+          setIsLoading(false);
+          return;
+        }
+        
         const reportData = await ReportService.getDetailedReport(reportId);
         
         if (reportData) {
@@ -45,6 +61,13 @@ const DetailedReport = () => {
       } catch (error) {
         console.error("Error fetching report:", error);
         setIsError(true);
+        
+        // Check for specific database error
+        if ((error as any)?.code === "42P01") {
+          setErrorMessage("The detailed reports database table does not exist yet. Please try generating a report first.");
+        } else {
+          setErrorMessage("There was an error loading your report. Please try again later.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -127,6 +150,24 @@ const DetailedReport = () => {
     }
   };
 
+  const handleCreateTable = async () => {
+    try {
+      setIsLoading(true);
+      await ReportService.setupDetailedReportTable();
+      toast.success("Database table created successfully");
+      
+      // Refresh the page after a brief delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error("Error creating table:", error);
+      toast.error("Failed to create database table");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -142,7 +183,55 @@ const DetailedReport = () => {
     );
   }
 
-  if (isError || !report) {
+  if (isError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
+          <div className="max-w-lg w-full mx-auto">
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error Loading Report</AlertTitle>
+              <AlertDescription>
+                {errorMessage || "Sorry, we couldn't find the report you were looking for."}
+              </AlertDescription>
+            </Alert>
+            
+            {errorMessage && errorMessage.includes("database table") && (
+              <div className="mt-4 text-center">
+                <p className="mb-4 text-gray-600">
+                  Would you like to create the required database table now?
+                </p>
+                <Button 
+                  onClick={handleCreateTable} 
+                  disabled={isLoading}
+                  className="bg-palm-purple text-white hover:bg-palm-purple/90 mb-4"
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Setting Up...
+                    </>
+                  ) : (
+                    "Set Up Database Table"
+                  )}
+                </Button>
+              </div>
+            )}
+            
+            <div className="text-center mt-6">
+              <Link to="/" className="text-palm-purple hover:underline">
+                Go back to homepage
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!report) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />

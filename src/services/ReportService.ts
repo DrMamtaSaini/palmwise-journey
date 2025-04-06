@@ -140,6 +140,40 @@ class ReportService {
     }
   }
   
+  public async setupDetailedReportTable(): Promise<void> {
+    try {
+      toast.info('Setting up database', {
+        description: 'Creating the necessary database tables for detailed reports...',
+        duration: 5000
+      });
+      
+      // Call the Edge Function to create the table
+      const response = await supabase.functions.invoke('create-detailed-report-table', {
+        method: 'POST',
+      });
+      
+      console.log("Table setup response:", response);
+      
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to create table");
+      }
+      
+      toast.success('Database setup complete', {
+        description: 'The detailed reports table has been created successfully!',
+        duration: 5000
+      });
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error setting up table:", error);
+      toast.error('Database setup failed', {
+        description: 'There was a problem creating the database table. Please try again later.',
+        duration: 5000
+      });
+      return Promise.reject(error);
+    }
+  }
+  
   private async generateReportSections(sectionTitles: string[], reading: ExtendedPalmReading, language: string) {
     // Simplified for demo, in a real app you would use AI to generate content for each section
     return Promise.all(sectionTitles.map(async (title, index) => {
