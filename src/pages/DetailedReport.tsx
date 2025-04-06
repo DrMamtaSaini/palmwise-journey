@@ -1,171 +1,160 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Download, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Share2, FileText } from "lucide-react";
-import ReportService, { DetailedLifeReport } from "../services/ReportService";
-import { useAuth } from "../hooks/useAuth";
-import ReadingLoader from "../components/ReadingLoader";
-import ReadingNotFound from "../components/ReadingNotFound";
-import TranslationNote from "../components/TranslationNote";
-import { toast } from "sonner";
+import ReportSection from "../components/ReportSection";
+import LanguageSelector from "../components/LanguageSelector";
+import PaymentModal from "../components/PaymentModal";
+import ReportService, { DetailedLifeReport } from "@/services/ReportService";
 
 const DetailedReport = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const [report, setReport] = useState<DetailedLifeReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('english');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuth();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   useEffect(() => {
-    if (!reportId) {
-      setError("Report ID is missing");
-      setIsLoading(false);
-      return;
-    }
-    
     const fetchReport = async () => {
+      if (!reportId) {
+        setIsError(true);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        console.log(`Fetching report with ID: ${reportId} (retry: ${retryCount})`);
+        setIsLoading(true);
+        const reportData = await ReportService.getDetailedReport(reportId);
         
-        // Check if this is a sample report ID
-        if (reportId === "sample-report" || reportId === "sample-report-hindi") {
-          const language = reportId === "sample-report-hindi" ? "hindi" : "english";
-          console.log(`Loading sample report for language: ${language}`);
-          const sampleReport = ReportService.getSampleReport(language);
-          setReport(sampleReport);
-          return;
-        }
-        
-        const fetchedReport = await ReportService.getReport(reportId);
-        
-        if (!fetchedReport) {
-          // If this is a new report and we're within retry limits, try again
-          if (retryCount < 3) {
-            console.log(`Report not found, will retry in 3 seconds (retry ${retryCount + 1})`);
-            setRetryCount(prev => prev + 1);
-            setTimeout(() => setIsLoading(true), 3000);
-            return;
+        if (reportData) {
+          setReport(reportData);
+          if (reportData.language) {
+            setSelectedLanguage(reportData.language);
           }
-          
-          setError("Report not found or still being generated");
-          setShowDebugInfo(retryCount >= 3);
-        } else if (!isAuthenticated || (fetchedReport.userId !== user?.id && fetchedReport.userId !== "sample")) {
-          setError("You don't have permission to view this report");
         } else {
-          console.log("Report found:", fetchedReport.id);
-          setReport(fetchedReport);
+          setIsError(true);
         }
-      } catch (err) {
-        console.error("Error fetching report:", err);
-        setError("Failed to load the report");
-        setShowDebugInfo(true);
+      } catch (error) {
+        console.error("Error fetching report:", error);
+        setIsError(true);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    if (isLoading) {
-      fetchReport();
+
+    fetchReport();
+  }, [reportId]);
+
+  useEffect(() => {
+    if (report && report.language && report.language !== selectedLanguage) {
+      setSelectedLanguage(report.language);
     }
-  }, [reportId, isAuthenticated, user, isLoading, retryCount]);
-  
-  const handlePrint = () => {
-    window.print();
-  };
-  
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copied to clipboard");
-  };
-  
-  const handleRetry = () => {
-    setIsLoading(true);
-    setError(null);
-    setRetryCount(0);
-    setShowDebugInfo(false);
-  };
-  
-  const handleDownloadPDF = async () => {
+  }, [report]);
+
+  const handleLanguageChange = async (newLanguage: string) => {
     if (!report) return;
+
+    setSelectedLanguage(newLanguage);
     
-    // If PDF already exists and is not a blob URL, open it
-    if (report.downloadUrl && !report.downloadUrl.startsWith('blob:')) {
-      window.open(report.downloadUrl, '_blank');
+    if (reportId === 'sample-report' || reportId === 'sample-report-hindi') {
+      try {
+        setIsLoading(true);
+        const aiSampleReport = await ReportService.generateAISampleReport(newLanguage);
+        setReport(aiSampleReport);
+      } catch (error) {
+        console.error("Error generating AI sample report:", error);
+        toast.error("Failed to generate AI sample report");
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
     
-    // Otherwise generate it
+    // In a real app, you would regenerate the report in the new language
+    // For this demo, we'll just update the state
+    toast.info("Regenerating report in " + newLanguage);
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!report) return;
+
+    setIsGeneratingPDF(true);
     try {
-      setIsGeneratingPDF(true);
-      toast.info('Generating PDF', {
-        description: 'Creating your comprehensive palm reading report PDF. This may take a moment...',
-        duration: 5000
-      });
+      const pdfUrl = await ReportService.generatePDFForReport(report);
+      setDownloadUrl(pdfUrl);
       
-      const downloadUrl = await ReportService.generatePDFForReport(report);
+      // Trigger the download
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `${report.title}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-      // Update report with download URL
-      setReport({
-        ...report,
-        downloadUrl
-      });
-      
-      // If it's not a blob URL (from storage), open it automatically
-      if (!downloadUrl.startsWith('blob:')) {
-        window.open(downloadUrl, '_blank');
-      } else {
-        // For blob URLs, we'll let the user click manually to avoid popup blockers
-        toast.success('PDF Ready', {
-          description: 'Click the Download PDF button again to open your report'
-        });
-      }
+      toast.success("PDF downloaded successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error('PDF Generation Failed', {
-        description: 'There was a problem creating your PDF. Please try again later.'
-      });
+      toast.error("Failed to generate PDF");
     } finally {
       setIsGeneratingPDF(false);
     }
   };
   
+  const handleViewSampleReport = async () => {
+    if (!isAuthenticated) {
+      setShowPaymentModal(true);
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const aiSampleReport = await ReportService.generateAISampleReport(selectedLanguage);
+      setReport(aiSampleReport);
+      navigate(`/detailed-report/${aiSampleReport.id}`, { replace: true });
+    } catch (error) {
+      console.error("Error generating AI sample report:", error);
+      toast.error("Failed to generate AI sample report");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow pt-24 pb-16 px-4 flex items-center justify-center">
-          <ReadingLoader message={`Loading your detailed life report${retryCount > 0 ? ` (attempt ${retryCount + 1})` : ''}...`} />
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
+          <div className="text-center">
+            <RefreshCw className="inline-block animate-spin mr-2" />
+            Loading report...
+          </div>
         </main>
         <Footer />
       </div>
     );
   }
-  
-  if (error || !report) {
+
+  if (isError || !report) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow pt-24 pb-16 px-4 flex items-center justify-center">
-          <div className="w-full max-w-md">
-            <ReadingNotFound 
-              message={error || "Report not found"} 
-              retryAction={handleRetry}
-              showDebugInfo={showDebugInfo}
-            />
-            {error && error.includes("still being generated") && (
-              <div className="mt-4 text-center">
-                <p className="mt-2 text-sm text-gray-500">
-                  Report generation can take up to 60 seconds. Please wait or check again later.
-                </p>
-              </div>
-            )}
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-palm-light">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Report Not Found</h1>
+            <p className="text-gray-600">
+              Sorry, we couldn't find the report you were looking for.
+            </p>
+            <Link to="/" className="text-palm-purple hover:underline">
+              Go back to homepage
+            </Link>
           </div>
         </main>
         <Footer />
@@ -174,131 +163,73 @@ const DetailedReport = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow pt-24 pb-16 px-4">
+      <main className="flex-grow bg-palm-light py-12 px-4">
         <div className="container mx-auto max-w-4xl">
-          <div className="mb-6 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back
-            </Button>
-            
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                className="text-gray-600"
-                onClick={handlePrint}
-              >
-                <Printer className="h-4 w-4 mr-2" /> Print
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="text-gray-600"
-                onClick={handleShare}
-              >
-                <Share2 className="h-4 w-4 mr-2" /> Share
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="text-[#7953F5] border-[#7953F5]/30 hover:bg-[#7953F5]/5"
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
-              >
-                {isGeneratingPDF ? (
-                  <>
-                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-[#7953F5] border-t-transparent rounded-full"></span>
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF ({report.pageCount} pages)
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="mb-8">
+            <Link to="/" className="inline-flex items-center text-gray-600 hover:text-palm-purple transition-colors">
+              <ArrowLeft size={20} className="mr-2" />
+              Back to Home
+            </Link>
           </div>
 
-          {report.language === "hindi" && report.translationNote && (
-            <TranslationNote note={report.translationNote} />
-          )}
-
-          <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8 print:shadow-none">
-            <div className="p-8 border-b border-gray-200 print:break-after-page">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{report.title}</h1>
-              <p className="text-gray-500">
-                {new Date(report.createdAt).toLocaleDateString()} • {report.pageCount} pages • {report.language === "hindi" ? "हिन्दी" : "English"}
-              </p>
-            </div>
-
-            <div className="p-8">
-              <div className="space-y-12">
-                {report.sections.map((section, index) => (
-                  <div key={index} className="border-b border-gray-100 pb-12 last:border-b-0 last:pb-0 print:break-after-page">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-900">{section.title}</h3>
-                    
-                    {section.image && (
-                      <div className="mb-4 rounded-lg overflow-hidden">
-                        <img 
-                          src={section.image} 
-                          alt={section.title} 
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="text-gray-700 space-y-4">
-                      {section.content.split('\n').map((paragraph, i) => (
-                        <p key={i}>{paragraph}</p>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-[#7953F5]/5 p-6 rounded-xl border border-[#7953F5]/20 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="bg-[#7953F5] rounded-full p-3 text-white">
-                <FileText className="h-6 w-6" />
-              </div>
+          <div className="bg-white rounded-2xl shadow-soft p-8">
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Download Your Full {report.pageCount}-Page Report</h3>
-                <p className="text-gray-600 mt-1">Get your comprehensive palm reading report as a beautifully formatted PDF document.</p>
+                <h1 className="text-3xl font-bold text-palm-purple mb-2">{report.title}</h1>
+                <p className="text-gray-600">
+                  Created on {new Date(report.createdAt).toLocaleDateString()}
+                </p>
+                {report.translationNote && (
+                  <p className="text-sm text-gray-500 mt-2">{report.translationNote}</p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <LanguageSelector
+                  selectedLanguage={selectedLanguage}
+                  onLanguageChange={handleLanguageChange}
+                />
+                
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isGeneratingPDF}
+                    className="bg-palm-purple text-white px-4 py-2 rounded-md hover:bg-palm-purple/90 transition-colors flex items-center"
+                  >
+                    {isGeneratingPDF ? (
+                      <RefreshCw className="inline-block animate-spin mr-2" />
+                    ) : (
+                      <Download size={18} className="mr-2" />
+                    )}
+                    Download PDF
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleViewSampleReport}
+                    className="bg-palm-purple text-white px-4 py-2 rounded-md hover:bg-palm-purple/90 transition-colors flex items-center"
+                  >
+                    View Sample
+                  </button>
+                )}
               </div>
             </div>
-            <div className="mt-4">
-              <Button
-                className="bg-gradient-to-r from-[#7953F5] to-[#9672FF] text-white hover:shadow-md transition-all duration-300 w-full sm:w-auto"
-                onClick={handleDownloadPDF}
-                disabled={isGeneratingPDF}
-              >
-                {isGeneratingPDF ? (
-                  <>
-                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download {report.pageCount}-Page PDF
-                  </>
-                )}
-              </Button>
-            </div>
+
+            {report.sections.map((section, index) => (
+              <ReportSection key={index} title={section.title} content={section.content} image={section.image} />
+            ))}
           </div>
         </div>
       </main>
 
       <Footer />
+      
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+      />
     </div>
   );
 };
