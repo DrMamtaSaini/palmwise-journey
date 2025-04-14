@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Upload, Camera, SparklesIcon, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -206,7 +205,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         <Button
           type="button"
           className="w-full bg-palm-purple text-white hover:bg-purple-700"
-          disabled={!previewUrl}
+          disabled={true}
           onClick={handleAnalyze}
         >
           <SparklesIcon size={20} className="mr-2" />
