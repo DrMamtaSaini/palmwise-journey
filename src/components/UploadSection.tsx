@@ -206,13 +206,11 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         <Button
           type="button"
           className="w-full bg-palm-purple text-white hover:bg-purple-700"
-          disabled={true}
+          disabled={!previewUrl}
           onClick={handleAnalyze}
         >
-          <>
-            <SparklesIcon size={20} className="mr-2" />
-            <span>Read My Palm</span>
-          </>
+          <SparklesIcon size={20} className="mr-2" />
+          <span>Read My Palm</span>
         </Button>
       )}
     </div>
