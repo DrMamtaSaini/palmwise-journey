@@ -187,7 +187,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
           <Button
             type="button"
             className="flex-1 bg-palm-purple text-white hover:bg-purple-700"
-            disabled={!previewUrl || isProcessing || isUploading}
+            disabled={isProcessing || isUploading}
             onClick={handleAnalyze}
           >
             {isProcessing || isUploading ? (
@@ -206,17 +206,13 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         <Button
           type="button"
           className="w-full bg-palm-purple text-white hover:bg-purple-700"
-          disabled={!previewUrl || isProcessing || isUploading}
+          disabled={true}
           onClick={handleAnalyze}
         >
-          {isProcessing || isUploading ? (
-            <span className="animate-pulse">{isProcessing ? "Analyzing..." : "Uploading..."}</span>
-          ) : (
-            <>
-              <SparklesIcon size={20} className="mr-2" />
-              <span>Read My Palm</span>
-            </>
-          )}
+          <>
+            <SparklesIcon size={20} className="mr-2" />
+            <span>Read My Palm</span>
+          </>
         </Button>
       )}
     </div>
