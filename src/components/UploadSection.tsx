@@ -171,7 +171,7 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
         </button>
       </div>
 
-      {previewUrl && (
+      {previewUrl ? (
         <div className="flex justify-between gap-4 mb-6">
           <Button
             variant="outline"
@@ -199,13 +199,11 @@ const UploadSection = ({ onAnalyze, isProcessing = false }: UploadSectionProps) 
             )}
           </Button>
         </div>
-      )}
-      
-      {!previewUrl && (
+      ) : (
         <Button
           type="button"
           className="w-full bg-palm-purple text-white hover:bg-purple-700"
-          disabled={true}
+          disabled={!previewUrl}
           onClick={handleAnalyze}
         >
           <SparklesIcon size={20} className="mr-2" />
